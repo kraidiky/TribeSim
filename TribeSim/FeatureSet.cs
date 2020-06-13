@@ -1,136 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Dynamic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TribeSim
 {
-    class FeatureSet : DynamicObject
+    /// <summary> Этот класс теперь используем только для статической проверки типов и место хранения статических функций, больше он ни для чего не нужен, со всеми функциями массив отлично справляется. </summary>
+    public static class FeatureSet
     {
-        private Dictionary<AvailableFeatures, double> featureData = new Dictionary<AvailableFeatures, double>();
-        public FeatureSet()
+        /// <summary> Генерит пустой массив нужного размера, чтобы не таскать по всему коду знгания о константе FEATURES_COUNT. Ну и вообще, можно тут под капот спрятать пулинг массивов, если будет желание. </summary>
+        public static double[] Blank() {
+            return new double[WorldProperties.FEATURES_COUNT];
+        }
+        /// <summary> Для индексации используются целые числа, к которм приводятся enum-ы: (int)AvailableFeatures.value</summary>
+        public static double[] GenerateInitialGeneStrand()
         {
-            foreach (AvailableFeatures feature in Enum.GetValues(typeof(AvailableFeatures)))
-            {
-                featureData.Add(feature, 0);                
-            }
+            var genes = Blank();
+            var features = WorldProperties.FeatureDescriptions;
+            for (int i = 0; i < features.Length; i++)
+                genes[i] = SupportFunctions.NormalRandom(features[i].InitialStateGenesMean, features[i].InitialStateGenesStdDev);
+            return genes;
         }
 
-        public static FeatureSet GenerateInitialGeneStrand()
-        {
-            FeatureSet retval = new FeatureSet();
-            double mean = 0;
-            double stddev = 0;
-
-            foreach (AvailableFeatures feature in Enum.GetValues(typeof(AvailableFeatures)))
-            {
-                switch (feature)
-                {
-                    case AvailableFeatures.CooperationEfficiency:
-                        mean = WorldProperties.InitialStateGenesCooperationEfficiencyMean;
-                        stddev = WorldProperties.InitialStateGenesCooperationEfficiencyStdDev;
-                        break;
-                    case AvailableFeatures.Creativity:
-                        mean = WorldProperties.InitialStateGenesCreativityMean;
-                        stddev = WorldProperties.InitialStateGenesCreativityStdDev;
-                        break;
-                    case AvailableFeatures.FreeRiderDeterminationEfficiency:
-                        mean = WorldProperties.InitialStateGenesFreeRiderDeterminationEfficiencyMean;
-                        stddev = WorldProperties.InitialStateGenesFreeRiderDeterminationEfficiencyStdDev;
-                        break;
-                    case AvailableFeatures.FreeRiderPunishmentLikelyhood:
-                        mean = WorldProperties.InitialStateGenesFreeRiderPunishmentLikelyhoodMean;
-                        stddev = WorldProperties.InitialStateGenesFreeRiderPunishmentLikelyhoodStdDev;
-                        break;
-                    case AvailableFeatures.HuntingEfficiency:
-                        mean = WorldProperties.InitialStateGenesHuntingEfficiencyMean;
-                        stddev = WorldProperties.InitialStateGenesHuntingEfficiencyStdDev;
-                        break;
-                    case AvailableFeatures.LikelyhoodOfNotBeingAFreeRider:
-                        mean = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderMean;
-                        stddev = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev;
-                        break;
-                    case AvailableFeatures.MemoryLimit:
-                        mean = WorldProperties.InitialStateGenesMemorySizeMean;
-                        stddev = WorldProperties.InitialStateGenesMemorySizeStdDev;
-                        break;
-                    case AvailableFeatures.StudyEfficiency:
-                        mean = WorldProperties.InitialStateGenesStudyEfficiencyMean;
-                        stddev = WorldProperties.InitialStateGenesStudyEfficiencyStdDev;
-                        break;
-                    case AvailableFeatures.StudyLikelyhood:
-                        mean = WorldProperties.InitialStateGenesStudyLikelyhoodMean;
-                        stddev = WorldProperties.InitialStateGenesStudyLikelyhoodStdDev;
-                        break;
-                    case AvailableFeatures.TeachingEfficiency:
-                        mean = WorldProperties.InitialStateGenesTeachingEfficiencyMean;
-                        stddev = WorldProperties.InitialStateGenesTeachingEfficiencyStdDev;
-                        break;
-                    case AvailableFeatures.TeachingLikelyhood:
-                        mean = WorldProperties.InitialStateGenesTeachingLikelyhoodMean;
-                        stddev = WorldProperties.InitialStateGenesTeachingLikelyhoodStdDev;
-                        break;
-                    case AvailableFeatures.TrickEfficiency:
-                        mean = WorldProperties.InitialStateGenesTrickEfficiencyMean;
-                        stddev = WorldProperties.InitialStateGenesTrickEfficiencyStdDev;
-                        break;
-                    case AvailableFeatures.TrickLikelyhood:
-                        mean = WorldProperties.InitialStateGenesTrickLikelyhoodMean;
-                        stddev = WorldProperties.InitialStateGenesTrickLikelyhoodStdDev;
-                        break;
-                    default:
-                        throw new NotImplementedException("Unknown feature detected while trying to generate new creature.");
-                }
-                double value = SupportFunctions.NormalRandom(mean, stddev);
-                if (!retval.featureData.ContainsKey(feature))
-                {
-                    retval.featureData.Add(feature, value);
-                }
-                else
-                {
-                    retval[feature] = value;
-                }
-            }
-
-            return retval;
+        /// <summary> Можно было бы обойтись и Clone но вдруг пулинг потребуется. </summary>
+        public static double[] Copy(this double[] genes) {
+            var copy = Blank();
+            genes.CopyTo(copy, 0);
+            return copy;
         }
 
-        public FeatureSet(FeatureSet copyFrom)
-        {
-            foreach (AvailableFeatures feature in Enum.GetValues(typeof(AvailableFeatures)))
-            {
-                featureData.Add(feature, copyFrom[feature]);
-            }
+        public static double GetFeature(this double[] genes, AvailableFeatures feature) {
+            return genes[(int)feature];
         }
-
-        public double this[AvailableFeatures feature]
-        {
-            get { return featureData[feature]; }
-            set { featureData[feature] = value; }
+        public static double SetFeature(this double[] genes, AvailableFeatures feature, double value) {
+            return genes[(int)feature] = value;
         }
-
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
-        {
-            AvailableFeatures f = (AvailableFeatures)Enum.Parse(typeof(AvailableFeatures), binder.Name);
-            result = featureData[f];
-            return true;
-        }
-
-        public override bool TrySetMember(SetMemberBinder binder, object value)
-        {
-            AvailableFeatures f = (AvailableFeatures)Enum.Parse(typeof(AvailableFeatures), binder.Name);
-            featureData[f] = Convert.ToDouble(value);
-            return true;
-        }
-
-        
     }
 
-    enum AvailableFeatures
+    public enum AvailableFeatures
     {
         [Description("Trick likelyhood|TrL")]        
         TrickLikelyhood,

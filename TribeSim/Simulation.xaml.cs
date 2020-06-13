@@ -67,7 +67,7 @@ namespace TribeSim
             stepCalculationInProgress = false;
             Dispatcher.Invoke(new System.Action(delegate()
             {
-                lblYear.Content = World.Year;
+                lblYear.Content = World.Year.ToString() + "  " + World.spendedTime;
             }));
         }
 
@@ -110,7 +110,7 @@ namespace TribeSim
                     {
                         World.Initialize(Dispatcher);
                     }
-                    lblYear.Content = World.Year;
+                    lblYear.Content = World.Year.ToString() + "  " + World.spendedTime;
                 }));
 
                 stepCalculationInProgress = false;

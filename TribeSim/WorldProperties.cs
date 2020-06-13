@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Serialization;
 
 namespace TribeSim
 {
@@ -25,6 +21,7 @@ namespace TribeSim
         private static bool inStableState = true;
         private static string filename = null;
         private static PropertyTree propertyTree = null;
+        private static FeatureDescription[] _featureDescriptions;
 
         private static double startingNumberOfTribes;
         private static double startingTribePopulationMean;
@@ -1382,7 +1379,6 @@ namespace TribeSim
         [DisplayableProperty("Collect number of live memes", group = "Program settings", description = "If set to 1, the number of live memes will be recorded.")]
         public static double CollectLiveMemes { get => collectLiveMemes; set { collectLiveMemes = value; PersistChanges(); } }
 
-
         #endregion
 
         #region Persistance
@@ -1548,6 +1544,134 @@ namespace TribeSim
             return retval;
         }
         #endregion
+
+        #region Structured property description
+        /// <summary> Количество фич. Эту цифру можно рассчитывать, и это будет надёжнее, но чуть-чуть медленнее. Поэтому вместо того чтобы её вычислять мы будем её проверять. </summary>
+        public const int FEATURES_COUNT = 13;
+        public static void ResetFeatureDescriptions() {
+            _featureDescriptions = null;
+        }
+        public static FeatureDescription[] FeatureDescriptions {
+            get {
+                if (_featureDescriptions == null) {
+                    // Проверяем, что константа количества фич выставлена правильно.
+                    int maxFeatureIndex = -1;
+                    foreach (AvailableFeatures feature in Enum.GetValues(typeof(AvailableFeatures)))
+                        maxFeatureIndex = Math.Max(maxFeatureIndex, (int)feature);
+                    if (maxFeatureIndex + 1 != WorldProperties.FEATURES_COUNT)
+                        throw new Exception("Please fix WorldProperties.FEATURES_COUNT");
+
+                    _featureDescriptions = new FeatureDescription[WorldProperties.FEATURES_COUNT];
+                    _featureDescriptions[(int)AvailableFeatures.TrickLikelyhood] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesTrickLikelyhoodMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesTrickLikelyhoodStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceTrickLikelyhood,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanTrickLikelyhood,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTrickLikelyhood,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.TrickEfficiency] = new FeatureDescription() {
+                        Is0to1Feature = false,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesTrickEfficiencyMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesTrickEfficiencyStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceTrickEfficiency,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanTrickEfficiency,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTrickEfficiency,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.TeachingLikelyhood] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesTeachingLikelyhoodMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesTeachingLikelyhoodStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceTeachingLikelyhood,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanTeachingLikelyhood,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTeachingLikelyhood,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.TeachingEfficiency] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesTeachingEfficiencyMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesTeachingEfficiencyStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceTeachingEfficiency,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanTeachingEfficiency,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTeachingEfficiency,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.StudyLikelyhood] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesStudyLikelyhoodMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesStudyLikelyhoodStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceStudyLikelyhood,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanStudyLikelyhood,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevStudyLikelyhood,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.StudyEfficiency] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesStudyEfficiencyMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesStudyEfficiencyStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceStudyEfficiency,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanStudyEfficiency,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevStudyEfficiency,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesFreeRiderPunishmentLikelyhoodMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesFreeRiderPunishmentLikelyhoodStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceFreeRiderPunishmentLikelyhood,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanFreeRiderPunishmentLikelyhood,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevFreeRiderPunishmentLikelyhood,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.FreeRiderDeterminationEfficiency] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesFreeRiderDeterminationEfficiencyMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesFreeRiderDeterminationEfficiencyStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceFreeRiderDeterminationEfficiency,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanFreeRiderDeterminationEfficiency,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevFreeRiderDeterminationEfficiency,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceLikelyhoodOfNotBeingAFreeRider,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanLikelyhoodOfNotBeingAFreeRider,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevLikelyhoodOfNotBeingAFreeRider,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.HuntingEfficiency] = new FeatureDescription() {
+                        Is0to1Feature = false,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesHuntingEfficiencyMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesHuntingEfficiencyStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceHuntingEfficiency,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanHuntingEfficiency,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevHuntingEfficiency,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.CooperationEfficiency] = new FeatureDescription() {
+                        Is0to1Feature = false,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesCooperationEfficiencyMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesCooperationEfficiencyStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceCooperationEfficiency,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanCooperationEfficiency,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevCooperationEfficiency,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.MemoryLimit] = new FeatureDescription() {
+                        Is0to1Feature = false,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesMemorySizeMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesMemorySizeStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceMemoryLimit,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanMemoryLimit,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevMemoryLimit,
+                    };
+                    _featureDescriptions[(int)AvailableFeatures.Creativity] = new FeatureDescription() {
+                        Is0to1Feature = true,
+                        InitialStateGenesMean = WorldProperties.InitialStateGenesCreativityMean,
+                        InitialStateGenesStdDev = WorldProperties.InitialStateGenesCreativityStdDev,
+                        ChancceOfMutation = WorldProperties.MutationChanceCreativity,
+                        MutationStrengthMean = WorldProperties.MutationStrengthMeanCreativity,
+                        MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevCreativity,
+                    };
+                }
+                return _featureDescriptions;
+            }
+        }
+
+        #endregion
     }
 
     [System.AttributeUsage(System.AttributeTargets.Property)]
@@ -1582,5 +1706,14 @@ namespace TribeSim
     {
         public Dictionary<string, PropertyInfo> treeLeafs = new Dictionary<string, PropertyInfo>();
         public Dictionary<string, PropertyTree> treeBranches = new Dictionary<string, PropertyTree>();
+    }
+
+    public struct FeatureDescription {
+        public bool Is0to1Feature;
+        public double InitialStateGenesMean;
+        public double InitialStateGenesStdDev;
+        public double ChancceOfMutation;
+        public double MutationStrengthMean;
+        public double MutationStrengthStdDev;
     }
 }

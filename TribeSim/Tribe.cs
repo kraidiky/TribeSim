@@ -171,7 +171,8 @@ namespace TribeSim
             int numHunters = 0;
             foreach (Tribesman man in members)
             {
-                if (SupportFunctions.Chance(man.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider)))
+                var chance = man.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
+                if (SupportFunctions.Chance(chance))
                 {
                     double huntingEfforts = man.GoHunting();
                     if (huntingEfforts > 0)

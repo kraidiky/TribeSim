@@ -73,10 +73,19 @@ namespace TribeSim
 
         public static bool Chance(double chance)
         {
-            lock (randomizer)
-            {
-                return randomizer.NextDouble() < chance;
-            }
+            if (chance > 0) // Потому что этот кейс очень частый, а операции lock и NextDouble дофига тяжелые. По идее каждому трайбу, живущему в отдельном потоке надо выдавать собственный рандомайзер чтобы вот этих вот локов небыло, и можно было делать воспроизводимость.
+                lock (randomizer) {
+                    return randomizer.NextDouble() < chance;
+                }
+            else
+                return false;
+        }
+        /// <summary>
+        /// Функция нужна для удобства пошаговой отладки, чтобы можно было в одну строчку заменить все паралелизмы на последовательное выполнение.
+        /// </summary>
+        public static void Parallel<T>(this IEnumerable<T> items, Action<T> action) {
+            //System.Threading.Tasks.Parallel.ForEach<T>(items, action);
+            foreach (var item in items) action(item);
         }
     }
 

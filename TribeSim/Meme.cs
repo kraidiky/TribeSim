@@ -378,8 +378,7 @@ namespace TribeSim
         /// <returns></returns>
         public string GetJSONString()
         {
-            const string Format = "{\"id\": {0}, \"AffectedFeature\": {1}, \"Price\": {2}, \"Effect\": {3}}";
-            return string.Format(Format, MemeId, AffectedFeature.ToString(), Price, Efficiency);
+            return $"{{\"id\": {MemeId}, \"AffectedFeature\": {AffectedFeature.ToString()}, \"Price\": {Price}, \"Effect\": {Efficiency}}}";
         }
 
         ~Meme()

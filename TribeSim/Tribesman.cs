@@ -34,7 +34,7 @@ namespace TribeSim
         public string GetJSONString ()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("{\"name\":{0}, \"memes\": [", Name );
+            sb.Append("{\"name\":\"").Append(Name).Append("\", \"memes\": [");
             bool isFirst = true;
             foreach (Meme m in knownMemes)
             {

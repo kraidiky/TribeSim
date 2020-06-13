@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using System.Diagnostics;
 
 namespace TribeSim
 {
@@ -63,6 +64,7 @@ namespace TribeSim
 
         public static void Initialize(Dispatcher d)
         {
+            WorldProperties.ResetFeatureDescriptions();
             StatisticsCollector.Reset();
             Meme.ClearMemePool();
             tribes.Clear();
@@ -126,9 +128,20 @@ namespace TribeSim
             return false;
         }
 
+        private static Stopwatch stopwatch;
+        public static TimeSpan spendedTime;
+
         public static void SimulateYear(Dispatcher d)
         {
             year++;
+
+            if (year == 1)
+                stopwatch = Stopwatch.StartNew();
+            if (year % 1000 == 0) {
+                stopwatch.Stop();
+                spendedTime = stopwatch.Elapsed;
+            }
+
             PrepareForANewYear();
             if (WorldProperties.SkipLifeSupportStep < 0.5) LifeSupport();
             if (WorldProperties.SkipSpontaneousMemeInventionStep < 0.5) InventMemes();
@@ -175,7 +188,7 @@ namespace TribeSim
                 StatisticsCollector.ReportSumEvent(t.TribeName, "Population", t.Population);
             }
             
-            Parallel.ForEach(World.tribes, (tribe) => { tribe.ReportEndOfYearStatistics(); });
+            World.tribes.Parallel((tribe) => { tribe.ReportEndOfYearStatistics(); });
             if (WorldProperties.CollectLiveMemes > 0.5)
             {
                 StatisticsCollector.ReportSumEvent("Global", "Live memes", Meme.CountLiveMemes());
@@ -194,7 +207,7 @@ namespace TribeSim
 
         private static void PrepareForANewYear()
         {
-             Parallel.ForEach(World.tribes, (tribe) => { tribe.PrepareForANewYear(); });          
+             World.tribes.Parallel((tribe) => { tribe.PrepareForANewYear(); });          
         }
 
         private static void CulturalExchange()
@@ -221,7 +234,7 @@ namespace TribeSim
         {
             if (tribes.Count == 1) return; // There's nowhere to migrate.
             ConcurrentDictionary<Tribesman, Tribe> migratingTribesmen = new ConcurrentDictionary<Tribesman, Tribe>();
-            Parallel.ForEach(World.tribes, (tribe) =>
+            World.tribes.Parallel((tribe) =>
             {
                 List<Tribesman> migratingMembers = tribe.WhoIsMigrating();
                 foreach (Tribesman member in migratingMembers)
@@ -243,7 +256,7 @@ namespace TribeSim
         private static void SplitGroups()
         {
             ConcurrentBag<Tribe> newTribes = new ConcurrentBag<Tribe>();
-            Parallel.ForEach(World.tribes, (tribe) =>
+            World.tribes.Parallel((tribe) =>
             {
                 Tribe newTribe = tribe.Split();
                 if (newTribe != null)
@@ -259,28 +272,28 @@ namespace TribeSim
 
         private static void Breed()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { if (tribe.Population >= 2) { tribe.Breed(); } });  
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Breed(); } });  
         }
 
         private static void Die()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { tribe.Die(); });  
+            World.tribes.Parallel((tribe) => { tribe.Die(); });  
         }
 
         private static void Study()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { if (tribe.Population >= 2) { tribe.Study(); } });  
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Study(); } });  
         }
 
         private static void UselessAction()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { tribe.PerformUselessActions(); });  
+            World.tribes.Parallel((tribe) => { tribe.PerformUselessActions(); });  
         }
 
         private static void HuntAndShare()
         {
             ConcurrentDictionary<Tribe, double> tribeHuntingEfforts = new ConcurrentDictionary<Tribe, double>();
-            ParallelLoopResult resultset = Parallel.ForEach(World.tribes, (tribe) => { tribeHuntingEfforts.TryAdd(tribe, tribe.GoHunting()); });
+            World.tribes.Parallel((tribe) => { tribeHuntingEfforts.TryAdd(tribe, tribe.GoHunting()); });
             double totalHuntingEffort = 0;
             foreach (Tribe t in tribes)
             {
@@ -301,32 +314,32 @@ namespace TribeSim
                     resourcesRecievedByTribes.TryAdd(t, WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep / totalHuntingEffort * tribeHuntingEfforts[t]);
                 }
             }
-            Parallel.ForEach(World.tribes, (tribe) => { tribe.ReceiveAndShareResource(resourcesRecievedByTribes[tribe]); });
+            World.tribes.Parallel((tribe) => { tribe.ReceiveAndShareResource(resourcesRecievedByTribes[tribe]); });
         }
 
         private static void PunishFreeRiders()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { if (tribe.Population >= 2) { tribe.PunishFreeRider(); } });  
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.PunishFreeRider(); } });  
         }
 
         private static void Teach()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { if (tribe.Population >= 2) { tribe.Teach(); } });   
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Teach(); } });   
         }
 
         private static void ForgetUnusedMemes()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { tribe.ForgetUnusedMeme(); });   
+            World.tribes.Parallel((tribe) => { tribe.ForgetUnusedMeme(); });   
         }
 
         private static void InventMemes()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { tribe.SpontaneousMemeInvention(); });   
+            World.tribes.Parallel((tribe) => { tribe.SpontaneousMemeInvention(); });   
         }
 
         private static void LifeSupport()
         {
-            Parallel.ForEach(World.tribes, (tribe) => { tribe.ConsumeLifeSupport(); });            
+            World.tribes.Parallel((tribe) => { tribe.ConsumeLifeSupport(); });            
         }     
   
         
