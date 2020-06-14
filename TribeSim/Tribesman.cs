@@ -75,12 +75,34 @@ namespace TribeSim
         }
 
         private HashSet<TribesmanToMemeAssociation> memes = new HashSet<TribesmanToMemeAssociation>();
+        private double? uselessMemesEffect = null;
+        private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
         private GeneCode genes = null;
         private double resource;
         private double Resource
         {
             get { return resource; }
             set { resource = value; }
+        }
+
+        private void AddMeme(Meme newMeme) {
+            TribesmanToMemeAssociation tma = TribesmanToMemeAssociation.Create(this, newMeme);
+            memes.Add(tma);
+            if (tma.Meme.AffectedFeature.HasValue) {
+                memesEffect[(int)tma.Meme.AffectedFeature.Value] = null;
+            } else {
+                uselessMemesEffect = null;
+            }
+            MemorySizeRemaining -= newMeme.Price;
+        }
+        private void RemoveMeme(TribesmanToMemeAssociation assoc) {
+            memes.Remove(assoc);
+            if (assoc.Meme.AffectedFeature.HasValue) {
+                memesEffect[(int)assoc.Meme.AffectedFeature.Value] = null;
+            } else {
+                uselessMemesEffect = null;
+            }
+            MemorySizeRemaining += assoc.Meme.Price;
         }
 
         private Tribesman()
@@ -147,41 +169,35 @@ namespace TribeSim
         {
             double retval = double.NaN;
             if (af.HasValue)
-            {                
-                HashSet<TribesmanToMemeAssociation> relevantMemes = new HashSet<TribesmanToMemeAssociation>(memes.Where(assoc => assoc.Meme.AffectedFeature == af));
-                retval = genes[af.Value];
-                switch (af)
-                {
-                    case AvailableFeatures.TrickLikelyhood: // 0..1 features.                                         
-                    case AvailableFeatures.TeachingLikelyhood:
-                    case AvailableFeatures.TeachingEfficiency:
-                    case AvailableFeatures.StudyLikelyhood:
-                    case AvailableFeatures.StudyEfficiency:
-                    case AvailableFeatures.FreeRiderPunishmentLikelyhood:
-                    case AvailableFeatures.FreeRiderDeterminationEfficiency:
-                    case AvailableFeatures.LikelyhoodOfNotBeingAFreeRider:                        
+            {
+                var effect = memesEffect[(int)af.Value];
+                if (effect.HasValue) {
+                    retval = effect.Value;
+                } else {
+                    HashSet<TribesmanToMemeAssociation> relevantMemes = new HashSet<TribesmanToMemeAssociation>(memes.Where(assoc => assoc.Meme.AffectedFeature == af));
+                    retval = genes[af.Value];
+                    var description = WorldProperties.FeatureDescriptions[(int)af.Value];
+                    if (description.Is0to1Feature) { // 0..1 features.
                         foreach (TribesmanToMemeAssociation assoc in relevantMemes)
-                        {
-                            retval += assoc.Meme.Efficiency  - assoc.Meme.Efficiency * retval;
-                        }
-                        break;
-                    case AvailableFeatures.HuntingEfficiency:   //0..infinity features.                    
-                    case AvailableFeatures.TrickEfficiency:
-                    case AvailableFeatures.CooperationEfficiency:
+                                retval += assoc.Meme.Efficiency - assoc.Meme.Efficiency * retval;
+                    } else { //0..infinity features.
                         foreach (TribesmanToMemeAssociation assoc in relevantMemes)
-                        {
                             retval += assoc.Meme.Efficiency;
-                        }
-                        break;
-                }                
+                    }
+                    memesEffect[(int)af.Value] = retval;
+                }
             }
             else
             {
-                retval = 0;
-                HashSet<TribesmanToMemeAssociation> relevantMemes = new HashSet<TribesmanToMemeAssociation>(memes.Where(assoc => assoc.Meme.AffectedFeature.HasValue == false));
-                foreach (TribesmanToMemeAssociation assoc in relevantMemes)
-                {
-                    retval += assoc.Meme.Efficiency - assoc.Meme.Efficiency * retval;
+                if (uselessMemesEffect.HasValue) {
+                    retval = uselessMemesEffect.Value;
+                } else {
+                    retval = 0;
+                    HashSet<TribesmanToMemeAssociation> relevantMemes = new HashSet<TribesmanToMemeAssociation>(memes.Where(assoc => assoc.Meme.AffectedFeature.HasValue == false));
+                    foreach (TribesmanToMemeAssociation assoc in relevantMemes) {
+                        retval += assoc.Meme.Efficiency - assoc.Meme.Efficiency * retval;
+                    }
+                    uselessMemesEffect = retval;
                 }
             }
             return retval;
@@ -282,10 +298,8 @@ namespace TribeSim
             createdMeme = newMeme;
             if (newMeme.Price < MemorySizeRemaining)
             {
-                TribesmanToMemeAssociation tma = TribesmanToMemeAssociation.Create(this, newMeme);
-                memes.Add(tma);
-                MemorySizeRemaining -= newMeme.Price;
-                tma.Meme.ReportInvented(this);                
+                AddMeme(newMeme);
+                newMeme.ReportInvented(this);                
                 return true;
             }
             else
@@ -305,7 +319,7 @@ namespace TribeSim
                         assoc.Meme.ReportForgotten(this);
                         storyOfLife?.AppendFormat("Forgotten how {1} ({0})",assoc.Meme.SignatureString, assoc.Meme.ActionDescription).AppendLine();
                         MemorySizeRemaining += assoc.Meme.Price;
-                        memes.Remove(assoc);                        
+                        RemoveMeme(assoc);
                         ReportPhenotypeChange();                                                
                     }
                 }
@@ -448,8 +462,7 @@ namespace TribeSim
 
         private void LearnNewMemeFrom(Meme meme, Tribesman teacher)
         {
-            MemorySizeRemaining -= meme.Price;
-            memes.Add(TribesmanToMemeAssociation.Create(this, meme));
+            AddMeme(meme);
             if (teacher != null)
             {
                 storyOfLife?.AppendFormat("{0} taught how {4} ({2}). {3:f2} memory remaining.", teacher.Name, Name, meme.SignatureString, MemorySizeRemaining, meme.ActionDescription).AppendLine();
@@ -734,8 +747,7 @@ namespace TribeSim
             foreach (TribesmanToMemeAssociation assoc in memes.ToArray())
             {
                 assoc.Meme.ReportForgotten(this);                
-                MemorySizeRemaining += assoc.Meme.Price;
-                memes.Remove(assoc);                       
+                RemoveMeme(assoc);
             }
         }
 
