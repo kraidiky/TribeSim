@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TribeSim
 {
     class Tribesman
     {
-        private bool keepsDiary = false;
-        private StringBuilder storyOfLife = new StringBuilder();
-        private StringBuilder storyOfPhenotypeChanges = new StringBuilder();
+        private StringBuilder storyOfLife;
+        private StringBuilder storyOfPhenotypeChanges;
         private double MemorySizeRemaining = 0;
         private string name = null;
         private int yearBorn = 0;
@@ -24,6 +20,11 @@ namespace TribeSim
         public int YearBorn
         {
             get { return yearBorn; }            
+        }
+
+        public void KeepsDiary() {
+            storyOfLife = new StringBuilder();
+            storyOfPhenotypeChanges = new StringBuilder();
         }
 
         /// <summary>
@@ -57,20 +58,12 @@ namespace TribeSim
 
         public string GetLifeStory()
         {
-            return storyOfPhenotypeChanges.ToString() + Environment.NewLine + storyOfLife.ToString();
+            return storyOfPhenotypeChanges.ToString() + Environment.NewLine + storyOfLife?.ToString();
         }
 
-        private void ReportEvent(string description)
-        {
-            if (keepsDiary)
-            {
-                storyOfLife.AppendFormat("Year {0}: {1}", World.Year, description);
-                storyOfLife.AppendLine();
-            }
-        }
         private void ReportPhenotypeChange()
         {
-            if (keepsDiary)
+            if (storyOfPhenotypeChanges != null)
             {
                 if (storyOfPhenotypeChanges.Length < 3)
                 {
@@ -92,16 +85,18 @@ namespace TribeSim
 
         private Tribesman()
         {
-            keepsDiary = SupportFunctions.Chance(WorldProperties.ChancesToWriteALog);
+            if (SupportFunctions.Chance(WorldProperties.ChancesToWriteALog))
+                KeepsDiary();
         }
 
         public static Tribesman GenerateTribesmanFromAStartingSet()
         {            
             Tribesman retval = new Tribesman();
-            retval.keepsDiary = SupportFunctions.Chance(WorldProperties.ChancesToWriteALog);
+            if (SupportFunctions.Chance(WorldProperties.ChancesToWriteALog))
+                retval.KeepsDiary();
             retval.genes = GeneCode.GenerateInitial();
             retval.ReportPhenotypeChange();
-            retval.ReportEvent(retval.Name + " was created as a member of a statring set.");
+            retval.storyOfLife?.Append(retval.Name).Append(" was created as a member of a statring set.").AppendLine();
             retval.yearBorn = World.Year;
             retval.resource = WorldProperties.StatringAmountOfResources;
             retval.MemorySizeRemaining = retval.GetFeature(AvailableFeatures.MemoryLimit) + retval.GetMemorySizeBoost();            
@@ -195,7 +190,7 @@ namespace TribeSim
         public void ConsumeLifeSupport()
         {
             resource -= WorldProperties.LifeSupportCosts;
-            ReportEvent("Eaten " + WorldProperties.LifeSupportCosts + " resources. " + resource.ToString("f2") + " left.");
+            storyOfLife?.Append("Eaten ").Append(WorldProperties.LifeSupportCosts).Append(" resources. ").Append(resource.ToString("f2")).Append(" left.").AppendLine();
         }
 
         public void TryInventMemeSpontaneously()
@@ -270,12 +265,12 @@ namespace TribeSim
                 
                 if (InventNewMemeForAFeature(af, out inventedMeme))
                 {
-                    ReportEvent(string.Format("Invented how {5}. ({0} meme with {1} effect). Complexity is {2:f2} and {3} now has {4:f2} memory left. (Meme#{5})", af.HasValue ? af.Value.GetDescription() : "Nothing", inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.MemeId, inventedMeme.ActionDescription));
+                    storyOfLife?.AppendFormat("Invented how {5}. ({0} meme with {1} effect). Complexity is {2:f2} and {3} now has {4:f2} memory left. (Meme#{5})", af.HasValue ? af.Value.GetDescription() : "Nothing", inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.MemeId, inventedMeme.ActionDescription).AppendLine();
                     ReportPhenotypeChange();
                 }
                 else
                 {
-                    ReportEvent(string.Format("Invented the new meme and forgot it immediately because {0} is too stupid to remember anything else. Memory size is {1:f2} and meme complexity is {2:f2}", Name, MemorySizeRemaining, inventedMeme.Price));
+                    storyOfLife?.AppendFormat("Invented the new meme and forgot it immediately because {0} is too stupid to remember anything else. Memory size is {1:f2} and meme complexity is {2:f2}", Name, MemorySizeRemaining, inventedMeme.Price).AppendLine();
                 }
             }
         }
@@ -308,7 +303,7 @@ namespace TribeSim
                     if (SupportFunctions.Chance(WorldProperties.ChanceToForgetTheUnusedMeme))
                     {
                         assoc.Meme.ReportForgotten(this);
-                        ReportEvent(string.Format("Forgotten how {1} ({0})",assoc.Meme.SignatureString, assoc.Meme.ActionDescription));
+                        storyOfLife?.AppendFormat("Forgotten how {1} ({0})",assoc.Meme.SignatureString, assoc.Meme.ActionDescription).AppendLine();
                         MemorySizeRemaining += assoc.Meme.Price;
                         memes.Remove(assoc);                        
                         ReportPhenotypeChange();                                                
@@ -319,9 +314,9 @@ namespace TribeSim
 
         ~Tribesman()
         {
-            if (keepsDiary)
+            if (storyOfLife != null)
             {
-                string lifeStory = GetLifeStory();
+                string lifeStory = GetLifeStory(); // Ну не знаю - не знаю по идее надо в стрим писать прямо из стрингбилдера, нафига память то тратить.
                 if (lifeStory.Length < 10) return;
                 string filename = Path.Combine(World.TribesmanLogFolder, this.Name + " born " + YearBorn + ".txt");
                 File.WriteAllText(filename, lifeStory);
@@ -346,7 +341,7 @@ namespace TribeSim
                     List<TribesmanToMemeAssociation> memeAssoc = memes.Where(associ => !student.knownMemes.Contains(associ.Meme)).ToList();
                     if (memeAssoc.Count == 0)
                     {
-                        ReportEvent(string.Format("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts,isCulturalExchange?"Cultural Exchange! ":""));
+                        storyOfLife?.AppendFormat("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts,isCulturalExchange?"Cultural Exchange! ":"").AppendLine();
                         return false;
                     }
                     Meme memeToTeach = memeAssoc[SupportFunctions.UniformRandomInt(0, memeAssoc.Count)];
@@ -361,14 +356,14 @@ namespace TribeSim
                         {
                             if (student.MemorySizeRemaining < memeToTeach.Price)
                             {
-                                ReportEvent(string.Format("{3}Tried to teach {0} how {4} ({1}) and failed. {0} was too stupid to remember it. {2} resources wasted.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription));
+                                storyOfLife?.AppendFormat("{3}Tried to teach {0} how {4} ({1}) and failed. {0} was too stupid to remember it. {2} resources wasted.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription).AppendLine();
                                 return false;
                             }
                             else
                             {
                                 student.LearnNewMemeFrom(memeToTeach, this);
                                 if (isCulturalExchange) memeToTeach.Report("Cultural Exchange!");
-                                ReportEvent(string.Format("{3}Successfully taught {0} how {4} ({1}). {2} resources used for teaching.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription));
+                                storyOfLife?.AppendFormat("{3}Successfully taught {0} how {4} ({1}). {2} resources used for teaching.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription).AppendLine();
                                 UseMemeGroup(AvailableFeatures.TeachingEfficiency, "teaching");
                                 UseMemeGroup(AvailableFeatures.TeachingLikelyhood, "teaching");
                                 student.UseMemeGroup(AvailableFeatures.StudyEfficiency, "studying");
@@ -377,7 +372,7 @@ namespace TribeSim
                         }
                         else
                         {
-                            ReportEvent(string.Format("Tried to teach {0} how {4} ({1}) and failed. Chances were {2:2}%. {3} resources wasted.", student.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, WorldProperties.TeachingCosts, memeToTeach.ActionDescription));
+                            storyOfLife?.AppendFormat("Tried to teach {0} how {4} ({1}) and failed. Chances were {2:2}%. {3} resources wasted.", student.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, WorldProperties.TeachingCosts, memeToTeach.ActionDescription).AppendLine();
                             return false;
                         }
                     }
@@ -386,12 +381,12 @@ namespace TribeSim
                         List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(student.knownMemes.ToList());
                         if (unmetPrequisites.Count == 1)
                         {
-                            ReportEvent(string.Format("Tried to teach {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", student.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId));
+                            storyOfLife?.AppendFormat("Tried to teach {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", student.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
                             return false;
                         }
                         else
                         {
-                            ReportEvent(string.Format("Tried to teach {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} other things first.", student.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites.Count));
+                            storyOfLife?.AppendFormat("Tried to teach {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} other things first.", student.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites.Count).AppendLine();
                             return false;
                         }
                     }
@@ -432,12 +427,12 @@ namespace TribeSim
                 
                 if (InventNewMemeForAFeature(usedFeature, out inventedMeme))
                 {
-                    ReportEvent(string.Format("While {6} invented how {7}. ({0} meme with {1} effect) The meme complexity is {2:f2} and {3} now has {4:f2} memory left. ({5})", usedFeature.HasValue ? usedFeature.Value.GetDescription() : "Nothing", inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.SignatureString, activity, inventedMeme.ActionDescription));
+                    storyOfLife?.AppendFormat("While {6} invented how {7}. ({0} meme with {1} effect) The meme complexity is {2:f2} and {3} now has {4:f2} memory left. ({5})", usedFeature.HasValue ? usedFeature.Value.GetDescription() : "Nothing", inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.SignatureString, activity, inventedMeme.ActionDescription).AppendLine();
                     ReportPhenotypeChange();
                 }
                 else
                 {
-                    ReportEvent(string.Format("While {3} invented the new meme but forgot it immediately. Too stupid to remember anything else. Memory size is {1:f2} and meme complexity is {2:f2}", Name, MemorySizeRemaining, inventedMeme.Price, activity));
+                    storyOfLife?.AppendFormat("While {3} invented the new meme but forgot it immediately. Too stupid to remember anything else. Memory size is {1:f2} and meme complexity is {2:f2}", Name, MemorySizeRemaining, inventedMeme.Price, activity).AppendLine();
                 }
             }
             IEnumerable<TribesmanToMemeAssociation> relevantMemes = memes.Where(associ => associ.Meme.AffectedFeature == usedFeature);
@@ -457,11 +452,11 @@ namespace TribeSim
             memes.Add(TribesmanToMemeAssociation.Create(this, meme));
             if (teacher != null)
             {
-                ReportEvent(string.Format("{0} taught how {4} ({2}). {3:f2} memory remaining.", teacher.Name, Name, meme.SignatureString, MemorySizeRemaining, meme.ActionDescription));
+                storyOfLife?.AppendFormat("{0} taught how {4} ({2}). {3:f2} memory remaining.", teacher.Name, Name, meme.SignatureString, MemorySizeRemaining, meme.ActionDescription).AppendLine();
             }
             else
             {
-                ReportEvent(string.Format("Learned how {2} ({0}) from a tribesmate. {1:f2} memory remaining.", meme.SignatureString, MemorySizeRemaining, meme.ActionDescription));
+                storyOfLife?.AppendFormat("Learned how {2} ({0}) from a tribesmate. {1:f2} memory remaining.", meme.SignatureString, MemorySizeRemaining, meme.ActionDescription).AppendLine();
             }
             meme.ReportTeaching(this, teacher);
             ReportPhenotypeChange();
@@ -482,18 +477,18 @@ namespace TribeSim
                     {
                         if (freeRidersList.Count == 1)
                         {
-                            ReportEvent("Successfully determined himself to be the only free rider in a tribe.");
+                            storyOfLife?.Append("Successfully determined himself to be the only free rider in a tribe.");
                             Meme inventedMeme2;
                             if ((WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean > 0.0001 || WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean < -0.0001) && WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev > 0.0001)
                             {
                                 if (InventNewMemeForAFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, out inventedMeme2))
                                 {
-                                    ReportEvent(string.Format("Learned {1} ({0}) as a result of a guilty conscience.", inventedMeme2.SignatureString, inventedMeme2.ActionDescription));
+                                    storyOfLife?.AppendFormat("Learned {1} ({0}) as a result of a guilty conscience.", inventedMeme2.SignatureString, inventedMeme2.ActionDescription).AppendLine();
                                     ReportPhenotypeChange();
                                 }
                                 else
                                 {
-                                    ReportEvent("Tried to invent new meme as a result of a guilty conscience, but was too stupid to remember it.");
+                                    storyOfLife?.Append("Tried to invent new meme as a result of a guilty conscience, but was too stupid to remember it.");
                                 }
                             }
                             return;
@@ -505,19 +500,19 @@ namespace TribeSim
                         }
                     }
                     FreeRiderToBePunished.resource -= WorldProperties.FreeRiderPunishmentAmount;
-                    FreeRiderToBePunished.ReportEvent(string.Format("Was punished by {0} for being a free rider. {1} resources destroyed, {2:f2} remaining.", Name, WorldProperties.FreeRiderPunishmentAmount, FreeRiderToBePunished.resource));
-                    ReportEvent(string.Format("Decided to punish a free rider. Successfully determined that {0} is one and punished him for {1} resources.", FreeRiderToBePunished.Name, WorldProperties.FreeRiderPunishmentAmount));
+                    FreeRiderToBePunished.storyOfLife?.AppendFormat("Was punished by {0} for being a free rider. {1} resources destroyed, {2:f2} remaining.", Name, WorldProperties.FreeRiderPunishmentAmount, FreeRiderToBePunished.resource).AppendLine();
+                    storyOfLife?.AppendFormat("Decided to punish a free rider. Successfully determined that {0} is one and punished him for {1} resources.", FreeRiderToBePunished.Name, WorldProperties.FreeRiderPunishmentAmount).AppendLine();
                     UseMemeGroup(AvailableFeatures.FreeRiderDeterminationEfficiency, "punishing a free rider");
                     UseMemeGroup(AvailableFeatures.FreeRiderPunishmentLikelyhood, "punishing a free rider");
                     Meme inventedMeme;
                     if (FreeRiderToBePunished.InventNewMemeForAFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, out inventedMeme))
                     {
-                        FreeRiderToBePunished.ReportEvent(string.Format("Learned {1} ({0}) as a result of punishment.", inventedMeme.SignatureString, inventedMeme.ActionDescription));
+                        FreeRiderToBePunished.storyOfLife?.AppendFormat("Learned {1} ({0}) as a result of punishment.", inventedMeme.SignatureString, inventedMeme.ActionDescription).AppendLine();
                         FreeRiderToBePunished.ReportPhenotypeChange();
                     }
                     else
                     {
-                        FreeRiderToBePunished.ReportEvent("Tried to invent new meme as a result of punishment, but was too stupid to remember it.");
+                        FreeRiderToBePunished.storyOfLife?.Append("Tried to invent new meme as a result of punishment, but was too stupid to remember it.");
                     }
                 }
                 else
@@ -529,7 +524,7 @@ namespace TribeSim
                     {
                         if (members.Count == 1)
                         {
-                            ReportEvent("Successfully determined himself to be the only man in a tribe. Punishing free riders makes no sense.");
+                            storyOfLife?.Append("Successfully determined himself to be the only man in a tribe. Punishing free riders makes no sense.");
                             return;
                         }
                         else
@@ -539,8 +534,8 @@ namespace TribeSim
                         }
                     }
                     FreeRiderToBePunished.resource -= WorldProperties.FreeRiderPunishmentAmount;
-                    FreeRiderToBePunished.ReportEvent(string.Format("Was punished by {0} on false suspiction.", Name));
-                    ReportEvent(string.Format("Tried to punish a free rider, but failed to identify one. Punished {0} for {1} resources instead.", FreeRiderToBePunished.Name, WorldProperties.FreeRiderPunishmentAmount));
+                    FreeRiderToBePunished.storyOfLife?.AppendFormat("Was punished by {0} on false suspiction.", Name).AppendLine();
+                    storyOfLife?.AppendFormat("Tried to punish a free rider, but failed to identify one. Punished {0} for {1} resources instead.", FreeRiderToBePunished.Name, WorldProperties.FreeRiderPunishmentAmount).AppendLine();
                 }
             }
         }
@@ -554,11 +549,11 @@ namespace TribeSim
         {
             if (resource <= WorldProperties.HuntingCosts)
             {
-                ReportEvent(string.Format("Wanted to go hunting, but could not. Too hungry. Resources remaining - {0:f2}, needed for the hunt - {1}.", resource, WorldProperties.HuntingCosts));
+                storyOfLife?.AppendFormat("Wanted to go hunting, but could not. Too hungry. Resources remaining - {0:f2}, needed for the hunt - {1}.", resource, WorldProperties.HuntingCosts).AppendLine();
                 return 0;
             }
             resource -= WorldProperties.HuntingCosts;
-            ReportEvent(string.Format("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", GetFeature(AvailableFeatures.HuntingEfficiency), GetFeature(AvailableFeatures.CooperationEfficiency), WorldProperties.HuntingCosts, resource));
+            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", GetFeature(AvailableFeatures.HuntingEfficiency), GetFeature(AvailableFeatures.CooperationEfficiency), WorldProperties.HuntingCosts, resource).AppendLine();
             UseMemeGroup(AvailableFeatures.HuntingEfficiency, "hunting");
             UseMemeGroup(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, "hunting");
             UseMemeGroup(AvailableFeatures.CooperationEfficiency, "hunting");            
@@ -567,7 +562,7 @@ namespace TribeSim
 
         public void SkipHunting()
         {
-            ReportEvent(string.Format("Did not go hunting with the tribe. He told the others that {0}.", NamesGenerator.GenerateLameExcuse()));
+            storyOfLife?.AppendFormat("Did not go hunting with the tribe. He told the others that {0}.", NamesGenerator.GenerateLameExcuse()).AppendLine();
         }
 
         public double TellHowMuchDoYouWant(double resourcesReceivedPerGroup)
@@ -576,13 +571,13 @@ namespace TribeSim
             if (SupportFunctions.Chance(GetFeature(AvailableFeatures.TrickLikelyhood)))
             {
                 requestedShare += GetFeature(AvailableFeatures.TrickEfficiency);
-                ReportEvent(string.Format("Group returned from the hunt with {0:f0} resources. He decided to play a trick and asked to get {1:f1}% more then the rest.", resourcesReceivedPerGroup, (requestedShare-1)*100));
+                storyOfLife?.AppendFormat("Group returned from the hunt with {0:f0} resources. He decided to play a trick and asked to get {1:f1}% more then the rest.", resourcesReceivedPerGroup, (requestedShare-1)*100).AppendLine();
                 UseMemeGroup(AvailableFeatures.TrickEfficiency, "sharing resources");
                 UseMemeGroup(AvailableFeatures.TrickLikelyhood, "sharing resources");
             }
             else
             {
-                ReportEvent(string.Format("Group returned from the hunt with {0:f0} resources. He asked for a fare share.", resourcesReceivedPerGroup));
+                storyOfLife?.AppendFormat("Group returned from the hunt with {0:f0} resources. He asked for a fare share.", resourcesReceivedPerGroup).AppendLine();
             }
             return requestedShare;
         }
@@ -592,11 +587,11 @@ namespace TribeSim
             resource += recievedShare;
             if (SupportFunctions.Chance(0.99))
             {
-                ReportEvent(string.Format("After {2} debate received {0:f0} resources from the common loot and now has {1:f0}.",recievedShare, resource, SupportFunctions.Flip()?"continuous":"short"));
+                storyOfLife?.AppendFormat("After {2} debate received {0:f0} resources from the common loot and now has {1:f0}.",recievedShare, resource, SupportFunctions.Flip()?"continuous":"short").AppendLine();
             }
             else
             {
-                ReportEvent(string.Format("After {3} debate and a broken {0} received {1:f0} resources from the common loot and now has {2:f0}", NamesGenerator.GenerateBodypart(), recievedShare, resource, SupportFunctions.Flip() ? "continuous" : "short"));
+                storyOfLife?.AppendFormat("After {3} debate and a broken {0} received {1:f0} resources from the common loot and now has {2:f0}", NamesGenerator.GenerateBodypart(), recievedShare, resource, SupportFunctions.Flip() ? "continuous" : "short").AppendLine();
             }
         }
 
@@ -607,7 +602,7 @@ namespace TribeSim
             if (GetFeature(null)>=0.999 && WorldProperties.AllowRepetitiveUselessActions>1)
             {
                 resource = 0;
-                ReportEvent("Wasted all his resources on useless actions.");
+                storyOfLife?.Append("Wasted all his resources on useless actions.");
                 return;
             }
             while (SupportFunctions.Chance(GetFeature(null)))
@@ -623,7 +618,7 @@ namespace TribeSim
                 List<TribesmanToMemeAssociation> relevantMemes = memes.Where(associ => associ.Meme.AffectedFeature == null).ToList();
                 Meme randomKnownUselessMeme = relevantMemes[SupportFunctions.UniformRandomInt(0, relevantMemes.Count)].Meme;
 
-                ReportEvent(string.Format("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource));                
+                storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();                
                 UseMemeGroup(null, "performing useless actions");
             }
         }
@@ -635,7 +630,7 @@ namespace TribeSim
 
         public void PrepareForANewYear()
         {
-            ReportEvent("    --------------    ");
+            storyOfLife?.Append("    --------------    ");
         }
 
         public void StudyOneOrManyOfTheMemesUsedThisTurn(List<Meme> memesUsedThisYear)
@@ -650,7 +645,7 @@ namespace TribeSim
             {
                 if (resource <= WorldProperties.StudyCosts)
                 {
-                    ReportEvent("Wanted to learn something new but couldn't. Too hungry.");
+                    storyOfLife?.Append("Wanted to learn something new but couldn't. Too hungry.");
                     break;
                 }
                 Meme memeToStudy = memesAvailableForStudy[SupportFunctions.UniformRandomInt(0, memesAvailableForStudy.Count)];
@@ -670,7 +665,7 @@ namespace TribeSim
                         }
                         else
                         {
-                            ReportEvent(string.Format("Tried to teach himself {3} ({0}), but was too stupid to remember it. Meme complexity is {1:f2} and memory size remianing is {2:f2}", memeToStudy.SignatureString, memeToStudy.Price, MemorySizeRemaining, memeToStudy.ActionDescription));
+                            storyOfLife?.AppendFormat("Tried to teach himself {3} ({0}), but was too stupid to remember it. Meme complexity is {1:f2} and memory size remianing is {2:f2}", memeToStudy.SignatureString, memeToStudy.Price, MemorySizeRemaining, memeToStudy.ActionDescription).AppendLine();
                             break;
                         }
                     }
@@ -680,11 +675,11 @@ namespace TribeSim
                     List<Meme> unmetPrequisites = memeToStudy.WhichPrequisitesAreNotMet(knownMemes.ToList());
                     if (unmetPrequisites.Count == 1)
                     {
-                        ReportEvent(string.Format("Tried to teach himself {0} (#{1}), but was not ready to learn it. Must learn {2} (#{3}) first.", memeToStudy.ActionDescription, memeToStudy.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId));
+                        storyOfLife?.AppendFormat("Tried to teach himself {0} (#{1}), but was not ready to learn it. Must learn {2} (#{3}) first.", memeToStudy.ActionDescription, memeToStudy.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
                     }
                     else
                     {
-                        ReportEvent(string.Format("Tried to teach himself {0} (#{1}), but was not ready to learn it. Must learn {2} other things first.", memeToStudy.ActionDescription, memeToStudy.MemeId, unmetPrequisites.Count));
+                        storyOfLife?.AppendFormat("Tried to teach himself {0} (#{1}), but was not ready to learn it. Must learn {2} other things first.", memeToStudy.ActionDescription, memeToStudy.MemeId, unmetPrequisites.Count).AppendLine();
                     }
                 }
                 memesAvailableForStudy.Remove(memeToStudy);
@@ -702,7 +697,7 @@ namespace TribeSim
                 {
                     ReportOnDeathStatistics(age);
                     ForgetAllMemes();
-                    ReportEvent(string.Format("Died of natural causes at the age of {0}.", age));
+                    storyOfLife?.AppendFormat("Died of natural causes at the age of {0}.", age).AppendLine();
                     StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of old age");                    
                     return true;
                 }
@@ -711,7 +706,7 @@ namespace TribeSim
             {
                 ReportOnDeathStatistics(age);
                 ForgetAllMemes();
-                ReportEvent(string.Format("Died of hunger at the age of {0}.", age));
+                storyOfLife?.AppendFormat("Died of hunger at the age of {0}.", age).AppendLine();
                 StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of hunger");                
                 return true;
             }
@@ -749,7 +744,7 @@ namespace TribeSim
             int age = World.Year - yearBorn;
             ReportOnDeathStatistics(age);
             ForgetAllMemes();            
-            ReportEvent(string.Format("Died of lonliness at the age of {0}. Remained the only one in the tribe.", age));            
+            storyOfLife?.AppendFormat("Died of lonliness at the age of {0}. Remained the only one in the tribe.", age).AppendLine();            
         }
 
         public bool IsOldEnoughToBreed { get { return Age >= WorldProperties.DontBreedIfYoungerThan; } }
@@ -769,17 +764,18 @@ namespace TribeSim
                 StatisticsCollector.ReportCountEvent(PartnerA.MyTribeName, "Child births");
                 StatisticsCollector.ReportAverageEvent(PartnerA.MyTribeName, "Child average brain size", child.BrainSize);
                 child.yearBorn = World.Year;
-                child.keepsDiary = SupportFunctions.Chance(WorldProperties.ChancesToWriteALog);
+                if (SupportFunctions.Chance(WorldProperties.ChancesToWriteALog))
+                    child.KeepsDiary();
                 child.ReportPhenotypeChange();
                 child.myTribeName = PartnerA.MyTribeName;
-                child.ReportEvent(string.Format("Was born from {0} and {1}. His brain size is {2:f1}. His parents spent {3:f1} resources to raise him.", PartnerA.Name, PartnerB.Name, child.BrainSize, priceToGetThisChildBrainSizePart));
+                child.storyOfLife?.AppendFormat("Was born from {0} and {1}. His brain size is {2:f1}. His parents spent {3:f1} resources to raise him.", PartnerA.Name, PartnerB.Name, child.BrainSize, priceToGetThisChildBrainSizePart).AppendLine();
                 child.MemorySizeRemaining = child.GetFeature(AvailableFeatures.MemoryLimit);
                 totalParentsResource -= priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
                 child.resource =  WorldProperties.ChildStartingResourceSpendingsReceivedCoefficient * priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
-                child.ReportEvent(string.Format("Parents have given {0:f1} resource as a birthday gift.", child.resource));                
+                child.storyOfLife?.AppendFormat("Parents have given {0:f1} resource as a birthday gift.", child.resource).AppendLine();                
                 PartnerB.resource = PartnerA.resource = totalParentsResource / 2;
-                PartnerA.ReportEvent(string.Format("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerB.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource));
-                PartnerB.ReportEvent(string.Format("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerA.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource));
+                PartnerA.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerB.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource).AppendLine();
+                PartnerB.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerA.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource).AppendLine();
                 PartnerA.TeachChild(child);
                 PartnerB.TeachChild(child);
                 return child;
@@ -796,7 +792,7 @@ namespace TribeSim
                     List<TribesmanToMemeAssociation> memeAssoc = memes.Where(associ => !child.knownMemes.Contains(associ.Meme)).ToList();
                     if (memeAssoc.Count == 0)
                     {
-                        ReportEvent(string.Format("Tried to teach a child {0} something{2}, but he already knows everything his parent {1} can teach him.", child.Name, Name, i > 0 ? " else" : ""));
+                        storyOfLife?.AppendFormat("Tried to teach a child {0} something{2}, but he already knows everything his parent {1} can teach him.", child.Name, Name, i > 0 ? " else" : "").AppendLine();
                         return;
                     }
                     Meme memeToTeach = memeAssoc[SupportFunctions.UniformRandomInt(0, memeAssoc.Count)];
@@ -811,12 +807,12 @@ namespace TribeSim
                         {
                             if (child.MemorySizeRemaining < memeToTeach.Price)
                             {
-                                ReportEvent(string.Format("Tried to teach child {0} {2} ({1}) and failed. {0} was too stupid to remember it.", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription));
+                                storyOfLife?.AppendFormat("Tried to teach child {0} {2} ({1}) and failed. {0} was too stupid to remember it.", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription).AppendLine();
                             }
                             else
                             {
                                 child.LearnNewMemeFrom(memeToTeach, this);
-                                ReportEvent(string.Format("Successfully taught child {0} {2} ({1}).", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription));
+                                storyOfLife?.AppendFormat("Successfully taught child {0} {2} ({1}).", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription).AppendLine();
                                 UseMemeGroup(AvailableFeatures.TeachingEfficiency, "teaching child");
                                 UseMemeGroup(AvailableFeatures.TeachingLikelyhood, "teaching child");
                                 child.UseMemeGroup(AvailableFeatures.StudyEfficiency, "learning from parents");
@@ -824,7 +820,7 @@ namespace TribeSim
                         }
                         else
                         {
-                            ReportEvent(string.Format("Tried to teach child {0} {3} ({1}) and failed. Chances were {2:2}%.", child.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, memeToTeach.ActionDescription));
+                            storyOfLife?.AppendFormat("Tried to teach child {0} {3} ({1}) and failed. Chances were {2:2}%.", child.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, memeToTeach.ActionDescription).AppendLine();
                         }
                     }
                     else
@@ -832,11 +828,11 @@ namespace TribeSim
                         List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(child.knownMemes.ToList());
                         if (unmetPrequisites.Count == 1)
                         {
-                            ReportEvent(string.Format("Tried to teach child {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", child.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId));
+                            storyOfLife?.AppendFormat("Tried to teach child {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", child.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
                         } 
                         else
                         {
-                            ReportEvent(string.Format("Tried to teach child {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} other things first.", child.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites.Count));
+                            storyOfLife?.AppendFormat("Tried to teach child {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} other things first.", child.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites.Count).AppendLine();
                         }
                     }
                 }
@@ -846,7 +842,7 @@ namespace TribeSim
 
         public void ReportJoiningTribe(Tribe tribe)
         {
-            ReportEvent(string.Format("Joined the tribe {0}", tribe.TribeName));
+            storyOfLife?.AppendFormat("Joined the tribe {0}", tribe.TribeName).AppendLine();
         }
 
         public double BrainSize
@@ -871,7 +867,7 @@ namespace TribeSim
         {
             if (SupportFunctions.Chance(WorldProperties.MigrationChance))
             {
-                ReportEvent("Decided to leave the tribe and search for a better life somewhere else.");
+                storyOfLife?.Append("Decided to leave the tribe and search for a better life somewhere else.");
                 return true;
             }
             return false;
@@ -879,7 +875,7 @@ namespace TribeSim
 
         public void PrepareForMigrationOutsideOfTheScope()
         {
-            ReportEvent("Decided to migrate to South America. Goodbye.");
+            storyOfLife?.Append("Decided to migrate to South America. Goodbye.");
         }
 
         public void ReportEndOfYearStatistics()
