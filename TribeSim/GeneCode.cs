@@ -12,9 +12,9 @@ namespace TribeSim
         private double[] strandB;
         private double[] resultingSet;
 
-        public static GeneCode GenerateInitial()
+        public static GeneCode GenerateInitial(Random randomizer)
         {
-            return new GeneCode(FeatureSet.GenerateInitialGeneStrand(), FeatureSet.GenerateInitialGeneStrand());            
+            return new GeneCode(FeatureSet.GenerateInitialGeneStrand(randomizer), FeatureSet.GenerateInitialGeneStrand(randomizer));            
         }
 
         public GeneCode(double[] parentStrand1, double[] parentStrand2)
@@ -28,30 +28,32 @@ namespace TribeSim
             }
         }
 
-        public static GeneCode GenerateFrom(GeneCode motherGenes, GeneCode fatherGenes)
+        public static GeneCode GenerateFrom(Random randomizer, GeneCode motherGenes, GeneCode fatherGenes)
         {
             double[] genesInheritedFromMother = FeatureSet.Blank();
             double[] genesInheritedFromFather = FeatureSet.Blank();
             for (int feature = 0; feature < genesInheritedFromMother.Length; feature++)
             {
                 genesInheritedFromMother[feature] = InheritTheFeatureWithAMutationChance(
-                    SupportFunctions.Flip() ? motherGenes.strandA[feature] : motherGenes.strandB[feature],
+                    randomizer,
+                    randomizer.Flip() ? motherGenes.strandA[feature] : motherGenes.strandB[feature],
                     WorldProperties.FeatureDescriptions[feature]);
 
                 genesInheritedFromFather[feature] = InheritTheFeatureWithAMutationChance(
-                    SupportFunctions.Flip() ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature],
+                    randomizer,
+                    randomizer.Flip() ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature],
                     WorldProperties.FeatureDescriptions[feature]);
             }
             return new GeneCode(genesInheritedFromMother, genesInheritedFromFather);
         }
 
-        private static double InheritTheFeatureWithAMutationChance(double parentGenes, FeatureDescription feature)
+        private static double InheritTheFeatureWithAMutationChance(Random randomizer, double parentGenes, FeatureDescription feature)
         {
-            if (SupportFunctions.Chance(feature.ChancceOfMutation)) {
+            if (randomizer.Chance(feature.ChancceOfMutation)) {
                 double newFeatureValue = -1;
                 while (newFeatureValue < 0) // При кривых начальных данных, например mean = -2 std = 1 может замедлиться в сотни раз.
                 {
-                    newFeatureValue = parentGenes + SupportFunctions.NormalRandom(feature.MutationStrengthMean, feature.MutationStrengthStdDev);
+                    newFeatureValue = parentGenes + randomizer.NormalRandom(feature.MutationStrengthMean, feature.MutationStrengthStdDev);
                     if (newFeatureValue > 1 && feature.Is0to1Feature) {
                         newFeatureValue = -1; // Раз уж мы числа меньше 0 отбрасываем, то и больше 1 надо отбрасывать, а то распределение получится однобокое
                     }

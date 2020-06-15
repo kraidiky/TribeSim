@@ -12,12 +12,12 @@ namespace TribeSim
             return new double[WorldProperties.FEATURES_COUNT];
         }
         /// <summary> Для индексации используются целые числа, к которм приводятся enum-ы: (int)AvailableFeatures.value</summary>
-        public static double[] GenerateInitialGeneStrand()
+        public static double[] GenerateInitialGeneStrand(Random randomizer)
         {
             var genes = Blank();
             var features = WorldProperties.FeatureDescriptions;
             for (int i = 0; i < features.Length; i++)
-                genes[i] = SupportFunctions.NormalRandom(features[i].InitialStateGenesMean, features[i].InitialStateGenesStdDev);
+                genes[i] = randomizer.NormalRandom(features[i].InitialStateGenesMean, features[i].InitialStateGenesStdDev);
             return genes;
         }
 

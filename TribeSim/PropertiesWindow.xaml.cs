@@ -217,11 +217,12 @@ namespace TribeSim
 
         private void MenuItem_Click_3(object sender, RoutedEventArgs e)
         {
+            Random randomizer = new Random();
             StringBuilder sb = new StringBuilder();
             for (int i=0; i<10000; i++)
             {
                 AvailableFeatures af = AvailableFeatures.HuntingEfficiency;
-                Meme newMeme = Meme.InventNewMeme(af);
+                Meme newMeme = Meme.InventNewMeme(randomizer, af);
                 sb.AppendFormat("{0}\t{1}\tHunting Efficiency\n", newMeme.Efficiency, newMeme.Price);
             }
             File.WriteAllText("c:\\temp\\memes.csv",sb.ToString());
@@ -232,7 +233,7 @@ namespace TribeSim
             DateTime start = DateTime.Now;
             for (int i = 1; i < 10000001; i++ )
             {
-                string name = NamesGenerator.GenerateName();                
+                string name = NamesGenerator.GenerateName();
                 
                 if (i % 500000 == 0)
                 {
@@ -244,7 +245,7 @@ namespace TribeSim
 
         private void InitiateSimulation(object sender, RoutedEventArgs e)
         {
-            World.Initialize(Dispatcher);
+            World.Initialize(Dispatcher, (int)WorldProperties.InitialStateRandomSeed);
             Simulation simWindow = new Simulation();
             simWindow.ShowActivated = true;
             simWindow.Show();

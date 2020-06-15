@@ -2,41 +2,16 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TribeSim
 {
     static class SupportFunctions
     {
-        private static Random randomizer = new Random();
-        
-        public static double UniformRandom(double from, double to)
-        {
-            lock (randomizer)
-            {
-                return randomizer.NextDouble() * (to - from) + from;
-            }
-        }
+        public static readonly Random NotReproducableRandomizer = new Random();
 
-        public static int UniformRandomInt(int from, int to)
-        {
-            lock (randomizer)
-            {
-                return randomizer.Next(from, to);
-            }
-        }
-
-        public static double NormalRandom(double mean, double stdDev)
-        {
-            double u1;
-            double u2;
-            lock (randomizer)
-            {
-                u1 = 1.0 - randomizer.NextDouble(); //uniform(0,1] random doubles
-                u2 = 1.0 - randomizer.NextDouble();
-            }
+        public static double NormalRandom(this Random randomizer, double mean, double stdDev) {
+            double u1 = 1.0 - randomizer.NextDouble(); //uniform(0,1] random doubles
+            double u2 = 1.0 - randomizer.NextDouble();
             double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) *
                          Math.Sin(2.0 * Math.PI * u2); //random normal(0,1)
             double randNormal =
@@ -63,26 +38,17 @@ namespace TribeSim
             return 1 - ((1 - probability) / multiplier);
         }
 
-        public static bool Flip()
-        {
-            lock (randomizer)
-            {
-                return randomizer.NextDouble() > 0.5;
-            }
+        public static bool Flip(this Random randomizer) {
+            return randomizer.NextDouble() > 0.5;
         }
 
-        public static bool Chance(double chance)
-        {
-            if (chance > 0) // Потому что этот кейс очень частый, а операции lock и NextDouble дофига тяжелые. По идее каждому трайбу, живущему в отдельном потоке надо выдавать собственный рандомайзер чтобы вот этих вот локов небыло, и можно было делать воспроизводимость.
-                lock (randomizer) {
-                    return randomizer.NextDouble() < chance;
-                }
+        public static bool Chance(this Random randomizer, double chance) {
+            if (chance > 0) // Потому что этот кейс очень частый, а операции NextDouble немножко тяжелая. ускоряет на пару процентов.
+                return randomizer.NextDouble() < chance;
             else
                 return false;
         }
-        /// <summary>
-        /// Функция нужна для удобства пошаговой отладки, чтобы можно было в одну строчку заменить все паралелизмы на последовательное выполнение.
-        /// </summary>
+        /// <summary> Функция нужна для удобства пошаговой отладки, чтобы можно было в одну строчку заменить все паралелизмы на последовательное выполнение. </summary>
         public static void Parallel<T>(this IEnumerable<T> items, Action<T> action) {
             //System.Threading.Tasks.Parallel.ForEach<T>(items, action);
             foreach (var item in items) action(item);

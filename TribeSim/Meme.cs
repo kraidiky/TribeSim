@@ -113,7 +113,7 @@ namespace TribeSim
 
         private Meme() { }
 
-        public static Meme InventNewMeme(AvailableFeatures? memeAffectedFeature, List<Meme> memesAlreadyKnown = null)
+        public static Meme InventNewMeme(Random randomizer, AvailableFeatures? memeAffectedFeature, List<Meme> memesAlreadyKnown = null)
         {
             Meme meme = new Meme();
             meme.yearInvented = World.Year;
@@ -123,7 +123,7 @@ namespace TribeSim
             double thisMemePriceEfficiencyRatio = 0;
             double thisMemePriceRandomMean = 0;
             double thisMemePriceRandomStdDev = 0;
-            meme.keepDiary = SupportFunctions.Chance(WorldProperties.ChancesThatMemeWillWriteALog);
+            meme.keepDiary = randomizer.Chance(WorldProperties.ChancesThatMemeWillWriteALog);
             meme.affectedFeature = memeAffectedFeature;
             if (memeAffectedFeature.HasValue)
             {
@@ -237,7 +237,7 @@ namespace TribeSim
             }
             do
             {
-                meme.efficiency = SupportFunctions.NormalRandom(thisMemeMean, thisMemeStdDev);
+                meme.efficiency = randomizer.NormalRandom(thisMemeMean, thisMemeStdDev);
                 if (thisMemeMean > 1 && is0to1meme)
                 {
                     meme.efficiency = 1;
@@ -251,21 +251,21 @@ namespace TribeSim
             {
                 meme.price = (thisMemePricePedestal
                     + Math.Abs(meme.efficiency) * thisMemePriceEfficiencyRatio
-                    + SupportFunctions.NormalRandom(thisMemePriceRandomMean, thisMemePriceRandomStdDev))
+                    + randomizer.NormalRandom(thisMemePriceRandomMean, thisMemePriceRandomStdDev))
                     * Math.Pow(meme.ComplexityCoefficient, WorldProperties.MemeCostComplexityPriceCoefficient);
             }
 
             #region Complex culture
             if (WorldProperties.MemePrequisitesChance>0.000001 && memesAlreadyKnown!=null && memesAlreadyKnown.Count() > 0)
             {
-                if (SupportFunctions.Chance(WorldProperties.MemePrequisitesChance))
+                if (randomizer.Chance(WorldProperties.MemePrequisitesChance))
                 {
                     do
                     {
-                        int memeNo = SupportFunctions.UniformRandomInt(0, memesAlreadyKnown.Count());
+                        int memeNo = randomizer.Next(memesAlreadyKnown.Count());
                         meme.prequisiteMemes.Add(memesAlreadyKnown[memeNo]);
                         memesAlreadyKnown.RemoveAt(memeNo);
-                    } while (memesAlreadyKnown.Count > 0 && SupportFunctions.Chance(WorldProperties.MemeSubsequentPrequisitesChance));
+                    } while (memesAlreadyKnown.Count > 0 && randomizer.Chance(WorldProperties.MemeSubsequentPrequisitesChance));
                     meme.price *= WorldProperties.MemePrequisiteExtraPricePedestal;
                     meme.efficiency *= WorldProperties.MemePrequisiteBonusGainPedestal;
                     double totalPrequisitePrice = 0;

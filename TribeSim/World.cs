@@ -2,9 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 using System.Diagnostics;
 
@@ -12,6 +9,7 @@ namespace TribeSim
 {
     static class World
     {
+        private static Random randomizer;
 
         private static string baseFolder = null;
 
@@ -61,10 +59,13 @@ namespace TribeSim
 
         public static int Year { get { return World.year; } }
 
-
-        public static void Initialize(Dispatcher d)
+        public static void InitializeNext(Dispatcher d) {
+            Initialize(d, randomizer.Next(int.MaxValue));
+        }
+        public static void Initialize(Dispatcher d, int randomSeed)
         {
             WorldProperties.ResetFeatureDescriptions();
+            randomizer = new Random(randomSeed);
             StatisticsCollector.Reset();
             Meme.ClearMemePool();
             tribes.Clear();
@@ -101,11 +102,11 @@ namespace TribeSim
             year = 0;
             for (int i = 0; i < WorldProperties.StartingNumberOfTribes; i++ )
             {
-                Tribe t = new Tribe();
-                int numberOfTribesmen = (int)Math.Round(SupportFunctions.NormalRandom(WorldProperties.StartingTribePopulationMean, WorldProperties.StartingTribePopulationStdDev));
+                Tribe t = new Tribe(randomizer.Next(int.MaxValue));
+                int numberOfTribesmen = (int)Math.Round(randomizer.NormalRandom(WorldProperties.StartingTribePopulationMean, WorldProperties.StartingTribePopulationStdDev));
                 for (int ii = 0; ii < numberOfTribesmen; ii++)
                 {
-                    Tribesman man = Tribesman.GenerateTribesmanFromAStartingSet();
+                    Tribesman man = Tribesman.GenerateTribesmanFromAStartingSet(randomizer);
                     t.AcceptMember(man);
                 }
                 tribes.Add(t);
@@ -137,8 +138,7 @@ namespace TribeSim
 
             if (year == 1)
                 stopwatch = Stopwatch.StartNew();
-            if (year % 1000 == 0) {
-                stopwatch.Stop();
+            if (year % 3000 == 0) {
                 spendedTime = stopwatch.Elapsed;
             }
 
@@ -199,7 +199,7 @@ namespace TribeSim
         {
             while (tribes.Count > WorldProperties.MaximumTribesAllowedInTheWorld)
             {
-                Tribe removingTribe = tribes[SupportFunctions.UniformRandomInt(0, tribes.Count)];
+                Tribe removingTribe = tribes[randomizer.Next(tribes.Count)];
                 removingTribe.PrepareForMigrationOutsideOfTheScope();
                 tribes.Remove(removingTribe);
             }
@@ -213,13 +213,13 @@ namespace TribeSim
         private static void CulturalExchange()
         {
             if (tribes.Count < 2) return;
-            while (SupportFunctions.Chance(WorldProperties.CulturalExchangeTeachingChance))
+            while (randomizer.Chance(WorldProperties.CulturalExchangeTeachingChance))
             {
                 int t1n, t2n;
-                t1n = SupportFunctions.UniformRandomInt(0, tribes.Count);
+                t1n = randomizer.Next(tribes.Count);
                 do
                 {
-                    t2n = SupportFunctions.UniformRandomInt(0, tribes.Count);
+                    t2n = randomizer.Next(tribes.Count);
                 }
                 while (t1n == t2n);
                 Tribe tribeFrom = tribes[t1n];
@@ -247,7 +247,7 @@ namespace TribeSim
                 Tribe newTribe;
                 do
                 {
-                    newTribe = tribes[SupportFunctions.UniformRandomInt(0, tribes.Count)];
+                    newTribe = tribes[randomizer.Next(tribes.Count)];
                 } while (newTribe == migratingTribesmen[m]);
                 newTribe.AcceptMember(m);
             }

@@ -9,6 +9,8 @@ namespace TribeSim
 {
     class Tribe
     {
+        private static Random randomizer;
+
         private List<Tribesman> members = new List<Tribesman>();
         private bool keepsLog = false;
         private string logFileName = "";
@@ -31,9 +33,11 @@ namespace TribeSim
         private StringBuilder logImmigration = new StringBuilder();
         private StringBuilder logCultuarlExchanges = new StringBuilder();
 
-        public Tribe()
+        public Tribe(int randomSeed)
         {
-            keepsLog = SupportFunctions.Chance(WorldProperties.ChancesThatTribeWillWriteALog);
+            randomizer = new Random(randomSeed);
+            TribeName = NamesGenerator.GenerateTribeName();
+            keepsLog = randomizer.Chance(WorldProperties.ChancesThatTribeWillWriteALog);
             yearBegun = World.Year;
             lastYearActive = yearBegun;
             if (keepsLog)
@@ -60,22 +64,15 @@ namespace TribeSim
         {
             get { return members.Count == 0; }
         }
-        private string tribeName = null;
+        public string TribeName = null;
         private int yearBorn = 0;
         private List<Meme> memesUsedThisYear = new List<Meme>();
 
-        public string TribeName
-        {
-            get
-            {
-                if (tribeName == null) { tribeName = NamesGenerator.GenerateTribeName(); }
-                return tribeName;
-            }
-        }
 
         public void AcceptMember(Tribesman member)
         {
             member.MyTribeName = TribeName;
+            member.SetRandomizer(randomizer);
             members.Add(member);
             member.ReportJoiningTribe(this);
             member.MemeUsed += member_MemeUsed;
@@ -142,10 +139,10 @@ namespace TribeSim
                 if (members.Count==1) return;
                 do
                 {
-                    student = members[SupportFunctions.UniformRandomInt(0, members.Count)];
+                    student = members[randomizer.Next(members.Count)];
                     while (student == man) // this cycle is just to make sure he's not trying to tech himself
                     {
-                        student = members[SupportFunctions.UniformRandomInt(0, members.Count)];
+                        student = members[randomizer.Next(members.Count)];
                     }
                 } while (man.TryToTeach(student) && WorldProperties.AllowRepetitiveTeaching > 0.5);
             }
@@ -172,7 +169,7 @@ namespace TribeSim
             foreach (Tribesman man in members)
             {
                 var chance = man.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
-                if (SupportFunctions.Chance(chance))
+                if (randomizer.Chance(chance))
                 {
                     double huntingEfforts = man.GoHunting();
                     if (huntingEfforts > 0)
@@ -196,8 +193,8 @@ namespace TribeSim
                 return 0;
             }
             cooperationCoefficient /= numHunters;
-            StatisticsCollector.ReportAverageEvent(tribeName, "Average hunting efforts", sumHuntingPowers * cooperationCoefficient);
-            StatisticsCollector.ReportSumEvent(tribeName, "Total hunting efforts", sumHuntingPowers * cooperationCoefficient);
+            StatisticsCollector.ReportAverageEvent(TribeName, "Average hunting efforts", sumHuntingPowers * cooperationCoefficient);
+            StatisticsCollector.ReportSumEvent(TribeName, "Total hunting efforts", sumHuntingPowers * cooperationCoefficient);
 
             return sumHuntingPowers * cooperationCoefficient;
             
@@ -269,11 +266,11 @@ namespace TribeSim
             List<Tribesman> breedingPartners = members.Where(man => man.IsOldEnoughToBreed).ToList();
             while (breedingPartners.Count > 1)
             {
-                Tribesman PartnerA = breedingPartners[SupportFunctions.UniformRandomInt(0, breedingPartners.Count)];
+                Tribesman PartnerA = breedingPartners[randomizer.Next(breedingPartners.Count)];
                 breedingPartners.Remove(PartnerA);
-                Tribesman PartnerB = breedingPartners[SupportFunctions.UniformRandomInt(0, breedingPartners.Count)];
+                Tribesman PartnerB = breedingPartners[randomizer.Next(breedingPartners.Count)];
                 breedingPartners.Remove(PartnerB);
-                Tribesman child = Tribesman.Breed(PartnerA, PartnerB);
+                Tribesman child = Tribesman.Breed(randomizer, PartnerA, PartnerB);
                 if (child != null)
                 {
                     this.AcceptMember(child);
@@ -287,10 +284,10 @@ namespace TribeSim
             {
                 return null;
             }
-            Tribe newTribe = new Tribe();
+            Tribe newTribe = new Tribe(randomizer.Next(int.MaxValue));
             for (int i = 0; i < members.Count * WorldProperties.SplitTribeRatio; i++)
             {
-                Tribesman member = members[SupportFunctions.UniformRandomInt(0, members.Count)];
+                Tribesman member = members[randomizer.Next(members.Count)];
                 MemberLeaves(member);
                 newTribe.AcceptMember(member);
             }
@@ -319,13 +316,13 @@ namespace TribeSim
 
         public void AttemptCulturalExchangeWith(Tribe tribeTo)
         {
-            Tribesman man = members[SupportFunctions.UniformRandomInt(0, members.Count)];
+            Tribesman man = members[randomizer.Next(members.Count)];
             {
                 Tribesman student;
-                student = members[SupportFunctions.UniformRandomInt(0, members.Count)];
+                student = members[randomizer.Next(members.Count)];
                 while (student == man) // this cycle is just to make sure he's not trying to teach himself
                 {
-                    student = members[SupportFunctions.UniformRandomInt(0, members.Count)];
+                    student = members[randomizer.Next(members.Count)];
                 }
                 man.TryToTeach(student,true);                
             }

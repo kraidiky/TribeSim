@@ -18,6 +18,8 @@ namespace TribeSim
         #endregion
 
         #region Private fields
+        private static double initialStateRandomSeed;
+
         private static bool inStableState = true;
         private static string filename = null;
         private static PropertyTree propertyTree = null;
@@ -274,6 +276,9 @@ namespace TribeSim
 
 
         #region Modifiable propereties
+
+        [DisplayableProperty("Initial State Random Seed", group = "Initial state", description = "Initial State Random Seed")]
+        public static double InitialStateRandomSeed { get => initialStateRandomSeed; set { initialStateRandomSeed = value; PersistChanges(); } }
 
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Creativity")]
         public static double MutationStrengthStdDevCreativity { get => mutationStrengthStdDevCreativity; set {  mutationStrengthStdDevCreativity = value; PersistChanges(); } }
