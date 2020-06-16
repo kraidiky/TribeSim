@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -148,16 +149,35 @@ namespace TribeSim
             }
         }
 
+        private List<Tribesman> _punishers = new List<Tribesman>();
+        private List<double> _freeraidersFeatures = new List<double>();
+        private List<Tribesman> _freeRaiders = new List<Tribesman>();
         public void PunishFreeRider()
         {
-            double max = members.Max(tribesman => tribesman.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider));
-            double min = members.Min(tribesman => tribesman.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider));
-            double threshold = min + (max - min) * 0.25;
-            List<Tribesman> freeRidersList = members.Where(tribesman => tribesman.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider) <= threshold).ToList();
-                    
-            foreach (Tribesman man in members)
-            {
-                man.TryToDetermineAndPunishAFreeRider(members, freeRidersList);
+            _punishers.Clear();
+            for (int i = 0; i < members.Count; i++) {
+                var man = members[i];
+                var chance =  man.GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood);
+                if (randomizer.Chance(chance))
+                    _punishers.Add(man);
+            }
+            if (_punishers.Count > 0) {
+                _freeraidersFeatures.Clear();
+                double min = double.MaxValue, max = double.MinValue;
+                for (int i = 0; i < members.Count; i++) {
+                    double feature = members[i].GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
+                    min = Math.Min(min, feature);
+                    max = Math.Max(max, feature);
+                    _freeraidersFeatures[i] = feature;
+                }
+                double threshold = min + (max - min) * 0.25;
+                _freeRaiders.Clear();
+                for (int i = 0; i < _freeraidersFeatures.Count; i++) {
+                    if (_freeraidersFeatures[i] > threshold)
+                        _freeRaiders.Add(members[i]);
+                }
+                for (int i = 0; i < _punishers.Count; i++)
+                    _punishers[i].DetermineAndPunishAFreeRider(members, _freeRaiders);
             }
         }
 
@@ -261,15 +281,28 @@ namespace TribeSim
             }
         }
 
+        private List<Tribesman> breedingPartners = new List<Tribesman>();
         public void Breed()
         {
-            List<Tribesman> breedingPartners = members.Where(man => man.IsOldEnoughToBreed).ToList();
+            breedingPartners.Clear();
+            members
+                .Where(member => member.IsOldEnoughToBreed)
+                .ForEach(member => breedingPartners.Add(member)); // То же самое, что toList(), но не срёт в память. А у нас GC на секундочку, 17% производительности жрёт на момент когда я до этого места дорвался.
+
             while (breedingPartners.Count > 1)
-            {
-                Tribesman PartnerA = breedingPartners[randomizer.Next(breedingPartners.Count)];
-                breedingPartners.Remove(PartnerA);
-                Tribesman PartnerB = breedingPartners[randomizer.Next(breedingPartners.Count)];
-                breedingPartners.Remove(PartnerB);
+            {   // breedingPartners.Remove(PartnerA) адски тяжёлая операция, потому что во-первых, надо этот элемент теперь в списке найти за линейное время. А потом ещё раз за линейное время сдвингуть все элементы, которые в списке идёт после него, между тем порядок в данном случае для нас абсолютно не важен. Одно только это место жрало 13% производительности когда я до него добрался.
+                int index = randomizer.Next(breedingPartners.Count);
+                int last = breedingPartners.Count - 1;
+                Tribesman PartnerA = breedingPartners[index];
+                breedingPartners[index] = breedingPartners[last];
+                breedingPartners.RemoveAt(last);
+
+                index = randomizer.Next(breedingPartners.Count);
+                last = breedingPartners.Count - 1;
+                Tribesman PartnerB = breedingPartners[index];
+                breedingPartners[index] = breedingPartners[last];
+                breedingPartners.RemoveAt(last);
+
                 Tribesman child = Tribesman.Breed(randomizer, PartnerA, PartnerB);
                 if (child != null)
                 {

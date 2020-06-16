@@ -39,7 +39,7 @@ namespace TribeSim
         }
 
         public static bool Flip(this Random randomizer) {
-            return randomizer.NextDouble() > 0.5;
+            return randomizer.NextDouble() < 0.5;
         }
 
         public static bool Chance(this Random randomizer, double chance) {
@@ -53,6 +53,12 @@ namespace TribeSim
             //System.Threading.Tasks.Parallel.ForEach<T>(items, action);
             foreach (var item in items) action(item);
         }
+
+        public static void ForEach<T>(this IEnumerable<T> items, Action<T> action) {
+            foreach (var item in items)
+                action(item);
+        }
+
     }
 
     class NullableDictionary<K, V> : IDictionary<K, V>

@@ -7,10 +7,11 @@ namespace TribeSim
     /// <summary> Этот класс теперь используем только для статической проверки типов и место хранения статических функций, больше он ни для чего не нужен, со всеми функциями массив отлично справляется. </summary>
     public static class FeatureSet
     {
-        /// <summary> Генерит пустой массив нужного размера, чтобы не таскать по всему коду знгания о константе FEATURES_COUNT. Ну и вообще, можно тут под капот спрятать пулинг массивов, если будет желание. </summary>
+        /// <summary> Генерит пустой массив нужного размера, чтобы не таскать по всему коду знгания о константе FEATURES_COUNT. Пул делать не нужно, GC работает с этими массивами быстрее, чем я. </summary>
         public static double[] Blank() {
             return new double[WorldProperties.FEATURES_COUNT];
         }
+
         /// <summary> Для индексации используются целые числа, к которм приводятся enum-ы: (int)AvailableFeatures.value</summary>
         public static double[] GenerateInitialGeneStrand(Random randomizer)
         {

@@ -82,14 +82,11 @@ namespace TribeSim
         private HashSet<TribesmanToMemeAssociation> memes = new HashSet<TribesmanToMemeAssociation>();
         private double? uselessMemesEffect = null;
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
+
+        private double priceToGetThisChild;
         private GeneCode genes = null;
         private double resource;
-        private double Resource
-        {
-            get { return resource; }
-            set { resource = value; }
-        }
-
+        
         private void AddMeme(Meme newMeme) {
             TribesmanToMemeAssociation tma = TribesmanToMemeAssociation.Create(this, newMeme);
             memes.Add(tma);
@@ -127,6 +124,7 @@ namespace TribeSim
             retval.storyOfLife?.Append(retval.Name).Append(" was created as a member of a statring set.").AppendLine();
             retval.yearBorn = World.Year;
             retval.resource = WorldProperties.StatringAmountOfResources;
+            retval.priceToGetThisChild = retval.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             retval.MemorySizeRemaining = retval.GetFeature(AvailableFeatures.MemoryLimit) + retval.GetMemorySizeBoost();            
             return retval;
         }
@@ -424,22 +422,18 @@ namespace TribeSim
 
         private void UseMemeGroup(AvailableFeatures? usedFeature, string activity = "engaged in unknown activity")
         {
+            if (usedFeature == null) {
+                if (usedFeature == null && WorldProperties.NewMemeUselessEfficiencyMean == 0 && WorldProperties.NewMemeUselessEfficiencyStdDev == 0) { return; }
+            } else {
+                FeatureDescription description = WorldProperties.FeatureDescriptions[(int)usedFeature.Value];
+                if (!description.MemCanBeInvented)
+                    return;
+            }
+
             double C = GetFeature(AvailableFeatures.Creativity);;
             double M = WorldProperties.ChanceToInventNewMemeWhileUsingItModifier;
             double T = WorldProperties.ChanceToInventNewMemeWhileUsingItThreshold;
             double chanceToInventNewMeme = T + M * C - T * M * C;
-            if (usedFeature == null && WorldProperties.NewMemeUselessEfficiencyMean == 0 && WorldProperties.NewMemeUselessEfficiencyStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.CooperationEfficiency && WorldProperties.NewMemeCooperationEfficiencyMean == 0 && WorldProperties.NewMemeCooperationEfficiencyStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.FreeRiderDeterminationEfficiency && WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean == 0 && WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.FreeRiderPunishmentLikelyhood && WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean == 0 && WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.HuntingEfficiency && WorldProperties.NewMemeHuntingEfficiencyMean == 0 && WorldProperties.NewMemeHuntingEfficiencyStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.LikelyhoodOfNotBeingAFreeRider && WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean == 0 && WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.StudyEfficiency && WorldProperties.NewMemeStudyEfficiencyMean == 0 && WorldProperties.NewMemeStudyEfficiencyStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.StudyLikelyhood && WorldProperties.NewMemeStudyLikelyhoodMean == 0 && WorldProperties.NewMemeStudyLikelyhoodStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.TeachingEfficiency && WorldProperties.NewMemeTeachingEfficiencyMean == 0 && WorldProperties.NewMemeTeachingEfficiencyStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.TeachingLikelyhood && WorldProperties.NewMemeTeachingLikelyhoodMean == 0 && WorldProperties.NewMemeTeachingLikelyhoodStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.TrickEfficiency && WorldProperties.NewMemeTrickEfficiencyMean == 0 && WorldProperties.NewMemeTrickEfficiencyStdDev == 0) { return; }
-            if (usedFeature == AvailableFeatures.TrickLikelyhood && WorldProperties.NewMemeTrickLikelyhoodMean == 0 && WorldProperties.NewMemeTrickLikelyhoodStdDev == 0) { return; }
             
             if (randomizer.Chance(chanceToInventNewMeme))
             {
@@ -481,7 +475,12 @@ namespace TribeSim
             ReportPhenotypeChange();
         }
 
-        public void TryToDetermineAndPunishAFreeRider(List<Tribesman> members, List<Tribesman> freeRidersList)
+        public void TryToDetermineAndPunishAFreeRider(List<Tribesman> members, List<Tribesman> freeRidersList) {
+            if (randomizer.Chance(GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood)))
+                DetermineAndPunishAFreeRider(members, freeRidersList);
+        }
+
+        public void DetermineAndPunishAFreeRider(List<Tribesman> members, List<Tribesman> freeRidersList)
         {
             if (randomizer.Chance(GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood)))
             {
@@ -772,13 +771,18 @@ namespace TribeSim
         public static Tribesman Breed(Random randomizer, Tribesman PartnerA, Tribesman PartnerB)
         {
             double totalParentsResource = PartnerA.resource + PartnerB.resource;
+
+            if (totalParentsResource * 5 < 2*(PartnerA.priceToGetThisChild + PartnerB.priceToGetThisChild)) // Проверка на вшивость. Если у них вдвоём не набирается даже 2/3 от того, что они сами стоили незачем и начинать.
+                return null;
+
             Tribesman child = new Tribesman(randomizer);
-            child.genes = GeneCode.GenerateFrom(PartnerA.randomizer, PartnerA.genes, PartnerB.genes);
+            child.genes = GeneCode.GenerateFrom(randomizer, PartnerA.genes, PartnerB.genes);
 
             double priceToGetThisChildBrainSizePart = child.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             double priceToGetThisChildGiftPart = WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * (totalParentsResource - priceToGetThisChildBrainSizePart);
+            child.priceToGetThisChild = priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
 
-            if (totalParentsResource > priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart)
+            if (totalParentsResource > child.priceToGetThisChild)
             {
                 StatisticsCollector.ReportCountEvent(PartnerA.MyTribeName, "Child births");
                 StatisticsCollector.ReportAverageEvent(PartnerA.MyTribeName, "Child average brain size", child.BrainSize);

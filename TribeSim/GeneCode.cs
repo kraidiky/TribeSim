@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Drawing.Diagrams;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,15 +35,13 @@ namespace TribeSim
             double[] genesInheritedFromFather = FeatureSet.Blank();
             for (int feature = 0; feature < genesInheritedFromMother.Length; feature++)
             {
-                genesInheritedFromMother[feature] = InheritTheFeatureWithAMutationChance(
-                    randomizer,
-                    randomizer.Flip() ? motherGenes.strandA[feature] : motherGenes.strandB[feature],
-                    WorldProperties.FeatureDescriptions[feature]);
+                var description = WorldProperties.FeatureDescriptions[feature];
+                
+                var parentGene = randomizer.Flip() ? motherGenes.strandA[feature] : motherGenes.strandB[feature];
+                genesInheritedFromMother[feature] = InheritTheFeatureWithAMutationChance(randomizer, parentGene, description);
 
-                genesInheritedFromFather[feature] = InheritTheFeatureWithAMutationChance(
-                    randomizer,
-                    randomizer.Flip() ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature],
-                    WorldProperties.FeatureDescriptions[feature]);
+                parentGene = randomizer.Flip() ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature];
+                genesInheritedFromFather[feature] = InheritTheFeatureWithAMutationChance(randomizer, parentGene, description);
             }
             return new GeneCode(genesInheritedFromMother, genesInheritedFromFather);
         }
@@ -61,7 +60,6 @@ namespace TribeSim
                 return newFeatureValue;
             } else
                 return parentGenes;
-
         }
 
         public double this[int feature] { get { return resultingSet[feature]; } }

@@ -1569,6 +1569,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTrickLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTrickLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTrickLikelyhood,
+                MemCanBeInvented = WorldProperties.NewMemeTrickLikelyhoodMean != 0 || WorldProperties.NewMemeTrickLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TrickEfficiency] = new FeatureDescription() {
                 Is0to1Feature = false,
@@ -1577,6 +1578,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTrickEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTrickEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTrickEfficiency,
+                MemCanBeInvented = WorldProperties.NewMemeTrickEfficiencyMean != 0 || WorldProperties.NewMemeTrickEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingLikelyhood] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1585,6 +1587,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTeachingLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTeachingLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTeachingLikelyhood,
+                MemCanBeInvented = WorldProperties.NewMemeTeachingLikelyhoodMean != 0 || WorldProperties.NewMemeTeachingLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingEfficiency] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1593,6 +1596,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTeachingEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTeachingEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTeachingEfficiency,
+                MemCanBeInvented = WorldProperties.NewMemeTeachingEfficiencyMean != 0 || WorldProperties.NewMemeTeachingEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyLikelyhood] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1601,6 +1605,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceStudyLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanStudyLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevStudyLikelyhood,
+                MemCanBeInvented = WorldProperties.NewMemeStudyLikelyhoodMean != 0 || WorldProperties.NewMemeStudyLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyEfficiency] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1609,6 +1614,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceStudyEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanStudyEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevStudyEfficiency,
+                MemCanBeInvented = WorldProperties.NewMemeStudyEfficiencyMean != 0 || WorldProperties.NewMemeStudyEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1617,6 +1623,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceFreeRiderPunishmentLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanFreeRiderPunishmentLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevFreeRiderPunishmentLikelyhood,
+                MemCanBeInvented = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean != 0 || WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderDeterminationEfficiency] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1625,6 +1632,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceFreeRiderDeterminationEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanFreeRiderDeterminationEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevFreeRiderDeterminationEfficiency,
+                MemCanBeInvented = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean != 0 || WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1633,6 +1641,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceLikelyhoodOfNotBeingAFreeRider,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanLikelyhoodOfNotBeingAFreeRider,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevLikelyhoodOfNotBeingAFreeRider,
+                MemCanBeInvented = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean != 0 || WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.HuntingEfficiency] = new FeatureDescription() {
                 Is0to1Feature = false,
@@ -1641,6 +1650,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceHuntingEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanHuntingEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevHuntingEfficiency,
+                MemCanBeInvented = WorldProperties.NewMemeHuntingEfficiencyMean != 0 || WorldProperties.NewMemeHuntingEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.CooperationEfficiency] = new FeatureDescription() {
                 Is0to1Feature = false,
@@ -1649,6 +1659,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceCooperationEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanCooperationEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevCooperationEfficiency,
+                MemCanBeInvented = WorldProperties.NewMemeCooperationEfficiencyMean != 0 || WorldProperties.NewMemeCooperationEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.MemoryLimit] = new FeatureDescription() {
                 Is0to1Feature = false,
@@ -1657,6 +1668,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceMemoryLimit,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanMemoryLimit,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevMemoryLimit,
+                MemCanBeInvented = false,
             };
             FeatureDescriptions[(int)AvailableFeatures.Creativity] = new FeatureDescription() {
                 Is0to1Feature = true,
@@ -1665,6 +1677,7 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceCreativity,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanCreativity,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevCreativity,
+                MemCanBeInvented = false,
             };
         }
         #endregion
@@ -1711,5 +1724,7 @@ namespace TribeSim
         public double ChancceOfMutation;
         public double MutationStrengthMean;
         public double MutationStrengthStdDev;
+
+        public bool MemCanBeInvented;
     }
 }

@@ -138,7 +138,8 @@ namespace TribeSim
 
             if (year == 1)
                 stopwatch = Stopwatch.StartNew();
-            if (year % 3000 == 0) {
+            if (year % 10000 == 0) {
+                stopwatch.Stop();
                 spendedTime = stopwatch.Elapsed;
             }
 
