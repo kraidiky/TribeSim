@@ -33,15 +33,20 @@ namespace TribeSim
         {
             double[] genesInheritedFromMother = FeatureSet.Blank();
             double[] genesInheritedFromFather = FeatureSet.Blank();
+
+            int random = randomizer.Next(1 << WorldProperties.FEATURES_COUNT << WorldProperties.FEATURES_COUNT); // Избавимся от Flip который пустая трата ресурсов в данном месте.
+
             for (int feature = 0; feature < genesInheritedFromMother.Length; feature++)
             {
                 var description = WorldProperties.FeatureDescriptions[feature];
                 
-                var parentGene = randomizer.Flip() ? motherGenes.strandA[feature] : motherGenes.strandB[feature];
+                var parentGene = (random & 1) == 0 ? motherGenes.strandA[feature] : motherGenes.strandB[feature];
                 genesInheritedFromMother[feature] = InheritTheFeatureWithAMutationChance(randomizer, parentGene, description);
+                random = random >> 1;
 
-                parentGene = randomizer.Flip() ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature];
+                parentGene = (random & 1) == 0 ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature];
                 genesInheritedFromFather[feature] = InheritTheFeatureWithAMutationChance(randomizer, parentGene, description);
+                random = random >> 1;
             }
             return new GeneCode(genesInheritedFromMother, genesInheritedFromFather);
         }
