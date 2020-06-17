@@ -46,7 +46,7 @@ namespace TribeSim
         public Meme Meme { get { return meme; } }
         public Tribesman Tribesman { get { return tribesman; } }
 
-        public static implicit operator Meme(TribesmanToMemeAssociation a)
+        public static implicit operator Meme(TribesmanToMemeAssociation a) // Фича, конечно, весёлая, но по читаемости кода шибает кувалдой. А ещё маскирует от программиста лишние действия, так что лучше не делать такого если не пишешь крутую библиотеку.
         {
             return a.meme;
         }

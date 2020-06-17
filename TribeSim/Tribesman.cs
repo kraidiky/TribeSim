@@ -79,7 +79,9 @@ namespace TribeSim
             }
         }
 
-        private HashSet<TribesmanToMemeAssociation> memes = new HashSet<TribesmanToMemeAssociation>();
+        private static TribesmanToMemeAssociation[] EmptyMemes = new TribesmanToMemeAssociation[0];
+        private List<TribesmanToMemeAssociation> memes = new List<TribesmanToMemeAssociation>();
+        private TribesmanToMemeAssociation[][] memesByFeature = new TribesmanToMemeAssociation[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         private double priceToGetThisChild;
@@ -88,14 +90,34 @@ namespace TribeSim
         
         private void AddMeme(Meme newMeme) {
             TribesmanToMemeAssociation tma = TribesmanToMemeAssociation.Create(this, newMeme);
+            int feature = (int)tma.Meme.AffectedFeature;
             memes.Add(tma);
-            memesEffect[(int)tma.Meme.AffectedFeature] = null;
+            memesEffect[feature] = null;
             MemorySizeRemaining -= newMeme.Price;
+            var oldByFeatures = memesByFeature[feature];
+            var newByFeatures = new TribesmanToMemeAssociation[oldByFeatures.Length + 1];
+            memesByFeature[feature] = newByFeatures;
+            newByFeatures[0] = tma;
+            oldByFeatures.CopyTo(newByFeatures, 1);
+
         }
         private void RemoveMeme(TribesmanToMemeAssociation assoc) {
+            int feature = (int)assoc.Meme.AffectedFeature;
             memes.Remove(assoc);
-            memesEffect[(int)assoc.Meme.AffectedFeature] = null;
+            memesEffect[feature] = null;
             MemorySizeRemaining += assoc.Meme.Price;
+            var oldByFeatures = memesByFeature[feature];
+            if (oldByFeatures.Length == 1) {
+                memesByFeature[feature] = EmptyMemes;
+            } else {
+                var newByFeatures = new TribesmanToMemeAssociation[oldByFeatures.Length - 1];
+                memesByFeature[feature] = newByFeatures;
+                for (int i = 0, j = 0; i < memesByFeature.Length; i++)
+                    if (oldByFeatures[i] != assoc) {
+                        newByFeatures[i] = oldByFeatures[j];
+                        j++;
+                    }
+            }
         }
 
         private Tribesman(Random randomizer)
@@ -166,7 +188,7 @@ namespace TribeSim
             if (effect.HasValue) {
                 return effect.Value;
             } else {
-                var relevantMemes = memes.Where(assoc => assoc.Meme.AffectedFeature == af);
+                var relevantMemes = memesByFeature[(int)af];// .Where(assoc => assoc.Meme.AffectedFeature == af);
                 var retval = genes[af];
                 var description = WorldProperties.FeatureDescriptions[(int)af];
                 if (description.Is0to1Feature) { // 0..1 features.
@@ -229,8 +251,8 @@ namespace TribeSim
 
         public void ForgetUnusedMemes()
         {
-            foreach (TribesmanToMemeAssociation assoc in memes.ToList())
-            {
+            for (int i = memes.Count - 1; i >= 0; i--) {
+                TribesmanToMemeAssociation assoc = memes[i];
                 if (assoc.TurnsSinceLastUsed > WorldProperties.DontForgetMemesThatWereUsedDuringThisPeriod)
                 {
                     if (randomizer.Chance(WorldProperties.ChanceToForgetTheUnusedMeme))
@@ -360,9 +382,9 @@ namespace TribeSim
                     storyOfLife?.AppendFormat("While {3} invented the new meme but forgot it immediately. Too stupid to remember anything else. Memory size is {1:f2} and meme complexity is {2:f2}", Name, MemorySizeRemaining, inventedMeme.Price, activity).AppendLine();
                 }
             }
-            IEnumerable<TribesmanToMemeAssociation> relevantMemes = memes.Where(associ => associ.Meme.AffectedFeature == usedFeature);
-            foreach (TribesmanToMemeAssociation tma in relevantMemes)
-            {
+            TribesmanToMemeAssociation[] relevantMemes = memesByFeature[(int)usedFeature];
+            for( int i = 0; i < relevantMemes.Length; i++) {
+                var tma = relevantMemes[i];
                 tma.Use();
                 if (MemeUsed != null)
                 {
@@ -541,9 +563,9 @@ namespace TribeSim
             {
                 resource -= resourcesWasted;
 
-                List<TribesmanToMemeAssociation> relevantMemes = memes.Where(associ => associ.Meme.AffectedFeature == AvailableFeatures.UselessActionsLikelihood).ToList();
-                if (relevantMemes.Count > 0) {
-                    Meme randomKnownUselessMeme = relevantMemes[randomizer.Next(relevantMemes.Count)].Meme;
+                TribesmanToMemeAssociation[] relevantMemes = memesByFeature[(int)AvailableFeatures.UselessActionsLikelihood];
+                if (relevantMemes.Length > 0) {
+                    Meme randomKnownUselessMeme = relevantMemes[randomizer.Next(relevantMemes.Length)].Meme;
 
                     storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
                     UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
@@ -566,10 +588,9 @@ namespace TribeSim
         public void StudyOneOrManyOfTheMemesUsedThisTurn(List<Meme> memesUsedThisYear)
         {
             List<Meme> memesAvailableForStudy = new List<Meme>(memesUsedThisYear);
-            foreach (TribesmanToMemeAssociation assoc in memes)
+            for (int i = 0; i < memes.Count; i++)
             {
-                if (memesAvailableForStudy.Contains(assoc))
-                    memesAvailableForStudy.Remove(assoc);
+                memesAvailableForStudy.Remove(memes[i].Meme);
             }
             while (randomizer.Chance(GetFeature(AvailableFeatures.StudyLikelyhood)) && memesAvailableForStudy.Count > 0 )
             {
@@ -648,9 +669,8 @@ namespace TribeSim
             StatisticsCollector.ReportAverageEvent(MyTribeName, "Longevity", age);
             double totalBrainUsage = 0;
             double totalBrainSize = 0;
-            foreach (TribesmanToMemeAssociation tma in memes)
-            {
-                totalBrainUsage += tma.Meme.Price;
+            for (int i = 0; i < memes.Count; i++) {
+                totalBrainUsage += memes[i].Meme.Price;
             }
             totalBrainSize = totalBrainUsage + MemorySizeRemaining;
             if (totalBrainSize > 0)
@@ -661,7 +681,8 @@ namespace TribeSim
 
         private void ForgetAllMemes()
         {
-            foreach (TribesmanToMemeAssociation assoc in memes.ToArray())
+            var allMemes = memes.ToArray();
+            foreach (TribesmanToMemeAssociation assoc in allMemes)
             {
                 assoc.Meme.ReportForgotten(this);                
                 RemoveMeme(assoc);
@@ -835,9 +856,10 @@ namespace TribeSim
                 double totalBrainUsage = 0;
                 double totalBrainSize = 0;
                 var brainUsages = FeatureSet.Blank();
-                foreach (TribesmanToMemeAssociation tma in memes) {
-                    totalBrainUsage += tma.Meme.Price;
-                    brainUsages[(int)tma.Meme.AffectedFeature] += tma.Meme.Price;
+                for (int i = 0; i < memes.Count; i++) {
+                    var meme = memes[i].Meme;
+                    totalBrainUsage += meme.Price;
+                    brainUsages[(int)meme.AffectedFeature] += meme.Price;
                 }
                 totalBrainSize = totalBrainUsage + MemorySizeRemaining;
                 if (totalBrainSize > 0)
