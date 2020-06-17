@@ -106,51 +106,47 @@ namespace TribeSim
             return bodyparts[SupportFunctions.NotReproducableRandomizer.Next(bodyparts.Count)];
         }
 
-        public static string GenerateActionDescription(AvailableFeatures? af, bool negate = false)
+        public static string GenerateActionDescription(AvailableFeatures af, bool negate = false)
         {
             List<string> options = null;
-            if (!af.HasValue)
+            switch (af)
             {
-                options = uselessActions;
-            }
-            else
-            {
-                switch (af.Value)
-                {
-                    case AvailableFeatures.CooperationEfficiency:
-                        options = CooperationEfficiencyActions;
-                        break;
-                    case AvailableFeatures.FreeRiderDeterminationEfficiency:
-                        options = FreeRiderDeterminationEfficiencyActions;
-                        break;
-                    case AvailableFeatures.FreeRiderPunishmentLikelyhood:
-                        options = FreeRiderPunishmentLikelyhoodActions;
-                        break;
-                    case AvailableFeatures.HuntingEfficiency:
-                        options = HuntingEfficiencyActions;
-                        break;
-                    case AvailableFeatures.LikelyhoodOfNotBeingAFreeRider:
-                        options = LikelyhoodOfNotBeingAFreeRiderActions;
-                        break;
-                    case AvailableFeatures.StudyEfficiency:
-                        options = StudyEfficiencyActions;
-                        break;
-                    case AvailableFeatures.StudyLikelyhood:
-                        options = StudyLikelyhoodActions;
-                        break;
-                    case AvailableFeatures.TeachingEfficiency:
-                        options = TeachingEfficiencyActions;
-                        break;
-                    case AvailableFeatures.TeachingLikelyhood:
-                        options = TeachingLikelyhoodActions;
-                        break;
-                    case AvailableFeatures.TrickEfficiency:
-                        options = TrickEfficiencyActions;
-                        break;
-                    case AvailableFeatures.TrickLikelyhood:
-                        options = TrickLikelyhoodActions;
-                        break;                        
-                }
+                case AvailableFeatures.CooperationEfficiency:
+                    options = CooperationEfficiencyActions;
+                    break;
+                case AvailableFeatures.FreeRiderDeterminationEfficiency:
+                    options = FreeRiderDeterminationEfficiencyActions;
+                    break;
+                case AvailableFeatures.FreeRiderPunishmentLikelyhood:
+                    options = FreeRiderPunishmentLikelyhoodActions;
+                    break;
+                case AvailableFeatures.HuntingEfficiency:
+                    options = HuntingEfficiencyActions;
+                    break;
+                case AvailableFeatures.LikelyhoodOfNotBeingAFreeRider:
+                    options = LikelyhoodOfNotBeingAFreeRiderActions;
+                    break;
+                case AvailableFeatures.StudyEfficiency:
+                    options = StudyEfficiencyActions;
+                    break;
+                case AvailableFeatures.StudyLikelyhood:
+                    options = StudyLikelyhoodActions;
+                    break;
+                case AvailableFeatures.TeachingEfficiency:
+                    options = TeachingEfficiencyActions;
+                    break;
+                case AvailableFeatures.TeachingLikelyhood:
+                    options = TeachingLikelyhoodActions;
+                    break;
+                case AvailableFeatures.TrickEfficiency:
+                    options = TrickEfficiencyActions;
+                    break;
+                case AvailableFeatures.TrickLikelyhood:
+                    options = TrickLikelyhoodActions;
+                    break;  
+                case AvailableFeatures.UselessActionsLikelihood:
+                    options = uselessActions;
+                    break;
             }
 
             if (options == null) return "";

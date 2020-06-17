@@ -310,9 +310,10 @@ namespace TribeSim
             }
             else
             {
+                var resourcePerHuntingEffort = WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep / totalHuntingEffort; // Деление - медленная операция. Это, конечно, копейки, но зачем их в пустую тратить.
                 foreach (Tribe t in tribes)
                 {
-                    resourcesRecievedByTribes.TryAdd(t, WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep / totalHuntingEffort * tribeHuntingEfforts[t]);
+                    resourcesRecievedByTribes.TryAdd(t, resourcePerHuntingEffort * tribeHuntingEfforts[t]);
                 }
             }
             World.tribes.Parallel((tribe) => { tribe.ReceiveAndShareResource(resourcesRecievedByTribes[tribe]); });

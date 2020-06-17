@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.CustomProperties;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +17,6 @@ namespace TribeSim
 
 
         private StringBuilder storyline = new StringBuilder();
-        private AvailableFeatures? affectedFeature;
         private int knownBy = 0;
 
         private int maxKnowBy = 0;
@@ -67,10 +67,7 @@ namespace TribeSim
             get { if (memeId == -1) memeId = maxMemeId++; return memeId; }
         }
 
-        public AvailableFeatures? AffectedFeature
-        {
-            get { return affectedFeature; }
-        }
+        public readonly AvailableFeatures AffectedFeature;
 
         public double Price
         {
@@ -89,14 +86,7 @@ namespace TribeSim
                 {
                     if (prequisiteMemes.Count != 1)
                     {
-                        if (this.AffectedFeature.HasValue && this.efficiency < 0)
-                        {
-                            actionDescription = NamesGenerator.GenerateActionDescription(this.AffectedFeature, true);
-                        }
-                        else
-                        {
-                            actionDescription = NamesGenerator.GenerateActionDescription(this.AffectedFeature, false);
-                        }
+                        actionDescription = NamesGenerator.GenerateActionDescription(AffectedFeature, efficiency < 0);
                     }
                     else if (prequisiteMemes.Count == 1)
                     {
@@ -111,148 +101,37 @@ namespace TribeSim
             }
         }
 
-        private Meme() { }
+        private Meme(AvailableFeatures affectedFeature) {
+            this.AffectedFeature = affectedFeature;
+        }
 
-        public static Meme InventNewMeme(Random randomizer, AvailableFeatures? memeAffectedFeature, List<Meme> memesAlreadyKnown = null)
+        public static Meme InventNewMeme(Random randomizer, AvailableFeatures memeAffectedFeature, List<Meme> memesAlreadyKnown = null)
         {
-            Meme meme = new Meme();
+            Meme meme = new Meme(memeAffectedFeature);
             meme.yearInvented = World.Year;
-            double thisMemeMean = 0;
-            double thisMemeStdDev = 0;
-            double thisMemePricePedestal = 0;
-            double thisMemePriceEfficiencyRatio = 0;
-            double thisMemePriceRandomMean = 0;
-            double thisMemePriceRandomStdDev = 0;
+            FeatureDescription featureDescription = WorldProperties.FeatureDescriptions[(int)memeAffectedFeature];
+
             meme.keepDiary = randomizer.Chance(WorldProperties.ChancesThatMemeWillWriteALog);
-            meme.affectedFeature = memeAffectedFeature;
-            if (memeAffectedFeature.HasValue)
-            {
-                switch (memeAffectedFeature.Value)
-                {
-                    case AvailableFeatures.TrickLikelyhood:
-                        thisMemeMean = WorldProperties.NewMemeTrickLikelyhoodMean;
-                        thisMemeStdDev = WorldProperties.NewMemeTrickLikelyhoodStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalTrickLikelyhood;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTrickLikelyhood;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageTrickLikelyhood;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickLikelyhood;
-                        break;
-                    case AvailableFeatures.TrickEfficiency:
-                        thisMemeMean = WorldProperties.NewMemeTrickEfficiencyMean;
-                        thisMemeStdDev = WorldProperties.NewMemeTrickEfficiencyStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalTrickEfficiency;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTrickEfficiency;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageTrickEfficiency;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickEfficiency;
-                        break;
-                    case AvailableFeatures.TeachingLikelyhood:
-                        thisMemeMean = WorldProperties.NewMemeTeachingLikelyhoodMean;
-                        thisMemeStdDev = WorldProperties.NewMemeTeachingLikelyhoodStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalTeachingLikelyhood;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTeachingLikelyhood;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageTeachingLikelyhood;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingLikelyhood;
-                        break;
-                    case AvailableFeatures.TeachingEfficiency:
-                        thisMemeMean = WorldProperties.NewMemeTeachingEfficiencyMean;
-                        thisMemeStdDev = WorldProperties.NewMemeTeachingEfficiencyStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalTeachingEfficiency;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTeachingEfficiency;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageTeachingEfficiency;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingEfficiency;
-                        break;
-                    case AvailableFeatures.StudyLikelyhood:
-                        thisMemeMean = WorldProperties.NewMemeStudyLikelyhoodMean;
-                        thisMemeStdDev = WorldProperties.NewMemeStudyLikelyhoodStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalStudyLikelyhood;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioStudyLikelyhood;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageStudyLikelyhood;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyLikelyhood;
-                        break;
-                    case AvailableFeatures.StudyEfficiency:
-                        thisMemeMean = WorldProperties.NewMemeStudyEfficiencyMean;
-                        thisMemeStdDev = WorldProperties.NewMemeStudyEfficiencyStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalStudyEfficiency;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioStudyEfficiency;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageStudyEfficiency;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyEfficiency;
-                        break;
-                    case AvailableFeatures.FreeRiderPunishmentLikelyhood:
-                        thisMemeMean = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean;
-                        thisMemeStdDev = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalFreeRiderPunishmentLikelyhood;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioFreeRiderPunishmentLikelyhood;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageFreeRiderPunishmentLikelyhood;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderPunishmentLikelyhood;
-                        break;
-                    case AvailableFeatures.FreeRiderDeterminationEfficiency:
-                        thisMemeMean = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean;
-                        thisMemeStdDev = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalFreeRiderDeterminationEfficiency;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioFreeRiderDeterminationEfficiency;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageFreeRiderDeterminationEfficiency;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderDeterminationEfficiency;
-                        break;
-                    case AvailableFeatures.CooperationEfficiency:
-                        thisMemeMean = WorldProperties.NewMemeCooperationEfficiencyMean;
-                        thisMemeStdDev = WorldProperties.NewMemeCooperationEfficiencyStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalCooperationEfficiency;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioCooperationEfficiency;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageCooperationEfficiency;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevCooperationEfficiency;
-                        break;
-                    case AvailableFeatures.HuntingEfficiency:
-                        thisMemeMean = WorldProperties.NewMemeHuntingEfficiencyMean;
-                        thisMemeStdDev = WorldProperties.NewMemeHuntingEfficiencyStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalHuntingEfficiency;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioHuntingEfficiency;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageHuntingEfficiency;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevHuntingEfficiency;
-                        break;
-                    case AvailableFeatures.LikelyhoodOfNotBeingAFreeRider:
-                        thisMemeMean = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean;
-                        thisMemeStdDev = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev;
-                        thisMemePricePedestal = WorldProperties.MemeCostPedestalLikelyhoodOfNotBeingAFreeRider;
-                        thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioLikelyhoodOfNotBeingAFreeRider;
-                        thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageLikelyhoodOfNotBeingAFreeRider;
-                        thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevLikelyhoodOfNotBeingAFreeRider;
-                        break;
-                }
-            }
-            else
-            {
-                thisMemeMean = WorldProperties.NewMemeUselessEfficiencyMean;
-                thisMemeStdDev = WorldProperties.NewMemeUselessEfficiencyStdDev;
-                thisMemePricePedestal = WorldProperties.MemeCostPedestalUseless;
-                thisMemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioUseless;
-                thisMemePriceRandomMean = WorldProperties.MemeCostRandomAverageUseless;
-                thisMemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevUseless;                
-            }
             meme.efficiency = -1;
             meme.price = -1;
-            bool is0to1meme = true;
-            if (memeAffectedFeature == AvailableFeatures.CooperationEfficiency || memeAffectedFeature == AvailableFeatures.HuntingEfficiency || memeAffectedFeature == AvailableFeatures.TrickEfficiency)
-            {
-                is0to1meme = false;
-            }
-            do
-            {
-                meme.efficiency = randomizer.NormalRandom(thisMemeMean, thisMemeStdDev);
-                if (thisMemeMean > 1 && is0to1meme)
+            if (featureDescription.MemeEfficiencyMean > 1 && featureDescription.Is0to1Feature) {
+                meme.efficiency = 1;
+            } else
+                do
                 {
-                    meme.efficiency = 1;
+                    meme.efficiency = randomizer.NormalRandom(featureDescription.MemeEfficiencyMean, featureDescription.MemeEfficiencyStdDev);
                 }
-                meme.complexityCoefficient = Math.Pow(2, (meme.efficiency - thisMemeMean) / thisMemeStdDev);
-            }
-            while ((meme.efficiency < 0 || (is0to1meme && meme.efficiency > 1)) && memeAffectedFeature != AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
+                while (meme.efficiency < 0 || (featureDescription.Is0to1Feature && meme.efficiency > 1)); // А что, все мымы теперь 0-1? Может у нас специальный мем снижающий какое-то качество, почему бы и нет, собственно? Пусть отбор решает. Заодно посмотрим что он там нарешать сможет.
 
+            meme.complexityCoefficient = Math.Pow(2, (meme.efficiency - featureDescription.MemeEfficiencyMean) / featureDescription.MemeEfficiencyStdDev); // Зачем вообще complexityCoefficient считать внутри цикла?
 
             while (meme.price < 0)
             {
-                meme.price = (thisMemePricePedestal
-                    + Math.Abs(meme.efficiency) * thisMemePriceEfficiencyRatio
-                    + randomizer.NormalRandom(thisMemePriceRandomMean, thisMemePriceRandomStdDev))
-                    * Math.Pow(meme.ComplexityCoefficient, WorldProperties.MemeCostComplexityPriceCoefficient);
+                var pedestalPrice = featureDescription.MemePricePedestal;
+                var efficiencyPrice = Math.Abs(meme.efficiency) * featureDescription.MemePriceEfficiencyRatio;
+                var randomPricePart = randomizer.NormalRandom(featureDescription.MemePriceRandomMean, featureDescription.MemePriceRandomStdDev);
+                var complexityMultiplier = Math.Pow(meme.ComplexityCoefficient, WorldProperties.MemeCostComplexityPriceCoefficient);
+                meme.price = (pedestalPrice + efficiencyPrice + randomPricePart) * complexityMultiplier;
             }
 
             #region Complex culture
@@ -281,14 +160,8 @@ namespace TribeSim
             }
             #endregion
 
-            if (meme.AffectedFeature.HasValue)
-            {
-                meme.Report(string.Format("Meme teaches how {3}. It affects: {0}; Efficiency: {1:f5}; It takes {2:f2} memory.", memeAffectedFeature.GetDescription(), meme.Efficiency, meme.Price, meme.ActionDescription));
-            }
-            else
-            {
-                meme.Report(string.Format("Meme is useless. It's about {2}; Efficiency: {0:f5}; It takes {1:f2} memory.", meme.Efficiency, meme.Price, meme.ActionDescription));
-            }
+            meme.Report(string.Format("Meme teaches how {3}. It affects: {0}; Efficiency: {1:f5}; It takes {2:f2} memory.", memeAffectedFeature.GetDescription(), meme.Efficiency, meme.Price, meme.ActionDescription)); // Логер, конечно, можно не переделывать, потому что мемы создаются шибко редко.
+
             if (meme.prequisiteMemes.Count > 0)
             {
                 if (meme.prequisiteMemes.Count == 1)
@@ -420,14 +293,7 @@ namespace TribeSim
         {
             get
             {
-                if (AffectedFeature.HasValue)
-                {                    
-                    return $"#{MemeId} {affectedFeature.Value.GetAcronym()}:{Efficiency:f2}";
-                }
-                else
-                {
-                    return $"#{MemeId} Useless";
-                }
+               return $"#{MemeId} {AffectedFeature.GetAcronym()}:{Efficiency:f2}";
             }
         }
     }

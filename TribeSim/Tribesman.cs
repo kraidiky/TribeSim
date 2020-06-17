@@ -80,7 +80,6 @@ namespace TribeSim
         }
 
         private HashSet<TribesmanToMemeAssociation> memes = new HashSet<TribesmanToMemeAssociation>();
-        private double? uselessMemesEffect = null;
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         private double priceToGetThisChild;
@@ -90,20 +89,12 @@ namespace TribeSim
         private void AddMeme(Meme newMeme) {
             TribesmanToMemeAssociation tma = TribesmanToMemeAssociation.Create(this, newMeme);
             memes.Add(tma);
-            if (tma.Meme.AffectedFeature.HasValue) {
-                memesEffect[(int)tma.Meme.AffectedFeature.Value] = null;
-            } else {
-                uselessMemesEffect = null;
-            }
+            memesEffect[(int)tma.Meme.AffectedFeature] = null;
             MemorySizeRemaining -= newMeme.Price;
         }
         private void RemoveMeme(TribesmanToMemeAssociation assoc) {
             memes.Remove(assoc);
-            if (assoc.Meme.AffectedFeature.HasValue) {
-                memesEffect[(int)assoc.Meme.AffectedFeature.Value] = null;
-            } else {
-                uselessMemesEffect = null;
-            }
+            memesEffect[(int)assoc.Meme.AffectedFeature] = null;
             MemorySizeRemaining += assoc.Meme.Price;
         }
 
@@ -169,42 +160,25 @@ namespace TribeSim
             return sb.ToString();
         }
 
-        public double GetFeature(AvailableFeatures? af)
+        public double GetFeature(AvailableFeatures af)
         {
-            double retval = double.NaN;
-            if (af.HasValue)
-            {
-                var effect = memesEffect[(int)af.Value];
-                if (effect.HasValue) {
-                    retval = effect.Value;
-                } else {
-                    HashSet<TribesmanToMemeAssociation> relevantMemes = new HashSet<TribesmanToMemeAssociation>(memes.Where(assoc => assoc.Meme.AffectedFeature == af));
-                    retval = genes[af.Value];
-                    var description = WorldProperties.FeatureDescriptions[(int)af.Value];
-                    if (description.Is0to1Feature) { // 0..1 features.
-                        foreach (TribesmanToMemeAssociation assoc in relevantMemes)
-                                retval += assoc.Meme.Efficiency - assoc.Meme.Efficiency * retval;
-                    } else { //0..infinity features.
-                        foreach (TribesmanToMemeAssociation assoc in relevantMemes)
-                            retval += assoc.Meme.Efficiency;
-                    }
-                    memesEffect[(int)af.Value] = retval;
+            var effect = memesEffect[(int)af];
+            if (effect.HasValue) {
+                return effect.Value;
+            } else {
+                var relevantMemes = memes.Where(assoc => assoc.Meme.AffectedFeature == af);
+                var retval = genes[af];
+                var description = WorldProperties.FeatureDescriptions[(int)af];
+                if (description.Is0to1Feature) { // 0..1 features.
+                    foreach (TribesmanToMemeAssociation assoc in relevantMemes)
+                            retval += assoc.Meme.Efficiency - assoc.Meme.Efficiency * retval;
+                } else { //0..infinity features.
+                    foreach (TribesmanToMemeAssociation assoc in relevantMemes)
+                        retval += assoc.Meme.Efficiency;
                 }
+                memesEffect[(int)af] = retval;
+                return retval;
             }
-            else
-            {
-                if (uselessMemesEffect.HasValue) {
-                    retval = uselessMemesEffect.Value;
-                } else {
-                    retval = 0;
-                    HashSet<TribesmanToMemeAssociation> relevantMemes = new HashSet<TribesmanToMemeAssociation>(memes.Where(assoc => assoc.Meme.AffectedFeature.HasValue == false));
-                    foreach (TribesmanToMemeAssociation assoc in relevantMemes) {
-                        retval += assoc.Meme.Efficiency - assoc.Meme.Efficiency * retval;
-                    }
-                    uselessMemesEffect = retval;
-                }
-            }
-            return retval;
         }
 
         public void ConsumeLifeSupport()
@@ -215,77 +189,18 @@ namespace TribeSim
 
         public void TryInventMemeSpontaneously()
         {
+            // Exit if no memes can be created
+            if (WorldProperties.MemesWhichCanBeInvented.Length == 0)
+                return;
+
             double creativity = this.GetFeature(AvailableFeatures.Creativity);
             if (randomizer.Chance(creativity))
             {
-                // Exit if no memes can be created
-                if (WorldProperties.NewMemeCooperationEfficiencyMean==0 && WorldProperties.NewMemeCooperationEfficiencyStdDev==0 && WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean==0 && WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev==0 && WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean==0 && WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev==0 && WorldProperties.NewMemeHuntingEfficiencyMean ==0 && WorldProperties.NewMemeHuntingEfficiencyStdDev==0 && WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean==0 && WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev==0 && WorldProperties.NewMemeStudyEfficiencyMean==0 && WorldProperties.NewMemeStudyEfficiencyStdDev==0 && WorldProperties.NewMemeStudyLikelyhoodMean==0 && WorldProperties.NewMemeStudyLikelyhoodStdDev==0 && WorldProperties.NewMemeTeachingEfficiencyMean==0 && WorldProperties.NewMemeTeachingEfficiencyStdDev==0 && WorldProperties.NewMemeTeachingLikelyhoodMean==0 && WorldProperties.NewMemeTeachingLikelyhoodStdDev==0 && WorldProperties.NewMemeTrickEfficiencyMean==0 && WorldProperties.NewMemeTrickEfficiencyStdDev==0 && WorldProperties.NewMemeTrickLikelyhoodMean==0 && WorldProperties.NewMemeTrickLikelyhoodStdDev ==0 && WorldProperties.NewMemeUselessEfficiencyMean==0 && WorldProperties.NewMemeUselessEfficiencyStdDev==0)
-                {
-                    return;
-                }
-                int memeType = -1;
-                AvailableFeatures? af = null;
+                AvailableFeatures af = (AvailableFeatures)randomizer.Next(WorldProperties.MemesWhichCanBeInvented.Length);
 
-                while (memeType == -1)
+                if (InventNewMemeForAFeature(af, out Meme inventedMeme))
                 {
-                    memeType = randomizer.Next(1, 13);                    
-                    switch (memeType)
-                    {
-                        case 1:
-                            af = AvailableFeatures.TrickLikelyhood;
-                            if (WorldProperties.NewMemeTrickLikelyhoodMean == 0 && WorldProperties.NewMemeTrickLikelyhoodStdDev == 0) memeType = -1;
-                            break;
-                        case 2:
-                            af = AvailableFeatures.TrickEfficiency;
-                            if (WorldProperties.NewMemeTrickEfficiencyMean == 0 && WorldProperties.NewMemeTrickEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                        case 3:
-                            af = AvailableFeatures.TeachingLikelyhood;
-                            if (WorldProperties.NewMemeTeachingLikelyhoodMean == 0 && WorldProperties.NewMemeTeachingLikelyhoodStdDev == 0) memeType = -1;
-                            break;
-                        case 4:
-                            af = AvailableFeatures.TeachingEfficiency;
-                            if (WorldProperties.NewMemeTeachingEfficiencyMean == 0 && WorldProperties.NewMemeTeachingEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                        case 5:
-                            af = AvailableFeatures.StudyLikelyhood;
-                            if (WorldProperties.NewMemeStudyLikelyhoodMean == 0 && WorldProperties.NewMemeStudyEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                        case 6:
-                            af = AvailableFeatures.StudyEfficiency;
-                            if (WorldProperties.NewMemeStudyEfficiencyMean == 0 && WorldProperties.NewMemeStudyEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                        case 7:
-                            af = AvailableFeatures.FreeRiderPunishmentLikelyhood;
-                            if (WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean == 0 && WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev == 0) memeType = -1;
-                            break;
-                        case 8:
-                            af = AvailableFeatures.FreeRiderDeterminationEfficiency;
-                            if (WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean == 0 && WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                        case 9:
-                            af = AvailableFeatures.LikelyhoodOfNotBeingAFreeRider;
-                            if (WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean == 0 && WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev == 0) memeType = -1;
-                            break;
-                        case 10:
-                            af = AvailableFeatures.HuntingEfficiency;
-                            if (WorldProperties.NewMemeHuntingEfficiencyMean == 0 && WorldProperties.NewMemeHuntingEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                        case 11:
-                            af = AvailableFeatures.CooperationEfficiency;
-                            if (WorldProperties.NewMemeCooperationEfficiencyMean == 0 && WorldProperties.NewMemeCooperationEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                        case 12:
-                            af = null;
-                            if (WorldProperties.NewMemeUselessEfficiencyMean == 0 && WorldProperties.NewMemeUselessEfficiencyStdDev == 0) memeType = -1;
-                            break;
-                    }
-                }
-                Meme inventedMeme;
-                
-                if (InventNewMemeForAFeature(af, out inventedMeme))
-                {
-                    storyOfLife?.AppendFormat("Invented how {5}. ({0} meme with {1} effect). Complexity is {2:f2} and {3} now has {4:f2} memory left. (Meme#{5})", af.HasValue ? af.Value.GetDescription() : "Nothing", inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.MemeId, inventedMeme.ActionDescription).AppendLine();
+                    storyOfLife?.AppendFormat("Invented how {5}. ({0} meme with {1} effect). Complexity is {2:f2} and {3} now has {4:f2} memory left. (Meme#{5})", af.GetDescription(), inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.MemeId, inventedMeme.ActionDescription).AppendLine();
                     ReportPhenotypeChange();
                 }
                 else
@@ -295,7 +210,7 @@ namespace TribeSim
             }
         }
 
-        private bool InventNewMemeForAFeature(AvailableFeatures? featureTheMemeWillAffect, out Meme createdMeme)
+        private bool InventNewMemeForAFeature(AvailableFeatures featureTheMemeWillAffect, out Meme createdMeme)
         {
             Meme newMeme = Meme.InventNewMeme(randomizer, featureTheMemeWillAffect);
             StatisticsCollector.ReportCountEvent(this.MyTribeName, "Meme Invented");
@@ -420,15 +335,11 @@ namespace TribeSim
             }
         }
 
-        private void UseMemeGroup(AvailableFeatures? usedFeature, string activity = "engaged in unknown activity")
+        private void UseMemeGroup(AvailableFeatures usedFeature, string activity = "engaged in unknown activity")
         {
-            if (usedFeature == null) {
-                if (usedFeature == null && WorldProperties.NewMemeUselessEfficiencyMean == 0 && WorldProperties.NewMemeUselessEfficiencyStdDev == 0) { return; }
-            } else {
-                FeatureDescription description = WorldProperties.FeatureDescriptions[(int)usedFeature.Value];
-                if (!description.MemCanBeInvented)
-                    return;
-            }
+            FeatureDescription description = WorldProperties.FeatureDescriptions[(int)usedFeature];
+            if (!description.MemCanBeInvented)
+                return;
 
             double C = GetFeature(AvailableFeatures.Creativity);;
             double M = WorldProperties.ChanceToInventNewMemeWhileUsingItModifier;
@@ -441,7 +352,7 @@ namespace TribeSim
                 
                 if (InventNewMemeForAFeature(usedFeature, out inventedMeme))
                 {
-                    storyOfLife?.AppendFormat("While {6} invented how {7}. ({0} meme with {1} effect) The meme complexity is {2:f2} and {3} now has {4:f2} memory left. ({5})", usedFeature.HasValue ? usedFeature.Value.GetDescription() : "Nothing", inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.SignatureString, activity, inventedMeme.ActionDescription).AppendLine();
+                    storyOfLife?.AppendFormat("While {6} invented how {7}. ({0} meme with {1} effect) The meme complexity is {2:f2} and {3} now has {4:f2} memory left. ({5})", usedFeature.GetDescription(), inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.SignatureString, activity, inventedMeme.ActionDescription).AppendLine();
                     ReportPhenotypeChange();
                 }
                 else
@@ -473,11 +384,6 @@ namespace TribeSim
             }
             meme.ReportTeaching(this, teacher);
             ReportPhenotypeChange();
-        }
-
-        public void TryToDetermineAndPunishAFreeRider(List<Tribesman> members, List<Tribesman> freeRidersList) {
-            if (randomizer.Chance(GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood)))
-                DetermineAndPunishAFreeRider(members, freeRidersList);
         }
 
         public void DetermineAndPunishAFreeRider(List<Tribesman> members, List<Tribesman> freeRidersList)
@@ -618,13 +524,14 @@ namespace TribeSim
         {
             int uselessActionsMade = 0;
             double resourcesWasted = 0;
-            if (GetFeature(null)>=0.999 && WorldProperties.AllowRepetitiveUselessActions>1)
+            var chance = GetFeature(AvailableFeatures.UselessActionsLikelihood);
+            if (chance >= 0.999 && WorldProperties.AllowRepetitiveUselessActions>1)
             {
                 resource = 0;
                 storyOfLife?.Append("Wasted all his resources on useless actions.");
                 return;
             }
-            while (randomizer.Chance(GetFeature(null)))
+            while (randomizer.Chance(chance))
             {
                 uselessActionsMade++;
                 resourcesWasted += WorldProperties.UselessActionCost;
@@ -634,11 +541,15 @@ namespace TribeSim
             {
                 resource -= resourcesWasted;
 
-                List<TribesmanToMemeAssociation> relevantMemes = memes.Where(associ => associ.Meme.AffectedFeature == null).ToList();
-                Meme randomKnownUselessMeme = relevantMemes[randomizer.Next(relevantMemes.Count)].Meme;
+                List<TribesmanToMemeAssociation> relevantMemes = memes.Where(associ => associ.Meme.AffectedFeature == AvailableFeatures.UselessActionsLikelihood).ToList();
+                if (relevantMemes.Count > 0) {
+                    Meme randomKnownUselessMeme = relevantMemes[randomizer.Next(relevantMemes.Count)].Meme;
 
-                storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();                
-                UseMemeGroup(null, "performing useless actions");
+                    storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
+                    UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
+                } else {
+                    storyOfLife?.AppendFormat($"Geneticaly based useless actins. Chance: {chance}, but wasted {resourcesWasted:f2} resources on it. {resource:f2} remaining.").AppendLine();
+                }
             }
         }
 
@@ -921,39 +832,22 @@ namespace TribeSim
             }
             if (WorldProperties.CollectBrainUsagePercentages >0.5)
             {
-                NullableDictionary<AvailableFeatures?, double> brainUsages = new NullableDictionary<AvailableFeatures?, double>();
                 double totalBrainUsage = 0;
                 double totalBrainSize = 0;
-                foreach (AvailableFeatures af in Enum.GetValues(typeof(AvailableFeatures)))
-                {
-                    brainUsages.Add(af, 0);
-                }
-                brainUsages.Add((AvailableFeatures?)null, 0);
-                foreach (TribesmanToMemeAssociation tma in memes)
-                {
+                var brainUsages = FeatureSet.Blank();
+                foreach (TribesmanToMemeAssociation tma in memes) {
                     totalBrainUsage += tma.Meme.Price;
-                    if (!brainUsages.ContainsKey(tma.Meme.AffectedFeature))
-                    {
-                        brainUsages.Add(tma.Meme.AffectedFeature, tma.Meme.Price);
-                    }
-                    else
-                    {
-                        brainUsages[tma.Meme.AffectedFeature] += tma.Meme.Price;
-                    }
+                    brainUsages[(int)tma.Meme.AffectedFeature] += tma.Meme.Price;
                 }
                 totalBrainSize = totalBrainUsage + MemorySizeRemaining;
                 if (totalBrainSize > 0)
                 {
                     StatisticsCollector.ReportAverageEvent(MyTribeName, "% memory: unused", MemorySizeRemaining / totalBrainSize);
-                    foreach (KeyValuePair<AvailableFeatures?, double> kvp in brainUsages)
-                    {
-                        StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("% memory: {0}", kvp.Key == null ? "useless" : kvp.Key.ToString()), kvp.Value / totalBrainSize);
-                    }
+                    for (int i = 0; i < brainUsages.Length; i++)
+                        if (brainUsages[i] > 0)
+                            StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("% memory: {0}", ((AvailableFeatures)i).ToString()), brainUsages[i] / totalBrainSize);
                 }
             }
         }
-
-        
     }
-
 }

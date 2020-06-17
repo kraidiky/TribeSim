@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 
@@ -54,6 +55,8 @@ namespace TribeSim
         private static double initialStateGenesMemorySizeStdDev;
         private static double initialStateGenesCreativityMean;
         private static double initialStateGenesCreativityStdDev;
+        private static double initialStateGenesUselessActionsLikelihoodMean;
+        private static double initialStateGenesUselessActionsLikelihoodStdDev;
 
         private static double newMemeTrickLikelyhoodMean;
         private static double newMemeTrickLikelyhoodStdDev;
@@ -238,6 +241,7 @@ namespace TribeSim
         private static double mutationChanceCooperationEfficiency;
         private static double mutationChanceMemoryLimit;
         private static double mutationChanceCreativity;
+        private static double mutationChanceUselessActionsLikelihood;
         private static double mutationStrengthMeanTrickLikelyhood;
         private static double mutationStrengthMeanTrickEfficiency;
         private static double mutationStrengthMeanTeachingLikelyhood;
@@ -251,6 +255,7 @@ namespace TribeSim
         private static double mutationStrengthMeanCooperationEfficiency;
         private static double mutationStrengthMeanMemoryLimit;
         private static double mutationStrengthMeanCreativity;
+        private static double mutationStrengthMeanUselessActionsLikelihood;
         private static double mutationStrengthStdDevTrickLikelyhood;
         private static double mutationStrengthStdDevTrickEfficiency;
         private static double mutationStrengthStdDevTeachingLikelyhood;
@@ -264,6 +269,7 @@ namespace TribeSim
         private static double mutationStrengthStdDevCooperationEfficiency;
         private static double mutationStrengthStdDevMemoryLimit;
         private static double mutationStrengthStdDevCreativity;
+        private static double mutationStrengthStdDevUselessActionsLikelihood;
 
         private static double collectGraphData;
         private static double collectFilesData;
@@ -280,6 +286,8 @@ namespace TribeSim
         [DisplayableProperty("Initial State Random Seed", group = "Initial state", description = "Initial State Random Seed")]
         public static double InitialStateRandomSeed { get => initialStateRandomSeed; set { initialStateRandomSeed = value; PersistChanges(); } }
 
+        [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Useless Actions Likelihood")]
+        public static double MutationStrengthStdDevUselessActionsLikelihood { get => mutationStrengthStdDevUselessActionsLikelihood; set { mutationStrengthStdDevUselessActionsLikelihood = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Creativity")]
         public static double MutationStrengthStdDevCreativity { get => mutationStrengthStdDevCreativity; set {  mutationStrengthStdDevCreativity = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Memory limit")]
@@ -307,6 +315,8 @@ namespace TribeSim
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Trick likelyhood")]
         public static double MutationStrengthStdDevTrickLikelyhood { get => mutationStrengthStdDevTrickLikelyhood; set {  mutationStrengthStdDevTrickLikelyhood = value; PersistChanges(); } }
 
+        [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Useless Actions Likelihood")]
+        public static double MutationStrengthMeanUselessActionsLikelihood { get => mutationStrengthMeanUselessActionsLikelihood; set { mutationStrengthMeanUselessActionsLikelihood = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Creativity")]
         public static double MutationStrengthMeanCreativity { get => mutationStrengthMeanCreativity; set { mutationStrengthMeanCreativity = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Memory limit")]
@@ -335,7 +345,8 @@ namespace TribeSim
         public static double MutationStrengthMeanTrickLikelyhood { get => mutationStrengthMeanTrickLikelyhood; set { mutationStrengthMeanTrickLikelyhood = value; PersistChanges(); } }
 
 
-
+        [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Useless Actions Likelihood")]
+        public static double MutationChanceUselessActionsLikelihood { get => mutationChanceUselessActionsLikelihood; set { mutationChanceUselessActionsLikelihood = value; PersistChanges(); } }
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Creativity")]
         public static double MutationChanceCreativity { get => mutationChanceCreativity; set { mutationChanceCreativity = value; PersistChanges(); } }
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Memory limit")]
@@ -1176,6 +1187,19 @@ namespace TribeSim
             set { WorldProperties.initialStateGenesCreativityStdDev = value; PersistChanges(); }
         }
 
+        [DisplayableProperty("Mean", group = "Initial state\\Genes\\UselessActionsLikelihood")]
+        public static double InitialStateGenesUselessActionsLikelihoodMean
+        {
+            get { return WorldProperties.initialStateGenesUselessActionsLikelihoodMean; }
+            set { WorldProperties.initialStateGenesUselessActionsLikelihoodMean = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\UselessActionsLikelihood", description = "Genetically defined chance to do useless actions. [0, 1]")]
+        public static double InitialStateGenesUselessActionsLikelihoodStdDev
+        {
+            get { return WorldProperties.initialStateGenesUselessActionsLikelihoodStdDev; }
+            set { WorldProperties.initialStateGenesUselessActionsLikelihoodStdDev = value; PersistChanges(); }
+        }
 
         [DisplayableProperty("Resource consumed per year", group = "Environment", description = "The amount of resource consumed every year by a single being. [0, infinity)")]
         public static double LifeSupportCosts
@@ -1388,6 +1412,8 @@ namespace TribeSim
         #region Persistance
         public static void LoadPersistance(string loadFilename = null)
         {
+            Console.WriteLine($"WorldProperties.LoadPersistance({loadFilename})");
+
             inStableState = false;
             if (loadFilename != null)
             {
@@ -1408,6 +1434,8 @@ namespace TribeSim
             {
                 DisplayableProperty displayInfo = customProperty.GetCustomAttribute<DisplayableProperty>();
                 if (displayInfo == null) continue;
+                if (propertiesDictionary.ContainsKey(displayInfo.XMLName))
+                    Console.WriteLine($"{displayInfo.XMLName} >> {customProperty}");
                 propertiesDictionary.Add(displayInfo.XMLName, customProperty);
             }
             if (File.Exists(loadFilename))
@@ -1551,8 +1579,9 @@ namespace TribeSim
 
         #region Structured property description
         /// <summary> Количество фич. Эту цифру можно рассчитывать, и это будет надёжнее, но чуть-чуть медленнее. Поэтому вместо того чтобы её вычислять мы будем её проверять. </summary>
-        public const int FEATURES_COUNT = 13;
+        public const int FEATURES_COUNT = 14;
         public static FeatureDescription[] FeatureDescriptions;
+        public static int[] MemesWhichCanBeInvented;
         public static void ResetFeatureDescriptions() {
             // Проверяем, что константа количества фич выставлена правильно.
             int maxFeatureIndex = -1;
@@ -1569,6 +1598,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTrickLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTrickLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTrickLikelyhood,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeTrickLikelyhoodMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeTrickLikelyhoodStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalTrickLikelyhood,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTrickLikelyhood,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageTrickLikelyhood,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeTrickLikelyhoodMean != 0 || WorldProperties.NewMemeTrickLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TrickEfficiency] = new FeatureDescription() {
@@ -1578,6 +1614,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTrickEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTrickEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTrickEfficiency,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeTrickEfficiencyMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeTrickEfficiencyStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalTrickEfficiency,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTrickEfficiency,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageTrickEfficiency,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeTrickEfficiencyMean != 0 || WorldProperties.NewMemeTrickEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingLikelyhood] = new FeatureDescription() {
@@ -1587,6 +1630,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTeachingLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTeachingLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTeachingLikelyhood,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeTeachingLikelyhoodMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeTeachingLikelyhoodStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalTeachingLikelyhood,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTeachingLikelyhood,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageTeachingLikelyhood,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeTeachingLikelyhoodMean != 0 || WorldProperties.NewMemeTeachingLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingEfficiency] = new FeatureDescription() {
@@ -1596,6 +1646,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceTeachingEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanTeachingEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevTeachingEfficiency,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeTeachingEfficiencyMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeTeachingEfficiencyStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalTeachingEfficiency,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioTeachingEfficiency,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageTeachingEfficiency,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeTeachingEfficiencyMean != 0 || WorldProperties.NewMemeTeachingEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyLikelyhood] = new FeatureDescription() {
@@ -1605,6 +1662,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceStudyLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanStudyLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevStudyLikelyhood,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeStudyLikelyhoodMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeStudyLikelyhoodStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalStudyLikelyhood,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioStudyLikelyhood,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageStudyLikelyhood,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeStudyLikelyhoodMean != 0 || WorldProperties.NewMemeStudyLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyEfficiency] = new FeatureDescription() {
@@ -1614,6 +1678,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceStudyEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanStudyEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevStudyEfficiency,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeStudyEfficiencyMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeStudyEfficiencyStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalStudyEfficiency,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioStudyEfficiency,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageStudyEfficiency,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeStudyEfficiencyMean != 0 || WorldProperties.NewMemeStudyEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood] = new FeatureDescription() {
@@ -1623,6 +1694,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceFreeRiderPunishmentLikelyhood,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanFreeRiderPunishmentLikelyhood,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevFreeRiderPunishmentLikelyhood,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalFreeRiderPunishmentLikelyhood,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioFreeRiderPunishmentLikelyhood,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageFreeRiderPunishmentLikelyhood,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderPunishmentLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean != 0 || WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderDeterminationEfficiency] = new FeatureDescription() {
@@ -1632,6 +1710,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceFreeRiderDeterminationEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanFreeRiderDeterminationEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevFreeRiderDeterminationEfficiency,
+                
+                MemeEfficiencyMean = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalFreeRiderDeterminationEfficiency,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioFreeRiderDeterminationEfficiency,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageFreeRiderDeterminationEfficiency,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderDeterminationEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean != 0 || WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider] = new FeatureDescription() {
@@ -1641,6 +1726,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceLikelyhoodOfNotBeingAFreeRider,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanLikelyhoodOfNotBeingAFreeRider,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevLikelyhoodOfNotBeingAFreeRider,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalLikelyhoodOfNotBeingAFreeRider,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioLikelyhoodOfNotBeingAFreeRider,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageLikelyhoodOfNotBeingAFreeRider,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevLikelyhoodOfNotBeingAFreeRider,
                 MemCanBeInvented = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean != 0 || WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.HuntingEfficiency] = new FeatureDescription() {
@@ -1650,6 +1742,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceHuntingEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanHuntingEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevHuntingEfficiency,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeHuntingEfficiencyMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeHuntingEfficiencyStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalHuntingEfficiency,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioHuntingEfficiency,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageHuntingEfficiency,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevHuntingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeHuntingEfficiencyMean != 0 || WorldProperties.NewMemeHuntingEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.CooperationEfficiency] = new FeatureDescription() {
@@ -1659,6 +1758,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceCooperationEfficiency,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanCooperationEfficiency,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevCooperationEfficiency,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeCooperationEfficiencyMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeCooperationEfficiencyStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalCooperationEfficiency,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioCooperationEfficiency,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageCooperationEfficiency,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevCooperationEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeCooperationEfficiencyMean != 0 || WorldProperties.NewMemeCooperationEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.MemoryLimit] = new FeatureDescription() {
@@ -1668,6 +1774,13 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceMemoryLimit,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanMemoryLimit,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevMemoryLimit,
+
+                MemeEfficiencyMean = 0,
+                MemeEfficiencyStdDev = 0,
+                MemePricePedestal = 0,
+                MemePriceEfficiencyRatio = 0,
+                MemePriceRandomMean = 0,
+                MemePriceRandomStdDev = 0,
                 MemCanBeInvented = false,
             };
             FeatureDescriptions[(int)AvailableFeatures.Creativity] = new FeatureDescription() {
@@ -1677,8 +1790,36 @@ namespace TribeSim
                 ChancceOfMutation = WorldProperties.MutationChanceCreativity,
                 MutationStrengthMean = WorldProperties.MutationStrengthMeanCreativity,
                 MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevCreativity,
+
+                MemeEfficiencyMean = 0,
+                MemeEfficiencyStdDev = 0,
+                MemePricePedestal = 0,
+                MemePriceEfficiencyRatio = 0,
+                MemePriceRandomMean = 0,
+                MemePriceRandomStdDev = 0,
                 MemCanBeInvented = false,
             };
+            FeatureDescriptions[(int)AvailableFeatures.UselessActionsLikelihood] = new FeatureDescription() {
+                Is0to1Feature = true,
+                InitialStateGenesMean = WorldProperties.InitialStateGenesUselessActionsLikelihoodMean,
+                InitialStateGenesStdDev = WorldProperties.InitialStateGenesUselessActionsLikelihoodStdDev,
+                ChancceOfMutation = WorldProperties.MutationChanceUselessActionsLikelihood,
+                MutationStrengthMean = WorldProperties.MutationStrengthMeanUselessActionsLikelihood,
+                MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevUselessActionsLikelihood,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeUselessEfficiencyMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeUselessEfficiencyStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalUseless,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioUseless,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageUseless,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevUseless,
+                MemCanBeInvented = WorldProperties.NewMemeUselessEfficiencyMean != 0 || WorldProperties.NewMemeUselessEfficiencyStdDev != 0,
+            };
+            // Заранее отсортировать те мемы, которые могут быть изобретены
+            MemesWhichCanBeInvented = FeatureDescriptions
+                .Select((description, i) => description.MemCanBeInvented ? i : -1)
+                .Where(index => index >= 0)
+                .ToArray();
         }
         #endregion
     }
@@ -1725,6 +1866,12 @@ namespace TribeSim
         public double MutationStrengthMean;
         public double MutationStrengthStdDev;
 
+        public double MemeEfficiencyMean;
+        public double MemeEfficiencyStdDev;
+        public double MemePricePedestal;
+        public double MemePriceEfficiencyRatio;
+        public double MemePriceRandomMean;
+        public double MemePriceRandomStdDev;
         public bool MemCanBeInvented;
     }
 }

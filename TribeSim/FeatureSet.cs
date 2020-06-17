@@ -64,7 +64,9 @@ namespace TribeSim
         [Description("Memory limit|ML")]
         MemoryLimit,
         [Description("Creativity|Cre")]
-        Creativity
+        Creativity,
+        [Description("Useless actions likelihood|Usl")]
+        UselessActionsLikelihood,
     }
 
     static class EnumExtender
