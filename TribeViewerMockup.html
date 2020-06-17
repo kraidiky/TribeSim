@@ -1,0 +1,589 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.0/masonry.pkgd.min.js"></script>
+<script>"use strict";angular.module("ngMasonry",[]).controller("masonryController",function(){function n(){return!!e.config&&!!e.config.masonryContainer}function r(){var n={itemSelector:e.config.masonryItem},r=e.config.masonryOptions?angular.extend(n,e.config.masonryOptions):n;e.container=new Masonry(e.config.masonryContainer,r),"undefined"!=typeof imagesLoaded&&new imagesLoaded(e.config.masonryContainer,function(){e.reLayout()})}function o(){e.container.layout()}var e=this;e.config={},e.container=void 0,e.ready=n,e.initialize=r,e.reLayout=o}).directive("masonry",function(){function n(n,r){var o=!1,e=angular.element(document.querySelectorAll("["+r.$attr.masonry+"] [data-masonry-item], ["+r.$attr.masonry+"] [masonry-item]"));return angular.forEach(e,function(n){n=angular.element(n),(void 0!==n.attr("ng-repeat")||void 0!==n.attr("data-ng-repeat"))&&(o=!0,n.attr("data-masonry-after-render",""))}),{pre:function(n,r,o,e){e.config.masonryContainer="["+o.$attr.masonry+"]",e.config.masonryOptions=JSON.parse(o.masonryOptions||"{}")},post:function(n,r,e,t){o||t.initialize()}}}var r={restrict:"A",controller:"masonryController",compile:n};return r}).directive("masonryItem",function(){function n(){return{pre:function(n,r,o,e){void 0===e.config.masonryItem&&(e.config.masonryItem="["+o.$attr.masonryItem+"]")}}}var r={restrict:"A",require:"^masonry",priority:1,compile:n};return r}).directive("masonryAfterRender",["$timeout",function(n){"ngInject";function r(r,o,e,t){if(r.$last){var a=null;a=n(function(){t.initialize(),n.cancel(a)})}}var o={restrict:"A",require:"^masonry",priority:0,link:r};return o}]);</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Barlow+Condensed" rel="stylesheet">
+
+<title>Tribe life</title>
+<style>
+body{
+	margin:0;
+	padding:0;
+	font-family: 'Barlow Condensed', sans-serif;
+}
+div.app{
+	margin:0;
+	padding:10px;	
+    box-sizing: border-box;
+	background: #ebebeb;
+	color: #220c10;
+	width: 100vw;
+	height: 100vh;
+	overflow: auto;
+}
+span.symbol{
+	font-size:30px;
+}
+div.tribesman {
+    font-size: 10px;
+    text-align: center;
+    width: 46px;
+    height: 54px;
+    float: left;    
+	cursor: default;			
+}
+.highlighted
+{
+	z-index: 20;	
+	background: #f7c1bb;
+	border-radius: 3px;
+    box-sizing: border-box;
+}
+div.tribesman.circle {        
+    position: absolute;
+    margin: 165px 0 0 177px;
+	border: none;
+}
+h1 {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-size: 30px;
+	height: 36px;
+}	
+h2{
+    margin: 0;
+    text-align: center;
+    font-size: 20px;    
+	height: 24px;
+	background: #f7c1bb;
+}
+
+h3 {
+    background: #f7c1bb;
+    margin: 0 0 5px 0;
+	padding:0;
+    text-align: center;
+	transition-property: all;
+	transition-duration: 0.5s;
+}
+
+div.box {
+    border: 1px solid #f7c1bb;    
+    padding: 0 0 5px 0;
+    border-radius: 3px;
+	margin:3px;
+	max-height: 424px;
+	width:404px;
+    box-sizing: border-box;
+	transition-property: all;
+	transition-duration: 0.5s;		
+	transition-timing-function: ease-in-out;
+	float:left;
+	overflow: hidden;
+}
+
+div.box.years {
+	width: 8%;	
+	max-height: calc(100vh - 85px);
+	float:left;
+}
+
+div.box.forgettings {
+	width: 200px;		
+}
+
+div.box.teachings {
+	width: 230px;		
+}
+
+div.box.studies{
+	width: 230px;		
+}
+.box.punishments {
+    width: 190px;
+}
+.box.useless-actions {
+    width: 208px;
+}
+.box.deaths{
+    width: 208px;
+}
+
+div.boxes-holder {
+	width:91%;
+	float:left;
+}
+
+
+div.box:hover {
+    border: 1px solid #e1b0aa;    
+}
+
+div.box:hover h3
+{
+	background: #e1b0aa;
+}
+
+div.box .year {
+	cursor: pointer;
+	padding: 0px 10px;		
+}	
+div.box .year:hover {
+	background-color:#f7c1bb;
+}
+
+div.box.collapsed {
+    max-height: 25px;    
+}
+
+div.box.collapsed div.tribesmen-container {
+    display:none;    
+}
+
+div.tribesmen-container{
+	height:400px;
+	width:400px;
+}
+
+.circle-center {
+    text-align: center;
+    margin-top: 175px;
+    margin-left: 150px;
+    height: 40px;
+    font-size: 20px;
+    position: absolute;
+    width: 100px;
+}
+
+.meme {
+    float: left;
+    width: 120px;
+    margin: 2px;
+	cursor: default;
+}
+.meme span.symbol {
+    float: left;
+}
+
+.memeDescription {
+    font-size: 12px;
+}
+
+dl {
+    font-size: 11px;
+    margin: 0;
+}
+
+dt {
+    float: left;
+    width: 50px;
+    padding-right: 5px;
+    text-align: right;
+}
+
+.teaching.ng-scope {
+    float: left;
+}
+
+.punishment-arrow{	
+	font-family: monospace;
+	font-size: 16px;
+	float: left;
+    margin-top: 10px;
+}
+
+
+div.hunt div.tribesman {    
+    float: none;    
+    display: inline-block;
+	height: 65px;
+}
+
+div.useless-actions div.tribesman {    
+    float: none;    
+    display: inline-block;	
+}
+
+div.deaths div.tribesman {    
+    float: none;    
+    display: inline-block;	
+}
+
+
+</style>
+</head>
+<body>
+
+<div class="app" ng-app="tribeViewerApp" ng-controller="tribeViewerController">
+<!--<div class="tribesman">
+<span class="symbol">&#128104;</span>
+Tikh-Ro
+</div>-->
+	<h1>Tribe Huurt</h1>
+	<h2>Year: {{currentYear.year}}</h2>	
+	<div class="box years {{yearsCollapsed}}">
+		<h3 ng-click="CollapseYears()" >Years</h3>
+		<div class="year" ng-repeat="y in allData" ng-click="changeYear(y.year)" >{{y.year}}</div>
+	</div>
+	<div class="boxes-holder" data-masonry data-masonry-options='{ "columnWidth": 1 }'>
+	<div data-masonry-item class="box members {{membersCollapsed}}">
+		<h3 ng-click="CollapseMembers()" >Members</h3>
+		<div class="tribesmen-container"> 
+			<div class="circle-center">Total: {{currentYear.members.length}}{{highlightedMen>1?" ("+highlightedMen+")":""}}</div>
+			<div class="tribesman circle highlight-man-{{man.name}}" ng-mouseover="Highlight('man',man.name)" ng-mouseleave="Dehighlight()" ng-repeat="man in currentYear.members" style="transform: rotate({{360/currentYear.members.length*$index}}deg) translate(170px) rotate(-{{360/currentYear.members.length*$index}}deg);">
+				<span class="symbol">&#128104;</span>
+				<div class="name">{{man.name}}</div>
+			</div>					
+		</div>
+	</div>
+	<div data-masonry-item class="box memes {{memesCollapsed}}">
+		<h3 ng-click="CollapseMemes()" >Memes</h3>
+		<div class="meme highlight-meme-{{meme.id}}" ng-mouseover="Highlight('meme',meme.id)" ng-mouseleave="Dehighlight()" ng-repeat="meme in currentYear.memes"><span class="symbol">&#128220;</span> <div class="memeDescription">{{meme.AffectedFeature}}<dl><dt>Efficiency</dt><dd>{{meme.Effect}}</dd><dt>Price</dt><dd>{{meme.Price}}</dd></dl></div></div>
+	</div>
+	<div data-masonry-item class="box inventions {{inventionsCollapsed}}">
+		<h3 ng-click="CollapseInventions()" >Inventions</h3>		
+		<div class="invention" ng-repeat="invention in currentYear.events.inventions">
+			<div class="tribesman highlight-man-{{invention.inventor}}" ng-mouseover="Highlight('man',invention.inventor)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#128104;</span>
+				<div class="name">{{invention.inventor}}</div>
+			</div>	
+			<div class="meme highlight-meme-{{invention.meme.id}}" ng-mouseover="Highlight('meme',invention.meme.id)" ng-mouseleave="Dehighlight()"><span class="symbol">&#128220;</span> <div class="memeDescription">{{invention.meme.AffectedFeature}}<dl><dt>Efficiency</dt><dd>{{invention.meme.Effect}}</dd><dt>Price</dt><dd>{{invention.meme.Price}}</dd><dt>Action:</dt><dd>{{invention.action}}</dd></dl></div> </div>
+		</div>
+	</div>
+	
+	<div data-masonry-item class="box teachings {{teachingsCollapsed}}">
+		<h3 ng-click="CollapseTeachings()" >Teaching</h3>		
+		<div class="teaching" ng-repeat="teaching in currentYear.events.teachings">
+			<div class="tribesman highlight-man-{{teaching.teacher}}" ng-mouseover="Highlight('man',teaching.teacher)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#128116;</span>
+				<div class="name">{{teaching.teacher}}</div>
+			</div>	
+			<div class="meme highlight-meme-{{teaching.meme.id}}" ng-mouseover="Highlight('meme',teaching.meme.id)" ng-mouseleave="Dehighlight()"><span class="symbol">&#128220;</span> <div class="memeDescription">{{teaching.meme.AffectedFeature}}<dl><dt>Efficiency</dt><dd>{{teaching.meme.Effect}}</dd><dt>Price</dt><dd>{{teaching.meme.Price}}</dd></dl></div> </div>
+			<div class="tribesman highlight-man-{{teaching.student}}" ng-mouseover="Highlight('man',teaching.student)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#127891;</span>
+				<div class="name">{{teaching.student}}</div>
+			</div>	
+		</div>
+	</div>	
+	<div data-masonry-item class="box studies">
+		<h3>Studies</h3>		
+		<div class="teaching" ng-repeat="study in currentYear.events.studies">
+			<div class="tribesman highlight-man-{{study.teacher}}" ng-mouseover="Highlight('man',study.teacher)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#128116;</span>
+				<div class="name">{{study.teacher}}</div>
+			</div>	
+			<div class="meme highlight-meme-{{study.meme.id}}" ng-mouseover="Highlight('meme',study.meme.id)" ng-mouseleave="Dehighlight()"><span class="symbol">&#128220;</span> <div class="memeDescription">{{study.meme.AffectedFeature}}<dl><dt>Efficiency</dt><dd>{{study.meme.Effect}}</dd><dt>Price</dt><dd>{{study.meme.Price}}</dd></dl></div> </div>
+			<div class="tribesman highlight-man-{{study.student}}" ng-mouseover="Highlight('man',study.student)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#127891;</span>
+				<div class="name">{{study.student}}</div>
+			</div>	
+		</div>
+	</div>	
+	<div data-masonry-item class="box punishments {{punishmentsCollapsed}}">
+		<h3 ng-click="CollapsePunishments()" >Punishments</h3>		
+		<div class="punishment" ng-repeat="punishment in currentYear.events.punishments">
+			<div class="tribesman highlight-man-{{punishment.punisher}}" ng-mouseover="Highlight('man',punishment.punisher)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#128104;</span>
+				<div class="name">{{punishment.punisher}}</div>
+			</div>	
+			<div class="punishment-arrow">&mdash;{{(punishment.fair?"&mdash;fair&mdash;":"unfair")}}&mdash;&#8594;</div>
+			<div class="tribesman highlight-man-{{punishment.punished}}" ng-mouseover="Highlight('man',punishment.punished)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#128104;</span>
+				<div class="name">{{punishment.punished}}</div>
+			</div>	
+		</div>
+	</div>	
+	<div data-masonry-item class="box hunt">
+		<h3>Hunters</h3>		
+		<div ng-repeat="hunter in currentYear.events.hunt.hunters" class="tribesman highlight-man-{{hunter}}" ng-mouseover="Highlight('man',hunter)" ng-mouseleave="Dehighlight()">
+			<span class="symbol">&#127939;</span>
+			<div class="name">{{hunter}}</div>
+			<div class="name">{{currentYear.events.hunt.split[hunter]}}</div>
+		</div>	
+		<h3>Free riders</h3>
+		<div ng-repeat="hunter in currentYear.events.hunt.freeRiders" class="tribesman highlight-man-{{hunter}}" ng-mouseover="Highlight('man',hunter)" ng-mouseleave="Dehighlight()">
+			<span class="symbol">&#127969;</span>
+			<div class="name">{{hunter}}</div>
+			<div class="name">{{currentYear.events.hunt.split[hunter]}}</div>
+		</div>	
+		<h3>Hunt result</h3>		
+		<center><b>Total loot: {{currentYear.events.hunt.loot}}</b></center>
+	</div>	
+	<div data-masonry-item class="box deaths">
+		<h3>Deaths of hunger</h3>		
+		<div ng-repeat="deadman in currentYear.events.deaths.hunger" class="tribesman highlight-man-{{deadman}}" ng-mouseover="Highlight('man',deadman)" ng-mouseleave="Dehighlight()">
+			<span class="symbol">&#9760;</span>
+			<div class="name">{{deadman}}</div>			
+		</div>	
+		<h3>Deaths of natural causes</h3>
+		<div ng-repeat="deadman in currentYear.events.deaths.age" class="tribesman highlight-man-{{deadman}}" ng-mouseover="Highlight('man',deadman)" ng-mouseleave="Dehighlight()">
+			<span class="symbol">&#9760;</span>
+			<div class="name">{{deadman}}</div>			
+		</div>		
+	</div>	
+	<div data-masonry-item class="box useless-actions">
+		<h3>Useless actions</h3>		
+		<div ng-repeat="actor in currentYear.events.uselessActions" class="tribesman highlight-man-{{actor}}" ng-mouseover="Highlight('man',actor)" ng-mouseleave="Dehighlight()">
+			<span class="symbol">&#128111;</span>
+			<div class="name">{{actor}}</div>			
+		</div>			
+	</div>	
+	<div data-masonry-item class="box forgettings {{forgettingsCollapsed}}">
+		<h3 ng-click="CollapseForgettings()" >Forgettings</h3>		
+		<div class="invention" ng-repeat="forgetting in currentYear.events.forgettings">
+			<div class="tribesman highlight-man-{{forgetting.forgetter}}" ng-mouseover="Highlight('man',forgetting.forgetter)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#128104;</span>
+				<div class="name">{{forgetting.forgetter}}</div>
+			</div>	
+			<div class="meme highlight-meme-{{forgetting.meme.id}}" ng-mouseover="Highlight('meme',forgetting.meme.id)" ng-mouseleave="Dehighlight()"><span class="symbol">&#128220;</span> <div class="memeDescription">{{forgetting.meme.AffectedFeature}}<dl><dt>Efficiency</dt><dd>{{forgetting.meme.Effect}}</dd><dt>Price</dt><dd>{{forgetting.meme.Price}}</dd></dl></div> </div>
+		</div>
+	</div>
+	<div data-masonry-item class="box births">
+		<h3>Forgettings</h3>		
+		<div class="invention" ng-repeat="forgetting in currentYear.events.forgettings">
+			<div class="tribesman highlight-man-{{forgetting.forgetter}}" ng-mouseover="Highlight('man',forgetting.forgetter)" ng-mouseleave="Dehighlight()">
+				<span class="symbol">&#128104;</span>
+				<div class="name">{{forgetting.forgetter}}</div>
+			</div>	
+			<div class="meme highlight-meme-{{forgetting.meme.id}}" ng-mouseover="Highlight('meme',forgetting.meme.id)" ng-mouseleave="Dehighlight()"><span class="symbol">&#128220;</span> <div class="memeDescription">{{forgetting.meme.AffectedFeature}}<dl><dt>Efficiency</dt><dd>{{forgetting.meme.Effect}}</dd><dt>Price</dt><dd>{{forgetting.meme.Price}}</dd></dl></div> </div>
+		</div>
+	</div>
+	
+	</div>
+</div>
+</body>
+
+<!-- display code -->
+
+<script>
+var app = angular.module('tribeViewerApp', ['ngMasonry']);
+app.controller('tribeViewerController', function($scope) {
+    $scope.yearId = 0;
+    $scope.allData = TribeLifeData;
+	$scope.currentYear = TribeLifeData[0];	
+	$scope.yearsCollapsed = "";
+	$scope.membersCollapsed = "";
+	$scope.memesCollapsed = "";
+	$scope.inventionsCollapsed = "";
+	$scope.forgettingsCollapsed = "";
+	$scope.teachingsCollapsed = "";
+	$scope.highlightedMen = "";
+	$scope.punishmentsCollapsed = "";
+	$scope.Dehighlight = function()	{
+		$scope.highlightedMen=0;
+		$(".highlighted").removeClass("highlighted");
+	}
+	$scope.Highlight = function(type, name)	{	
+		$scope.highlightedMen=0;
+		if (type=="man")
+		{
+			$(".highlight-man-" + name).addClass("highlighted");
+			var curmember=null;
+			for(var i = 0; i < $scope.currentYear.members.length; i++)
+			{
+				if ($scope.currentYear.members[i].name==name)
+				{
+					curmember = $scope.currentYear.members[i];
+					break;
+				}
+			}
+			if (curmember!=null) {
+				for (var i=0; i<curmember.memes.length; i++)
+				{
+					$(".highlight-meme-" + curmember.memes[i]).addClass("highlighted");
+				}
+			}
+		}
+		else if (type="meme")
+		{
+			$(".highlight-meme-" + name).addClass("highlighted");
+			for(var i = 0; i < $scope.currentYear.members.length; i++)
+			{
+				if ($scope.currentYear.members[i].memes.includes(name))
+				{
+					$(".highlight-man-" + $scope.currentYear.members[i].name).addClass("highlighted");
+					$scope.highlightedMen++;
+				}
+			}
+		}
+	}
+	$scope.GetMemberAngle = function(name)
+	{
+		var index=0;	
+		for (index=0; index<$scope.currentYear.members.length; index++)
+		{
+			if ($scope.currentYear.members[index].name==name)
+			{
+				break;
+			}
+		}		
+		return 360/$scope.currentYear.members.length * index;
+	}
+	$scope.GetChordLen = function(punisher, punished)
+	{		
+		return Math.trunc(340 * Math.sin( Math.PI / 180 * ( $scope.GetMemberAngle(punisher) - $scope.GetMemberAngle(punished) ) / 2));
+	}
+	$scope.GetChordHShift = function(punisher, punished)
+	{
+		console.log( Math.sqrt(170*170 - Math.pow($scope.GetChordLen(punisher, punished),2)/4));
+		return Math.trunc(Math.sqrt(170*170 - Math.pow($scope.GetChordLen(punisher, punished),2)/4));
+	}
+	
+	
+	$scope.changeYear = function(yearNo) { for(var i = 0; i < $scope.allData.length; i++) { if($scope.allData[i].year == yearNo) { $scope.currentYear = $scope.allData[i]; $('.boxes-holder').masonry(); } } }
+	$scope.CollapseYears = function() 	{ if ($scope.yearsCollapsed == "") { $scope.yearsCollapsed = "collapsed"; } else { $scope.yearsCollapsed = ""; } $('.boxes-holder').masonry(); }
+	$scope.CollapseMembers= function() 	{ if ($scope.membersCollapsed == "") { $scope.membersCollapsed = "collapsed"; } else { $scope.membersCollapsed = ""; } }
+	$scope.CollapseMemes= function()	{ if ($scope.memesCollapsed == "") { $scope.memesCollapsed = "collapsed"; } else { $scope.memesCollapsed = ""; } }
+	$scope.CollapseInventions= function() { if ($scope.inventionsCollapsed == "") { $scope.inventionsCollapsed = "collapsed"; } else { $scope.inventionsCollapsed = ""; } }
+	$scope.CollapseForgettings = function() { if ($scope.forgettingsCollapsed == "") { $scope.forgettingsCollapsed = "collapsed"; } else { $scope.forgettingsCollapsed = ""; } }
+	$scope.CollapseTeachings = function() { if ($scope.teachingsCollapsed == "") { $scope.teachingsCollapsed = "collapsed"; } else { $scope.teachingsCollapsed = ""; } }
+	$scope.CollapsePunishments = function() { if ($scope.punishmentsCollapsed == "") { $scope.punishmentsCollapsed = "collapsed"; } else { $scope.punishmentsCollapsed = ""; } }
+});
+</script>
+
+
+
+<!-- data -->
+<script>
+var TribeLifeData = [
+	{
+		"year":0,
+		"members": [
+			{"name":"Tikh-Ro", "memes": [1, 3]},
+			{"name":"Sarp-Po", "memes": [2]},
+			{"name":"Johnd-Ru", "memes": [2, 3, 4]}
+			
+		],
+		"memes": [
+			{"id": 1, "AffectedFeature": "Hunting Efficiency", "Price": 20, "Effect": 0.01},
+			{"id": 2, "AffectedFeature": "Teaching Efficiency", "Price": 10, "Effect": 0.12},
+			{"id": 3, "AffectedFeature": "Study Efficiency", "Price": 5, "Effect": 0.07},
+			{"id": 4, "AffectedFeature": "Study Likelyhood", "Price": 15, "Effect": 0.0017}
+		],
+		"events":
+		{
+			"inventions": [{"inventor":"Tikh-Ro", "meme": {"id": 3, "AffectedFeature": "Study Efficiency", "Price": 5, "Effect": 0.07}, "action" : "spontaneous"},{"inventor":"Sarp-Po", "meme": {"id": 2, "AffectedFeature": "Teaching Efficiency", "Price": 10, "Effect": 0.12}, "action" : "work"}],
+			"forgettings": [{"forgetter":"Sarp-Po", "meme": {"id": 1, "AffectedFeature": "Hunting Efficiency", "Price": 20, "Effect": 0.01}}],			
+			"teachings": [{"teacher": "Tikh-Po", "student":"Johnd-Ru", "meme": {"id": 3, "AffectedFeature": "Study Efficiency", "Price": 5, "Effect": 0.07}}, {"teacher": "Sarp-Po", "student":"Johnd-Ru", "meme": {"id": 2, "AffectedFeature": "Teaching Efficiency", "Price": 10, "Effect": 0.12}}],
+			"punishments": [{"punisher": "Tikh-Po", "punished":"Johnd-Ru", "fair": true},{"punisher": "Sarp-Po", "punished":"Johnd-Ru", "fair": false}],
+			"hunt": {"hunters": ["Tikh-Po", "Sarp-Po"], "freeRiders":["Johnd-Ru"], "loot": 1000, "split": {"Tikh-Po":333.33, "Sarp-Po":333.33, "Johnd-Ru":333.34}},
+			"uselessActions": ["Tikh-Ro", "Johnd-Ru"],
+			"studies": [{"teacher": "Tikh-Po", "student":"Johnd-Ru", "meme": {"id": 3, "AffectedFeature": "Study Efficiency", "Price": 5, "Effect": 0.07}}, {"teacher": "Sarp-Po", "student":"Johnd-Ru", "meme": {"id": 2, "AffectedFeature": "Teaching Efficiency", "Price": 10, "Effect": 0.12}}],
+			"deaths": {"hunger":["Miln-Da"], "age":["Hurt-Nurt","Funt-Rot"]},
+			"births": [{"partner1":"Tikh-Ro", "partner2":"Johnd-Ru", "child":"Hung-Wer"}],
+			"immigration": {"leavers":["Hung-Wer"], "arrivals":["Johnd-Ru"]},
+			"culturalExchanges": {"outbound": [{"id": 1, "AffectedFeature": "Hunting Efficiency", "Price": 20, "Effect": 0.01},{"id": 3, "AffectedFeature": "Study Efficiency", "Price": 5, "Effect": 0.07}], "inbound": [{"id": 4, "AffectedFeature": "Study Likelyhood", "Price": 15, "Effect": 0.0017}]}
+		}
+	},
+	{
+		"year":1,
+		"members": [
+			{"name":"Tikh-Ro", "memes": [1, 3]},
+			{"name":"Sarp-Po", "memes": [2]},
+			{"name":"Johnd-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd1-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd2-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd3-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd4-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd5-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd6-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd7-Ru", "memes": [2, 3, 4]},
+			{"name":"Tikh-8Ro", "memes": [1, 3]},
+			{"name":"Sarp-9Po", "memes": [2]},
+			{"name":"Johnd10-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd17-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd11-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd16-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd12-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd15-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd13-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd14-Ru", "memes": [2, 3, 4]}			
+		],
+		"memes": [
+			{"id": 1, "AffectedFeature": "Hunting Efficiency", "Price": 20, "Effect": 0.01},
+			{"id": 2, "AffectedFeature": "Teaching Efficiency", "Price": 10, "Effect": 0.12},
+			{"id": 3, "AffectedFeature": "Study Efficiency", "Price": 5, "Effect": 0.07},
+			{"id": 4, "AffectedFeature": "Study Likelyhood", "Price": 15, "Effect": 0.0017},	
+			{"id": 5, "AffectedFeature": "Study Likelyhood", "Price": 15, "Effect": 0.0017}
+		],
+		"events":
+		{
+			"inventions": [{"inventor":"Tikh-Ro", "meme": 3, "action" : "punishment"},{"inventor":"Sarp-Po", "meme": 2, "action" : "spontaneous"}],
+			"forgettings": [{"forgetter":"Sarp-Po", "meme": 1}],			
+			"teachings": [{"teacher": "Tikh-Po", "student":"Johnd-Ru", "meme": 3}, {"teacher": "Sarp-Po", "student":"Johnd-Ru", "meme": 2}],
+			"punishments": [{"punisher": "Tikh-Po", "punished":"Johnd-Ru", "fair": true},{"punisher": "Sarp-Po", "punished":"Johnd-Ru", "fair": false}],
+			"hunt": {"hunters": ["Tikh-Po", "Sarp-Po"], "freeRiders":["Johnd-Ru"], "loot": 1000, "split": {"Tikh-Po":333.33, "Sarp-Po":333.33, "Johnd-Ru":333.34}},
+			"uselessActions": ["Tikh-Ro", "Johnd-Ru"],
+			"studies": [{"teacher": "Tikh-Po", "student":"Johnd-Ru", "meme": 3}, {"teacher": "Sarp-Po", "student":"Johnd-Ru", "meme": 2}],
+			"deaths": {"hunger":["Miln-Da"], "age":["Hurt-Nurt","Funt-Rot"]},
+			"births": [{"partner1":"Tikh-Ro", "partner2":"Johnd-Ru", "child":"Hung-Wer"}],
+			"immigration": {"leavers":["Hung-Wer"], "arrivals":["Johnd-Ru"]},
+			"culturalExchanges": {"outbound": [1,3], "inbound": [4]}
+		}
+	},
+	{
+		"year":2,
+		"members": [
+			{"name":"Tikh-Ro", "memes": [1, 3]},
+			{"name":"Sarp-Po", "memes": [2]},
+			{"name":"Johnd-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd1-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd2-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd3-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd4-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd5-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd6-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd7-Ru", "memes": [2, 3, 4]},
+			{"name":"Tikh-8Ro", "memes": [1, 3]},
+			{"name":"Sarp-9Po", "memes": [2]},
+			{"name":"Johnd10-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd17-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd11-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd16-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd12-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd15-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd13-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd11-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd16-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd12-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd15-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd13-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd11-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd16-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd12-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd15-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd13-Ru", "memes": [2, 3, 4]},
+			{"name":"Johnd14-Ru", "memes": [2, 3, 4]}	
+			
+		],
+		"memes": [
+			{"id": 1, "AffectedFeature": "Hunting Efficiency", "Price": 20, "Effect": 0.01},
+			{"id": 2, "AffectedFeature": "Teaching Efficiency", "Price": 10, "Effect": 0.12},
+			{"id": 3, "AffectedFeature": "Study Efficiency", "Price": 5, "Effect": 0.07},
+			{"id": 4, "AffectedFeature": "Study Likelyhood", "Price": 15, "Effect": 0.0017},
+			{"id": 5, "AffectedFeature": "Study Likelyhood", "Price": 15, "Effect": 0.0017},
+			{"id": 6, "AffectedFeature": "Study Likelyhood", "Price": 15, "Effect": 0.0017}
+		],
+		"events":
+		{
+			"inventions": [{"inventor":"Tikh-Ro", "meme": 3, "action" : "work"},{"inventor":"Sarp-Po", "meme": 2, "action" : "punishment"}],
+			"forgettings": [{"forgetter":"Sarp-Po", "meme": 1}],			
+			"teachings": [{"teacher": "Tikh-Po", "student":"Johnd-Ru", "meme": 3}, {"teacher": "Sarp-Po", "student":"Johnd-Ru", "meme": 2}],
+			"punishments": [{"punisher": "Tikh-Po", "punished":"Johnd-Ru", "fair": true},{"punisher": "Sarp-Po", "punished":"Johnd-Ru", "fair": false}],
+			"hunt": {"hunters": ["Tikh-Po", "Sarp-Po"], "freeRiders":["Johnd-Ru"], "loot": 1000, "split": {"Tikh-Po":333.33, "Sarp-Po":333.33, "Johnd-Ru":333.34}},
+			"uselessActions": ["Tikh-Ro", "Johnd-Ru"],
+			"studies": [{"teacher": "Tikh-Po", "student":"Johnd-Ru", "meme": 3}, {"teacher": "Sarp-Po", "student":"Johnd-Ru", "meme": 2}],
+			"deaths": {"hunger":["Miln-Da"], "age":["Hurt-Nurt","Funt-Rot"]},
+			"births": [{"partner1":"Tikh-Ro", "partner2":"Johnd-Ru", "child":"Hung-Wer"}],
+			"immigration": {"leavers":["Hung-Wer"], "arrivals":["Johnd-Ru"]},
+			"culturalExchanges": {"outbound": [1,3], "inbound": [4]}
+		}
+	}
+];
+</script>
+
+
+</html>

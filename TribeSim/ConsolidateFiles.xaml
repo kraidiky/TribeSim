@@ -1,0 +1,26 @@
+﻿<Window x:Class="TribeSim.ConsolidateFiles"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TribeSim"
+        mc:Ignorable="d"
+        Title="Consolidate Files" Height="611.785" Width="424.37" WindowStyle="ToolWindow">
+    <DockPanel HorizontalAlignment="Stretch"  LastChildFill="True" Margin="0,0,0,0" VerticalAlignment="Stretch" AllowDrop="True" DragDrop.DragEnter="EnterDrag" DragDrop.DragLeave="LeaveDrag" DragDrop.Drop="DropFile">
+
+        <DockPanel DockPanel.Dock="Bottom" Background="#FFEEEEEE" LastChildFill="False">
+            <Button Click="BrowseForFile" DockPanel.Dock="Left" Margin="5" Content="Browse..." Height="40" VerticalAlignment="Top" Width="75"/>
+            <Button Click="ClearList" DockPanel.Dock="Left" Margin="0, 5, 5, 5" Content="Clear" Height="40" VerticalAlignment="Top" Width="75"/>
+            <Button Click="Consolidate" DockPanel.Dock="Right" Margin="5"  Content="Consolidate" Height="40" VerticalAlignment="Top" Width="75"/>
+        </DockPanel>
+        <Label Content="Select or drop the files" DockPanel.Dock="Bottom" Background="#FFCCCCCC" Padding="30,10,10,10" FontSize="14"/>
+
+        <ListView Keyboard.KeyDown="LstItemsKeyPressed" x:Name="lstFileList" Height="493" VerticalAlignment="Top"  Background="#FFEEEEEE">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
+</Window>

@@ -1,0 +1,47 @@
+﻿<Window x:Class="TribeSim.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Simulation Properties" Height="350" Width="525" Loaded="Window_Loaded_1" MinWidth="525" MaxWidth="525" Closing="Window_Closing_1" Icon="Resources/Data-View-Details-icon.png">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open" Click="MenuItem_Click_1"/>
+                <MenuItem Header="_Save" Click="SaveClicked"/>
+                <MenuItem Header="_Consolidate..." Click="ConsolidateResults"/>
+                <MenuItem Header="Save _As" Click="SaveAsClicked"/>
+                <MenuItem Header="E_xit" Click="MenuItem_Click_2"/>
+            </MenuItem>                        
+            <MenuItem Header="_Simulate">
+                <MenuItem Header="_Run simultaion" Click="InitiateSimulation"/>
+                <MenuItem Header="_Set log folder" Click="SetLogFolderClicked"/>
+            </MenuItem>
+            <MenuItem Header="_Test" Visibility="Hidden">
+                <MenuItem Header="_Meme generation" Click="MenuItem_Click_3"/>
+                <MenuItem Header="_Names generation" Click="TestGenerateNames"/>
+                <MenuItem Header="_Excuses generation" Click="TestGenerateExcuses"/>
+            </MenuItem>
+        </Menu>
+        <Grid x:Name="mainGrid" Background="#FFEFEFF2">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20.174"/>
+                <ColumnDefinition Width="17.826"/>
+                <ColumnDefinition Width="444*"/>
+            <ColumnDefinition Width="38"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="38"/>
+            <RowDefinition Height="263*"/>
+            <RowDefinition Height="38"/>
+        </Grid.RowDefinitions>
+        <Rectangle Grid.ColumnSpan="4" Fill="#FFD2D2D6" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,0" Grid.RowSpan="1"/>
+        <Rectangle Grid.Row="2" Grid.ColumnSpan="4" Fill="#FFD2D2D6" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,0" Grid.RowSpan="1"/>
+        <Rectangle Grid.Row="1" Grid.ColumnSpan="2" Fill="#FFD2D2D6" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,0" Grid.RowSpan="1"/>
+        <Rectangle Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="1" Fill="#FFD2D2D6" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,0" Grid.RowSpan="1"/>
+
+        <TreeView KeyboardNavigation.TabNavigation="Contained"  x:Name="PropertiesTree" Grid.Column="2" HorizontalAlignment="Left" Height="Auto" Margin="0,0,0,0" Grid.Row="1" VerticalAlignment="Top" Width="435" UseLayoutRounding="False" ScrollViewer.CanContentScroll="True" BorderBrush="{x:Null}" Background="{x:Null}" IsTabStop="False">
+                
+            </TreeView>
+
+    </Grid>
+    </DockPanel>
+</Window>

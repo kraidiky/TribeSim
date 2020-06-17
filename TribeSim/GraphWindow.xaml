@@ -1,0 +1,24 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d3="http://research.microsoft.com/DynamicDataDisplay/1.0" x:Class="TribeSim.ChartWindow"
+        
+        
+        Title="Chart" Height="484" Width="1247.4" Icon="Resources/line-chart.png">
+    <DockPanel>
+        <Expander Header="" VerticalAlignment="Top" DockPanel.Dock="Left" Expanded="Expander_Expanded" Background="#FFFDFDFD" ExpandDirection="Right" FlowDirection="LeftToRight" HeaderStringFormat="">
+            <DockPanel>
+                <Label DockPanel.Dock="Top">Add new graph line</Label>
+                <Label DockPanel.Dock="Top">Select tribe</Label>
+                <ComboBox DockPanel.Dock="Top" x:Name="TribeNamesSelector" SelectionChanged="TribeNamesSelector_SelectionChanged"></ComboBox>
+                <Label DockPanel.Dock="Top">Select graph line to add</Label>
+                <ComboBox DockPanel.Dock="Top" x:Name="GraphLinesSelector"></ComboBox>
+                <Button DockPanel.Dock="Top" Height="20" Margin="10" Click="Button_Click">Add/Remove Line</Button>
+                <Button DockPanel.Dock="Top" Height="20" Margin="10 0" Click="Clear_Click">Clear all lines</Button>
+            </DockPanel>
+        </Expander>
+        <d3:ChartPlotter x:Name="ChartArea" VerticalAlignment="Top">
+
+        </d3:ChartPlotter>
+    </DockPanel>
+</Window>

@@ -1,0 +1,12 @@
+﻿<Window x:Class="TribeSim.PleaseWaitWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PleaseWaitWindow" Height="35" Width="300" WindowStyle="None" WindowStartupLocation="CenterScreen" Topmost="True">
+
+
+    
+        <ProgressBar HorizontalAlignment="Left" Height="25" VerticalAlignment="Top" Width="290" IsIndeterminate="True"/>
+    
+
+
+</Window>
