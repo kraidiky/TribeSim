@@ -83,7 +83,7 @@ namespace TribeSim
         private TribesmanToMemeAssociation[][] memesByFeature = new TribesmanToMemeAssociation[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
-        private double priceToGetThisChild;
+        private double BasicPriceToGetThisChild;
         private GeneCode genes = null;
         private double resource;
         
@@ -136,7 +136,7 @@ namespace TribeSim
             retval.storyOfLife?.Append(retval.Name).Append(" was created as a member of a statring set.").AppendLine();
             retval.yearBorn = World.Year;
             retval.resource = WorldProperties.StatringAmountOfResources;
-            retval.priceToGetThisChild = retval.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
+            retval.BasicPriceToGetThisChild = retval.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             retval.MemorySizeRemaining = retval.MemorySizeTotal = retval.GetFeature(AvailableFeatures.MemoryLimit) + retval.GetMemorySizeBoost();            
             return retval;
         }
@@ -700,7 +700,7 @@ namespace TribeSim
         {
             double totalParentsResource = PartnerA.resource + PartnerB.resource;
 
-            if (totalParentsResource * 5 < 2*(PartnerA.priceToGetThisChild + PartnerB.priceToGetThisChild)) // Проверка на вшивость. Если у них вдвоём не набирается даже 2/3 от того, что они сами стоили незачем и начинать.
+            if (totalParentsResource * 5 < 2*(PartnerA.BasicPriceToGetThisChild + PartnerB.BasicPriceToGetThisChild)) // Проверка на вшивость. Если у них вдвоём не набирается даже 2/3 от того, что они сами стоили незачем и начинать.
                 return null;
 
             Tribesman child = new Tribesman(randomizer);
@@ -708,9 +708,9 @@ namespace TribeSim
 
             double priceToGetThisChildBrainSizePart = child.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             double priceToGetThisChildGiftPart = WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * (totalParentsResource - priceToGetThisChildBrainSizePart);
-            child.priceToGetThisChild = priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart; // Записываем только минимально необходимую часть ресурса, пошедшую на мозг. Наследство может быть большим, маленьким или вообще нулевым.
+            child.BasicPriceToGetThisChild = priceToGetThisChildBrainSizePart + WorldProperties.ChildStartingResourcePedestal; // Записываем только минимально необходимую часть ресурса, пошедшую на мозг и родительский бонус. Наследство может быть большим, маленьким или вообще нулевым.
 
-            if (totalParentsResource > child.priceToGetThisChild)
+            if (totalParentsResource > priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart)
             {
                 StatisticsCollector.ReportCountEvent(PartnerA.MyTribeName, "Child births");
                 StatisticsCollector.ReportAverageEvent(PartnerA.MyTribeName, "Child average brain size", child.BrainSize);
