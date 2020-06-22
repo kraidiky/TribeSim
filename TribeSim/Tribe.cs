@@ -72,11 +72,10 @@ namespace TribeSim
 
         public void AcceptMember(Tribesman member)
         {
-            member.MyTribeName = TribeName;
+            member.MyTribe = this;
             member.SetRandomizer(randomizer);
             members.Add(member);
             member.ReportJoiningTribe(this);
-            member.MemeUsed += member_MemeUsed;
             if (keepsLog && !logTribesmenList.Contains(member))
             {
                 if (logTribesmenList.Count>0) logMembers.Append(", ");
@@ -87,12 +86,11 @@ namespace TribeSim
 
         public void MemberLeaves(Tribesman member)
         {
-            member.MyTribeName = "Unknown";
+            member.MyTribe  = null;
             members.Remove(member);
-            member.MemeUsed -= member_MemeUsed;
         }
 
-        private void member_MemeUsed(object sender, Meme e)
+        public void MemeUsed(Tribesman member, Meme e)
         {
             if (!memesUsedThisYear.Contains(e))
             {

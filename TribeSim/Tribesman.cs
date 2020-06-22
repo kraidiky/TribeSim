@@ -15,12 +15,11 @@ namespace TribeSim
 
         private StringBuilder storyOfLife;
         private StringBuilder storyOfPhenotypeChanges;
+        private double MemorySizeTotal = 0;
         private double MemorySizeRemaining = 0;
         private string name = null;
         private int yearBorn = 0;
-        private string myTribeName = "Unknown";
-
-        public event EventHandler<Meme> MemeUsed;
+        private Tribe myTribe;
 
         public int YearBorn
         {
@@ -138,7 +137,7 @@ namespace TribeSim
             retval.yearBorn = World.Year;
             retval.resource = WorldProperties.StatringAmountOfResources;
             retval.priceToGetThisChild = retval.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
-            retval.MemorySizeRemaining = retval.GetFeature(AvailableFeatures.MemoryLimit) + retval.GetMemorySizeBoost();            
+            retval.MemorySizeRemaining = retval.MemorySizeTotal = retval.GetFeature(AvailableFeatures.MemoryLimit) + retval.GetMemorySizeBoost();            
             return retval;
         }
 
@@ -363,7 +362,7 @@ namespace TribeSim
             if (!description.MemCanBeInvented)
                 return;
 
-            double C = GetFeature(AvailableFeatures.Creativity);;
+            double C = GetFeature(AvailableFeatures.Creativity);
             double M = WorldProperties.ChanceToInventNewMemeWhileUsingItModifier;
             double T = WorldProperties.ChanceToInventNewMemeWhileUsingItThreshold;
             double chanceToInventNewMeme = T + M * C - T * M * C;
@@ -386,10 +385,7 @@ namespace TribeSim
             for( int i = 0; i < relevantMemes.Length; i++) {
                 var tma = relevantMemes[i];
                 tma.Use();
-                if (MemeUsed != null)
-                {
-                    MemeUsed(this, tma.Meme);
-                }
+                myTribe?.MemeUsed(this, tma.Meme);
             }
         }
 
@@ -712,7 +708,7 @@ namespace TribeSim
 
             double priceToGetThisChildBrainSizePart = child.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             double priceToGetThisChildGiftPart = WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * (totalParentsResource - priceToGetThisChildBrainSizePart);
-            child.priceToGetThisChild = priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
+            child.priceToGetThisChild = priceToGetThisChildBrainSizePart; // Записываем только минимально необходимую часть ресурса, пошедшую на мозг. Наследство может быть большим, маленьким или вообще нулевым.
 
             if (totalParentsResource > child.priceToGetThisChild)
             {
@@ -722,9 +718,9 @@ namespace TribeSim
                 if (randomizer.Chance(WorldProperties.ChancesToWriteALog))
                     child.KeepsDiary();
                 child.ReportPhenotypeChange();
-                child.myTribeName = PartnerA.MyTribeName;
+                child.myTribe = PartnerA.myTribe;
                 child.storyOfLife?.AppendFormat("Was born from {0} and {1}. His brain size is {2:f1}. His parents spent {3:f1} resources to raise him.", PartnerA.Name, PartnerB.Name, child.BrainSize, priceToGetThisChildBrainSizePart).AppendLine();
-                child.MemorySizeRemaining = child.GetFeature(AvailableFeatures.MemoryLimit);
+                child.MemorySizeRemaining = child.MemorySizeTotal = child.GetFeature(AvailableFeatures.MemoryLimit);
                 totalParentsResource -= priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
                 child.resource =  WorldProperties.ChildStartingResourceSpendingsReceivedCoefficient * priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
                 child.storyOfLife?.AppendFormat("Parents have given {0:f1} resource as a birthday gift.", child.resource).AppendLine();                
@@ -816,7 +812,8 @@ namespace TribeSim
             }
         }
 
-        public string MyTribeName { get => myTribeName; set => myTribeName = value; }
+        public Tribe MyTribe { get => myTribe; set => myTribe = value; }
+        public string MyTribeName => myTribe?.TribeName ?? "Unknow";
 
         public bool WantsToLeaveTribe()
         {
