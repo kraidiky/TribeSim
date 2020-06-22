@@ -166,7 +166,7 @@ namespace TribeSim
                     double feature = members[i].GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
                     min = Math.Min(min, feature);
                     max = Math.Max(max, feature);
-                    _freeraidersFeatures[i] = feature;
+                    _freeraidersFeatures.Add(feature);
                 }
                 double threshold = min + (max - min) * 0.25;
                 _freeRaiders.Clear();

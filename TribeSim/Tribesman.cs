@@ -62,7 +62,7 @@ namespace TribeSim
 
         public string GetLifeStory()
         {
-            return storyOfPhenotypeChanges.ToString() + Environment.NewLine + storyOfLife?.ToString();
+            return storyOfPhenotypeChanges?.ToString() + Environment.NewLine + storyOfLife?.ToString();
         }
 
         private void ReportPhenotypeChange()
