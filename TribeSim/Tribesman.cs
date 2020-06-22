@@ -708,7 +708,7 @@ namespace TribeSim
 
             double priceToGetThisChildBrainSizePart = child.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             double priceToGetThisChildGiftPart = WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * (totalParentsResource - priceToGetThisChildBrainSizePart);
-            child.priceToGetThisChild = priceToGetThisChildBrainSizePart; // Записываем только минимально необходимую часть ресурса, пошедшую на мозг. Наследство может быть большим, маленьким или вообще нулевым.
+            child.priceToGetThisChild = priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart; // Записываем только минимально необходимую часть ресурса, пошедшую на мозг. Наследство может быть большим, маленьким или вообще нулевым.
 
             if (totalParentsResource > child.priceToGetThisChild)
             {
