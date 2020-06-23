@@ -111,7 +111,7 @@ namespace TribeSim
             } else {
                 var newByFeatures = new TribesmanToMemeAssociation[oldByFeatures.Length - 1];
                 memesByFeature[feature] = newByFeatures;
-                for (int i = 0, j = 0; i < memesByFeature.Length; i++)
+                for (int i = 0, j = 0; i < oldByFeatures.Length; i++)
                     if (oldByFeatures[i] != assoc) {
                         newByFeatures[i] = oldByFeatures[j];
                         j++;
@@ -258,7 +258,6 @@ namespace TribeSim
                     {
                         assoc.Meme.ReportForgotten(this);
                         storyOfLife?.AppendFormat("Forgotten how {1} ({0})",assoc.Meme.SignatureString, assoc.Meme.ActionDescription).AppendLine();
-                        MemorySizeRemaining += assoc.Meme.Price;
                         RemoveMeme(assoc);
                         ReportPhenotypeChange();                                                
                     }
@@ -595,6 +594,7 @@ namespace TribeSim
                     storyOfLife?.Append("Wanted to learn something new but couldn't. Too hungry.");
                     break;
                 }
+                // Тут есть три возможные причины перехода к следующему элементу цикла - пререквизиты, шанс выучить и недостаток памяти. Наерняка можно сильно съэкономить если расположить их в правильном порядке.
                 Meme memeToStudy = memesAvailableForStudy[randomizer.Next(memesAvailableForStudy.Count)];
                 if (memeToStudy.PrequisitesAreMet(knownMemes.ToList()))
                 {
