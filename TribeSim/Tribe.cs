@@ -174,8 +174,9 @@ namespace TribeSim
                     if (_freeraidersFeatures[i] > threshold)
                         _freeRaiders.Add(members[i]);
                 }
-                for (int i = 0; i < _punishers.Count; i++)
-                    _punishers[i].DetermineAndPunishAFreeRider(members, _freeRaiders);
+                if (_freeRaiders.Count > 0) // Такая шизовая ситуация возможна если у всех в племени строго одинаковый геном по данному признаку.
+                    for (int i = 0; i < _punishers.Count; i++)
+                        _punishers[i].DetermineAndPunishAFreeRider(members, _freeRaiders);
             }
         }
 
