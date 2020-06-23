@@ -113,7 +113,7 @@ namespace TribeSim
                 memesByFeature[feature] = newByFeatures;
                 for (int i = 0, j = 0; i < oldByFeatures.Length; i++)
                     if (oldByFeatures[i] != assoc) {
-                        newByFeatures[i] = oldByFeatures[j];
+                        newByFeatures[j] = oldByFeatures[i];
                         j++;
                     }
             }
