@@ -136,9 +136,9 @@ namespace TribeSim
         {
             year++;
 
-            if (year == 1)
+            if (year == 1000) // Первые 1000 циклов пропускаем. Там всякое медленное делается.
                 stopwatch = Stopwatch.StartNew();
-            if (year % 10000 == 0) {
+            if (year % 11000 == 0) {
                 stopwatch.Stop();
                 spendedTime = stopwatch.Elapsed;
             }
