@@ -124,6 +124,7 @@
   <Lifestyle_Steps_Skipgroupsplitting>0</Lifestyle_Steps_Skipgroupsplitting>
   <Lifestyle_Steps_Skipmigration>0</Lifestyle_Steps_Skipmigration>
   <Lifestyle_Steps_Skipculturalexchange>0</Lifestyle_Steps_Skipculturalexchange>
+  <Programsettings_IgnoreMultithreading_debugonly_>1</Programsettings_IgnoreMultithreading_debugonly_>
   <Programsettings_Collectphenotypeaverages>0</Programsettings_Collectphenotypeaverages>
   <Programsettings_Collectgenotypeaverages>0</Programsettings_Collectgenotypeaverages>
   <Programsettings_Memediarychance>0</Programsettings_Memediarychance>

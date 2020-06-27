@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Settings>
   <Initialstate_InitialStateRandomSeed>12</Initialstate_InitialStateRandomSeed>
+  <Genetics_Mutation_UselessActionsLikelihood_MutationstrengthStdDev>0</Genetics_Mutation_UselessActionsLikelihood_MutationstrengthStdDev>
   <Genetics_Mutation_Creativity_MutationstrengthStdDev>0</Genetics_Mutation_Creativity_MutationstrengthStdDev>
   <Genetics_Mutation_Memorylimit_MutationstrengthStdDev>0,4</Genetics_Mutation_Memorylimit_MutationstrengthStdDev>
   <Genetics_Mutation_Cooperationefficiency_MutationstrengthStdDev>0</Genetics_Mutation_Cooperationefficiency_MutationstrengthStdDev>
@@ -14,6 +15,7 @@
   <Genetics_Mutation_Teachinglikelyhood_MutationstrengthStdDev>0</Genetics_Mutation_Teachinglikelyhood_MutationstrengthStdDev>
   <Genetics_Mutation_Trickefficiency_MutationstrengthStdDev>0</Genetics_Mutation_Trickefficiency_MutationstrengthStdDev>
   <Genetics_Mutation_Tricklikelyhood_MutationstrengthStdDev>0</Genetics_Mutation_Tricklikelyhood_MutationstrengthStdDev>
+  <Genetics_Mutation_UselessActionsLikelihood_MutationstrengthMean>0</Genetics_Mutation_UselessActionsLikelihood_MutationstrengthMean>
   <Genetics_Mutation_Creativity_MutationstrengthMean>0</Genetics_Mutation_Creativity_MutationstrengthMean>
   <Genetics_Mutation_Memorylimit_MutationstrengthMean>0</Genetics_Mutation_Memorylimit_MutationstrengthMean>
   <Genetics_Mutation_Cooperationefficiency_MutationstrengthMean>0</Genetics_Mutation_Cooperationefficiency_MutationstrengthMean>
@@ -27,6 +29,7 @@
   <Genetics_Mutation_Teachinglikelyhood_MutationstrengthMean>0</Genetics_Mutation_Teachinglikelyhood_MutationstrengthMean>
   <Genetics_Mutation_Trickefficiency_MutationstrengthMean>0</Genetics_Mutation_Trickefficiency_MutationstrengthMean>
   <Genetics_Mutation_Tricklikelyhood_MutationstrengthMean>0</Genetics_Mutation_Tricklikelyhood_MutationstrengthMean>
+  <Genetics_Mutation_UselessActionsLikelihood_MutationChance>0</Genetics_Mutation_UselessActionsLikelihood_MutationChance>
   <Genetics_Mutation_Creativity_MutationChance>0</Genetics_Mutation_Creativity_MutationChance>
   <Genetics_Mutation_Memorylimit_MutationChance>0,04</Genetics_Mutation_Memorylimit_MutationChance>
   <Genetics_Mutation_Cooperationefficiency_MutationChance>0</Genetics_Mutation_Cooperationefficiency_MutationChance>
@@ -121,6 +124,7 @@
   <Lifestyle_Steps_Skipgroupsplitting>0</Lifestyle_Steps_Skipgroupsplitting>
   <Lifestyle_Steps_Skipmigration>0</Lifestyle_Steps_Skipmigration>
   <Lifestyle_Steps_Skipculturalexchange>0</Lifestyle_Steps_Skipculturalexchange>
+  <Programsettings_IgnoreMultithreading_debugonly_>1</Programsettings_IgnoreMultithreading_debugonly_>
   <Programsettings_Collectphenotypeaverages>0</Programsettings_Collectphenotypeaverages>
   <Programsettings_Collectgenotypeaverages>0</Programsettings_Collectgenotypeaverages>
   <Programsettings_Memediarychance>0</Programsettings_Memediarychance>
@@ -193,6 +197,8 @@
   <Initialstate_Genes_Memorysize_Standarddeviation>0</Initialstate_Genes_Memorysize_Standarddeviation>
   <Initialstate_Genes_Creativity_Mean>0,000266</Initialstate_Genes_Creativity_Mean>
   <Initialstate_Genes_Creativity_Standarddeviation>0</Initialstate_Genes_Creativity_Standarddeviation>
+  <Initialstate_Genes_UselessActionsLikelihood_Mean>0</Initialstate_Genes_UselessActionsLikelihood_Mean>
+  <Initialstate_Genes_UselessActionsLikelihood_Standarddeviation>0</Initialstate_Genes_UselessActionsLikelihood_Standarddeviation>
   <Environment_Resourceconsumedperyear>3</Environment_Resourceconsumedperyear>
   <Memes_Invention_Tricklikelyhood_Likelyhoodchangemean>0</Memes_Invention_Tricklikelyhood_Likelyhoodchangemean>
   <Memes_Invention_Tricklikelyhood_LikelyhoodchangeStdDev>0</Memes_Invention_Tricklikelyhood_LikelyhoodchangeStdDev>

@@ -49,9 +49,11 @@ namespace TribeSim
                 return false;
         }
         /// <summary> Функция нужна для удобства пошаговой отладки, чтобы можно было в одну строчку заменить все паралелизмы на последовательное выполнение. </summary>
-        public static void Parallel<T>(this IEnumerable<T> items, Action<T> action) {
-            //System.Threading.Tasks.Parallel.ForEach<T>(items, action);
-            foreach (var item in items) action(item);
+        public static void Parallel<T>(this IList<T> items, Action<T> action) {
+            if (WorldProperties.IgnoreMultithreading < .5)
+                System.Threading.Tasks.Parallel.ForEach<T>(items, action);
+            else 
+                foreach (var item in items) action(item);
         }
 
         public static void ForEach<T>(this IEnumerable<T> items, Action<T> action) {

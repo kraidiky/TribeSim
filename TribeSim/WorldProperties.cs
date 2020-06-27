@@ -20,6 +20,7 @@ namespace TribeSim
 
         #region Private fields
         private static double initialStateRandomSeed;
+        private static double ignoreMultithreading;
 
         private static bool inStableState = true;
         private static string filename = null;
@@ -678,6 +679,9 @@ namespace TribeSim
             get { return WorldProperties.skipCulturalExchangeStep; }
             set { WorldProperties.skipCulturalExchangeStep = value; PersistChanges(); }
         }
+
+        [DisplayableProperty("Ignore Multithreading (debug only)", group = "Program settings", description = "1 - ignore multithreading. This feature is good for debuging - step by step and profiling.")]
+        public static double IgnoreMultithreading { get => WorldProperties.ignoreMultithreading; set => WorldProperties.ignoreMultithreading = value; }
 
         [DisplayableProperty("Collect phenotype averages", group = "Program settings", description = "1 - a graph with average phenotype values will be available 0 - the model will run faster")]
         public static double CollectPhenotypeValues
