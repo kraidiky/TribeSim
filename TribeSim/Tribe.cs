@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Research.DynamicDataDisplay.Common;
+using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,7 @@ namespace TribeSim
 {
     class Tribe
     {
-        private static Random randomizer;
+        private Random randomizer;
 
         private List<Tribesman> members = new List<Tribesman>();
         private bool keepsLog = false;
@@ -65,6 +66,7 @@ namespace TribeSim
         {
             get { return members.Count == 0; }
         }
+        public readonly int TribeId;
         public string TribeName = null;
         private int yearBorn = 0;
         private List<Meme> memesUsedThisYear = new List<Meme>();
