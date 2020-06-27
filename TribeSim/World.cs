@@ -180,6 +180,12 @@ namespace TribeSim
                 }));
             }
             TribesmanToMemeAssociation.EndOfTurn();
+
+            if (year % 11000 == 1) {
+                Console.WriteLine($"========== year:{year} ==========");
+                for (int i = 0; i < tribes.Count; i++)
+                    Console.WriteLine($"tribe[{tribes[i].seed}] rnd:{tribes[i].randomizer.Next(10000)}");
+            }
         }
 
         private static void ReportEndOfYearStatistics()

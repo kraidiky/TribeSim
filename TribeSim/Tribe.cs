@@ -11,7 +11,8 @@ namespace TribeSim
 {
     class Tribe
     {
-        private Random randomizer;
+        public int seed;
+        public Random randomizer;
 
         private List<Tribesman> members = new List<Tribesman>();
         private bool keepsLog = false;
@@ -37,7 +38,7 @@ namespace TribeSim
 
         public Tribe(int randomSeed)
         {
-            randomizer = new Random(randomSeed);
+            randomizer = new Random(seed = randomSeed);
             TribeName = NamesGenerator.GenerateTribeName();
             keepsLog = randomizer.Chance(WorldProperties.ChancesThatTribeWillWriteALog);
             yearBegun = World.Year;
