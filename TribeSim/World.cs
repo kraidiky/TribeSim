@@ -257,7 +257,7 @@ namespace TribeSim
 
         private static void SplitGroups()
         {
-            // Тут потенциальный источник невоспроизводимости. Если в один год разделится больше одного года они могут оказаться в tribes в произвольном порядке, а порядок используется в некоторых местах например когда племена взаимодействуют между собой. Например при переселении или культурном обмене.
+            // Тут потенциальный источник невоспроизводимости. Если в один год разделится больше одного года они могут оказаться в tribes в произвольном порядке, а порядок используется в некоторых местах например когда племена взаимодействуют между собой. Например при переселении или культурном обмене. В частности в
             ConcurrentDictionary<Tribe, Tribe> newTribes = new ConcurrentDictionary<Tribe, Tribe>();
             World.tribes.Parallel((tribe) =>
             {
@@ -268,8 +268,8 @@ namespace TribeSim
                 }
             });
             if (newTribes.Count > 0) {
-                foreach (Tribe parent in tribes)
-                    if (newTribes.TryGetValue(parent, out var child))
+                for(int i = 0; i < tribes.Count; i++)
+                    if (newTribes.TryGetValue(tribes[i], out var child))
                         tribes.Add(child);
             }
         }
