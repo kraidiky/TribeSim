@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Threading;
 using System.Diagnostics;
+using System.Linq;
 
 namespace TribeSim
 {
@@ -256,18 +257,20 @@ namespace TribeSim
 
         private static void SplitGroups()
         {
-            ConcurrentBag<Tribe> newTribes = new ConcurrentBag<Tribe>();
+            // Тут потенциальный источник невоспроизводимости. Если в один год разделится больше одного года они могут оказаться в tribes в произвольном порядке, а порядок используется в некоторых местах например когда племена взаимодействуют между собой. Например при переселении или культурном обмене.
+            ConcurrentDictionary<Tribe, Tribe> newTribes = new ConcurrentDictionary<Tribe, Tribe>();
             World.tribes.Parallel((tribe) =>
             {
                 Tribe newTribe = tribe.Split();
                 if (newTribe != null)
                 {
-                    newTribes.Add(newTribe);
+                    newTribes.TryAdd(tribe, newTribe);
                 }
             });
-            foreach (Tribe t in newTribes)
-            {
-                tribes.Add(t);
+            if (newTribes.Count > 0) {
+                foreach (Tribe parent in tribes)
+                    if (newTribes.TryGetValue(parent, out var child))
+                        tribes.Add(child);
             }
         }
 
