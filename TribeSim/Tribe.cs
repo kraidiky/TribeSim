@@ -221,23 +221,28 @@ namespace TribeSim
             
         }
 
+        private double[] takenShares = new double[0];
         public void ReceiveAndShareResource(double resourcesReceivedPerGroup)
         {
             if (double.IsNaN(resourcesReceivedPerGroup))
             {
                 throw new ArgumentException("Received NaN resources");
             }
-            Dictionary<Tribesman, double> takenShares = new Dictionary<Tribesman, double>();
+            if (takenShares.Length != members.Count)
+                takenShares = new double[members.Count]; // Количество мемберов меняется довольно редко, создание массива тут оправдано.
+
             double totalShare = 0;
-            foreach (Tribesman man in members)
-            {
-                double requestedShare = man.TellHowMuchDoYouWant(resourcesReceivedPerGroup);
-                takenShares.Add(man, requestedShare);
+            for (int i = 0; i < takenShares.Length; i++) {
+                double requestedShare = members[i].TellHowMuchDoYouWant(resourcesReceivedPerGroup);
+                takenShares[i] = requestedShare;
                 totalShare += requestedShare;
+
             }
-            foreach (Tribesman man in members)
+
+            double resourcesPerRequest = resourcesReceivedPerGroup / totalShare; // Деление вообще довольно медленная операция, не надо ей злоупотреблять
+            for (int i = 0; i < takenShares.Length; i++)
             {
-                man.RecieveResourcesShare(resourcesReceivedPerGroup/totalShare*takenShares[man]);
+                members[i].RecieveResourcesShare(resourcesPerRequest * takenShares[i]);
             }
         }
 
