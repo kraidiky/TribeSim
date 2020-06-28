@@ -384,7 +384,7 @@ namespace TribeSim
             for( int i = 0; i < relevantMemes.Length; i++) {
                 var tma = relevantMemes[i];
                 tma.Use();
-                myTribe?.MemeUsed(this, tma.Meme);
+                myTribe.MemeUsed(this, tma.Meme); // Тот, кто не в племени не может пользовать мемы.
             }
         }
 

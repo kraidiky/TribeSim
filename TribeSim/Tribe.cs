@@ -70,8 +70,8 @@ namespace TribeSim
         public readonly int TribeId;
         public string TribeName = null;
         private int yearBorn = 0;
+        private HashSet<Meme> memesUsedThisYearHash = new HashSet<Meme>();
         private List<Meme> memesUsedThisYear = new List<Meme>();
-
 
         public void AcceptMember(Tribesman member)
         {
@@ -95,10 +95,8 @@ namespace TribeSim
 
         public void MemeUsed(Tribesman member, Meme e)
         {
-            if (!memesUsedThisYear.Contains(e))
-            {
+            if (memesUsedThisYearHash.Add(e))
                 memesUsedThisYear.Add(e);
-            }
         }
 
         public void ConsumeLifeSupport()
@@ -265,7 +263,8 @@ namespace TribeSim
 
         public void PrepareForANewYear()
         {
-            memesUsedThisYear = new List<Meme>();
+            memesUsedThisYearHash.Clear();
+            memesUsedThisYear.Clear();
             foreach (Tribesman man in members)
             {
                 man.PrepareForANewYear();
