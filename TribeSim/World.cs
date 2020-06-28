@@ -199,7 +199,7 @@ namespace TribeSim
             World.tribes.Parallel((tribe) => { tribe.ReportEndOfYearStatistics(); });
             if (WorldProperties.CollectLiveMemes > 0.5)
             {
-                StatisticsCollector.ReportSumEvent("Global", "Live memes", Meme.CountLiveMemes());
+                StatisticsCollector.ReportGlobalSumEvent("Live memes", Meme.CountLiveMemes());
             }
         }
 

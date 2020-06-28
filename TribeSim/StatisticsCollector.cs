@@ -13,53 +13,57 @@ namespace TribeSim
 {
     static class StatisticsCollector
     {
+        public const string GLOBAL = "Global";
         private static ConcurrentDictionary<string, TribeDataSet> tribeDataSets = new ConcurrentDictionary<string, TribeDataSet>();
 
         public static void ReportCountEvent(string tribeName, string eventName)
         {
-            if (!tribeDataSets.ContainsKey(tribeName))
-            {
-                tribeDataSets.TryAdd(tribeName, new TribeDataSet());
-            }
-            tribeDataSets[tribeName].ReportCountEvent(eventName);
-            if (tribeName != "Global")
-            {
-                ReportCountEvent("Global", eventName);
-            }
+            if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
+                tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
+            dataset.ReportCountEvent(eventName);
+            ReportGlobalCountEvent(eventName);
         }
+        public static void ReportGlobalCountEvent(string eventName) {
+            if (!tribeDataSets.TryGetValue(GLOBAL, out var dataset))
+                tribeDataSets.TryAdd(GLOBAL, dataset = new TribeDataSet());
+            dataset.ReportCountEvent(eventName);
+        }
+
         public static void ReportSumEvent(string tribeName, string eventName, double dValue)
         {
             float value = (float)dValue;
-            if (!tribeDataSets.ContainsKey(tribeName))
-            {
-                tribeDataSets.TryAdd(tribeName, new TribeDataSet());
-            }
-            tribeDataSets[tribeName].ReportSumEvent(eventName, value);
-            if (tribeName != "Global")
-            {
-                ReportSumEvent("Global", eventName, value);
-            }
+            if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
+                tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
+            dataset.ReportSumEvent(eventName, value);
+            ReportGlobalSumEvent(eventName, value);
         }
+        public static void ReportGlobalSumEvent(string eventName, double dValue) {
+            if (!tribeDataSets.TryGetValue(GLOBAL, out var dataset))
+                tribeDataSets.TryAdd(GLOBAL, dataset = new TribeDataSet());
+            dataset.ReportSumEvent(eventName, (float)dValue);
+        }
+
         public static void ReportAverageEvent(string tribeName, string eventName, double dValue)
         {
             float value = (float)dValue;
-            if (!tribeDataSets.ContainsKey(tribeName))
-            {
-                tribeDataSets.TryAdd(tribeName, new TribeDataSet());
-            }
-            tribeDataSets[tribeName].ReportAverageEvent(eventName, value);
-            if (tribeName != "Global")
-            {
-                ReportAverageEvent("Global", eventName, value);
-            }
-        }        
+            if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
+                tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
+            dataset.ReportAverageEvent(eventName, value);
+            ReportGlobalAverageEvent(eventName, value);
+        }
+        public static void ReportGlobalAverageEvent(string eventName, double dValue) {
+            float value = (float)dValue;
+            if (!tribeDataSets.TryGetValue(GLOBAL, out var dataset))
+                tribeDataSets.TryAdd(GLOBAL, dataset = new TribeDataSet());
+            dataset.ReportAverageEvent(eventName, value);
+        }
 
         public static void ConsolidateNewYear()
         {
             List<string> toRemove = new List<string>();
             foreach (KeyValuePair<string, TribeDataSet> kvp in tribeDataSets)
             {
-                if (World.TribeExists(kvp.Key) || kvp.Key == "Global")
+                if (World.TribeExists(kvp.Key) || kvp.Key == StatisticsCollector.GLOBAL)
                 {
                     kvp.Value.ConsolidateNewYear(kvp.Key);
                 }

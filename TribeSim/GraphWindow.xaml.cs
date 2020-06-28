@@ -33,10 +33,10 @@ namespace TribeSim
         private void Expander_Expanded(object sender, RoutedEventArgs e)
         {
             TribeNamesSelector.Items.Clear();
-            TribeNamesSelector.Items.Add("Global");
+            TribeNamesSelector.Items.Add(StatisticsCollector.GLOBAL);
             foreach (string tribeName in StatisticsCollector.GetTribeNames())
             {
-                if (tribeName != "Global")
+                if (tribeName != StatisticsCollector.GLOBAL)
                 {
                     TribeNamesSelector.Items.Add(tribeName);
                 }
