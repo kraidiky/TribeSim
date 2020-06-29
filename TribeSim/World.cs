@@ -250,20 +250,23 @@ namespace TribeSim
                     migratingTribesmen.TryAdd(member, tribe);
                 }
             });
-            foreach (Tribesman m in migratingTribesmen.Keys)
+            var immigrants = migratingTribesmen.ToList();// Предполагаю, что мигрирующих всегда будет мало, так что делаю как попало.
+            immigrants.Sort((m1, m2) => m1.Value != m2.Value ? Math.Sign(m1.Value.seed - m2.Value.seed) : Math.Sign(m1.Key.TribeMemberId - m2.Key.TribeMemberId));
+
+            foreach (var m in immigrants)
             {
                 Tribe newTribe;
                 do
                 {
                     newTribe = tribes[randomizer.Next(tribes.Count)];
-                } while (newTribe == migratingTribesmen[m]);
-                newTribe.AcceptMember(m);
+                } while (newTribe == m.Value);
+                newTribe.AcceptMember(m.Key);
             }
         }
 
         private static void SplitGroups()
         {
-            // Тут потенциальный источник невоспроизводимости. Если в один год разделится больше одного года они могут оказаться в tribes в произвольном порядке, а порядок используется в некоторых местах например когда племена взаимодействуют между собой. Например при переселении или культурном обмене. В частности в
+            // Тут потенциальный источник невоспроизводимости. Если в один год разделится больше одного лемени они могут оказаться в tribes в произвольном порядке, а порядок используется в некоторых местах например когда племена взаимодействуют между собой. Например при переселении или культурном обмене.
             ConcurrentDictionary<Tribe, Tribe> newTribes = new ConcurrentDictionary<Tribe, Tribe>();
             World.tribes.Parallel((tribe) =>
             {
@@ -274,7 +277,7 @@ namespace TribeSim
                 }
             });
             if (newTribes.Count > 0) {
-                for(int i = 0; i < tribes.Count; i++)
+                for(int i = 0; i < tribes.Count; i++) // Эта надстройка фиксирует порядок чтения
                     if (newTribes.TryGetValue(tribes[i], out var child))
                         tribes.Add(child);
             }
@@ -302,19 +305,19 @@ namespace TribeSim
 
         private static void HuntAndShare()
         {
-            ConcurrentDictionary<Tribe, double> tribeHuntingEfforts = new ConcurrentDictionary<Tribe, double>();
+            ConcurrentDictionary<Tribe, double> tribeHuntingEfforts = new ConcurrentDictionary<Tribe, double>(); // Тут порядок всё равно не важен, используется только сумма, поэтому тут ConcurrentDictionary не трогаем
             World.tribes.Parallel((tribe) => { tribeHuntingEfforts.TryAdd(tribe, tribe.GoHunting()); });
             double totalHuntingEffort = 0;
             foreach (Tribe t in tribes)
             {
                 totalHuntingEffort += tribeHuntingEfforts[t];
             }            
-            ConcurrentDictionary<Tribe, double> resourcesRecievedByTribes = new ConcurrentDictionary<Tribe, double>();
+            Dictionary<Tribe, double> resourcesRecievedByTribes = new Dictionary<Tribe, double>(); // Тут запись идёт в основном потоке, а из тредов только чтение. Чтение не может нарушить целостность, так что нефиг тут ConcurrentDictionary плодить.
             if (totalHuntingEffort <= WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep || WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep < 0)
             {
                 foreach (Tribe t in tribes)
                 {
-                    resourcesRecievedByTribes.TryAdd(t, tribeHuntingEfforts[t]);
+                    resourcesRecievedByTribes.Add(t, tribeHuntingEfforts[t]);
                 }
             }
             else
@@ -322,7 +325,7 @@ namespace TribeSim
                 var resourcePerHuntingEffort = WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep / totalHuntingEffort; // Деление - медленная операция. Это, конечно, копейки, но зачем их в пустую тратить.
                 foreach (Tribe t in tribes)
                 {
-                    resourcesRecievedByTribes.TryAdd(t, resourcePerHuntingEffort * tribeHuntingEfforts[t]);
+                    resourcesRecievedByTribes.Add(t, resourcePerHuntingEffort * tribeHuntingEfforts[t]);
                 }
             }
             World.tribes.Parallel((tribe) => { tribe.ReceiveAndShareResource(resourcesRecievedByTribes[tribe]); });

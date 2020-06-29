@@ -73,9 +73,11 @@ namespace TribeSim
         private HashSet<Meme> memesUsedThisYearHash = new HashSet<Meme>();
         private List<Meme> memesUsedThisYear = new List<Meme>();
 
+        private int nextFreeMemberId = 0;
         public void AcceptMember(Tribesman member)
         {
             member.MyTribe = this;
+            member.TribeMemberId = nextFreeMemberId++;
             member.SetRandomizer(randomizer);
             members.Add(member);
             member.ReportJoiningTribe(this);

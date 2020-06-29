@@ -812,6 +812,8 @@ namespace TribeSim
             }
         }
 
+        /// <summary> Идентификатор уникальный только внутри одного племени. При вступлении в новое племя идентификатор тоже получается новый. </summary>
+        public int TribeMemberId;
         public Tribe MyTribe { get => myTribe; set => myTribe = value; }
         public string MyTribeName => myTribe?.TribeName ?? "Unknow";
 
