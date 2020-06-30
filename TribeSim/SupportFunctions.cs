@@ -61,6 +61,38 @@ namespace TribeSim
                 action(item);
         }
 
+        // Эти две функции можно было бы объединить кучей разных способов, но почти все они хоть на чуть-чуть снижают производительность.
+        // Сам по себе переход к сортированным спискам изменил время с 17 до 14,5 видимо эволюция пошла по другому пути.
+        public static void AddToSortedList(this List<Meme> target, Meme meme) {
+            int i = target.Count - 1;
+            if (i < 0 || meme.Price >= target[i].Price)
+                target.Add(meme);
+            else {
+                for (--i; i >= 0; --i)
+                    if (meme.Price > target[i].Price) {
+                        target.Insert(i + 1, meme);
+                        break;
+                    }
+                if (i < 0) {
+                    target.Insert(0, meme);
+                }
+            }
+        }
+        public static void AddToSortedList(this List<TribesmanToMemeAssociation> target, TribesmanToMemeAssociation association) {
+            int i = target.Count - 1;
+            if (i < 0 || association.Meme.Price >= target[i].Meme.Price)
+                target.Add(association);
+            else {
+                for (--i; i >= 0; --i)
+                    if (association.Meme.Price > target[i].Meme.Price) {
+                        target.Insert(i + 1, association);
+                        break;
+                    }
+                if (i < 0) {
+                    target.Insert(0, association);
+                }
+            }
+        }
     }
 
     class NullableDictionary<K, V> : IDictionary<K, V>

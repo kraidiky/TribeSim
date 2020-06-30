@@ -89,8 +89,10 @@ namespace TribeSim
         
         private void AddMeme(Meme newMeme) {
             TribesmanToMemeAssociation tma = TribesmanToMemeAssociation.Create(this, newMeme);
+            // memes у нас теперь будет отсортирован по возрастанию прайса мемов
+            memes.AddToSortedList(tma);
+
             int feature = (int)tma.Meme.AffectedFeature;
-            memes.Add(tma);
             memesEffect[feature] = null;
             MemorySizeRemaining -= newMeme.Price;
             var oldByFeatures = memesByFeature[feature];
@@ -580,14 +582,49 @@ namespace TribeSim
             storyOfLife?.Append("    --------------    ");
         }
 
-        public void StudyOneOrManyOfTheMemesUsedThisTurn(List<Meme> memesUsedThisYear)
+        public void StudyOneOrManyOfTheMemesUsedThisTurn(List<Meme> memesUsedThisYear, List<Meme> memesAvailableForStudy)
         {
-            List<Meme> memesAvailableForStudy = new List<Meme>(memesUsedThisYear);
-            for (int i = 0; i < memes.Count; i++)
-            {
-                memesAvailableForStudy.Remove(memes[i].Meme);
+            memesAvailableForStudy.Clear();
+            int usedIndex = 0;
+            if (memes.Count > 0) {
+                for (int myIndex = 0; myIndex < memes.Count && usedIndex < memesUsedThisYear.Count;) {
+                    Meme used = memesUsedThisYear[usedIndex], my = memes[myIndex]; 
+                    if (used == my) { // пропустить совпадающие элементы.
+                        usedIndex++;
+                        myIndex++;
+                        continue;
+                    }
+                    //if (used.Price > MemorySizeRemaining) break; // Может там и есть чё, но оно к нам не влезет. Эта реализация будет отличается отстарого кода тем, что слишком большие мемы не участвуют в попытках обучения.
+                    if (used.Price > my.Price) {
+                        myIndex++;
+                    } else if (used.Price < my.Price) {
+                        usedIndex++;
+                        memesAvailableForStudy.Add(used);
+                    } else { // Если Мемы разные но цена у них полностью одинаковая то в отсортированных массивах такие мемы могут идти в любом порядке. Так что текущий мем придётся сравнить со всеми имеющими строго такую же цену, после чего откатиться назад.
+                        bool finded = false;
+                        for (int nextIndex = myIndex + 1; nextIndex < memes.Count; nextIndex++) {
+                            var nextMy = memes[nextIndex].Meme;
+                            if (nextMy.Price > used.Price) { // Если всё просмотрели и начались уже более дорогие мемы прекращаем просмотр. Не найденный мем добавится в список за пределами цикла
+                                break;
+                            } else if (used == nextMy) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
+                                finded = true;
+                                usedIndex++;
+                                break;
+                            }
+                        }
+                        if (!finded) {
+                            usedIndex++;
+                            memesAvailableForStudy.Add(used);
+                        }
+                    }
+                }
             }
-            while (randomizer.Chance(GetFeature(AvailableFeatures.StudyLikelyhood)) && memesAvailableForStudy.Count > 0 )
+            // Выход из цикла мог означать, что used ещё может и остались, а вот my точно кончились. Ну ил инаоборот, собственно
+            for (; usedIndex < memesUsedThisYear.Count; usedIndex++)
+                memesAvailableForStudy.Add(memesUsedThisYear[usedIndex]);
+
+            /// Всё что может быть выучено отсортировали, можно начинать.
+            while (memesAvailableForStudy.Count > 0 && randomizer.Chance(GetFeature(AvailableFeatures.StudyLikelyhood))) // Первый шаг оптимизации: Простое изменение порядка следования проверок сокращает время с 24 до 17
             {
                 if (resource <= WorldProperties.StudyCosts)
                 {

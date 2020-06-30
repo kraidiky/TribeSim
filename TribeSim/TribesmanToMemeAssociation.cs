@@ -10,10 +10,12 @@ namespace TribeSim
     {
         private static HashSet<WeakReference<TribesmanToMemeAssociation>> weakRefernceList = new HashSet<WeakReference<TribesmanToMemeAssociation>>();
         private static readonly object tribesmanToMemeAssociationLocker = new object();
-        private TribesmanToMemeAssociation(){}
+        private TribesmanToMemeAssociation(double price) {
+            //this.price = price;
+        }
         public static TribesmanToMemeAssociation Create(Tribesman man, Meme meme)
         {
-            TribesmanToMemeAssociation assoc = new TribesmanToMemeAssociation();
+            TribesmanToMemeAssociation assoc = new TribesmanToMemeAssociation(meme.Price);
             assoc.meme = meme;
             assoc.tribesman = man;
             assoc.weakRefernenceToThis = new WeakReference<TribesmanToMemeAssociation>(assoc);
@@ -39,6 +41,8 @@ namespace TribeSim
         private WeakReference<TribesmanToMemeAssociation> weakRefernenceToThis;
         private Tribesman tribesman;
         private Meme meme;
+        /// <summary> Поле полностью дублирует, содержимое мема, это чтобы не замедлять сортировку. </summary>
+        //public readonly double price;
         private int turnsSinceLastUsed = 0;
 
         public int TurnsSinceLastUsed { get { return turnsSinceLastUsed; } }

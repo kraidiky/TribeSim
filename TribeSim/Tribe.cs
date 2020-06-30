@@ -98,7 +98,7 @@ namespace TribeSim
         public void MemeUsed(Tribesman member, Meme e)
         {
             if (memesUsedThisYearHash.Add(e))
-                memesUsedThisYear.Add(e);
+                memesUsedThisYear.AddToSortedList(e);
         }
 
         public void ConsumeLifeSupport()
@@ -255,11 +255,12 @@ namespace TribeSim
             }
         }
 
+        private List<Meme> _memesCache = new List<Meme>(); // Достаточно одного кэшированного листа, потому что массивы никогда не обрабатываются одновременно. 
         public void Study()
-        {            
+        {
             foreach (Tribesman man in members)
             {
-                man.StudyOneOrManyOfTheMemesUsedThisTurn(memesUsedThisYear);
+                man.StudyOneOrManyOfTheMemesUsedThisTurn(memesUsedThisYear, _memesCache);
             }
         }
 
