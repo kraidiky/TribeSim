@@ -312,7 +312,7 @@ namespace TribeSim
                 breedingPartners[index] = breedingPartners[last];
                 breedingPartners.RemoveAt(last);
 
-                Tribesman child = Tribesman.Breed(randomizer, PartnerA, PartnerB);
+                Tribesman child = Tribesman.Breed(randomizer, PartnerA, PartnerB, _memesCache);
                 if (child != null)
                 {
                     this.AcceptMember(child);

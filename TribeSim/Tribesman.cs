@@ -583,44 +583,7 @@ namespace TribeSim
 
         public void StudyOneOrManyOfTheMemesUsedThisTurn(List<Meme> memesUsedThisYear, List<Meme> memesAvailableForStudy)
         {
-            memesAvailableForStudy.Clear();
-            int usedIndex = 0;
-            if (memes.Count > 0) {
-                for (int myIndex = 0; myIndex < memes.Count && usedIndex < memesUsedThisYear.Count;) {
-                    Meme used = memesUsedThisYear[usedIndex], my = memes[myIndex]; 
-                    if (used == my) { // пропустить совпадающие элементы.
-                        usedIndex++;
-                        myIndex++;
-                        continue;
-                    }
-                    //if (used.Price > MemorySizeRemaining) break; // Может там и есть чё, но оно к нам не влезет. Эта реализация будет отличается отстарого кода тем, что слишком большие мемы не участвуют в попытках обучения.
-                    if (used.Price > my.Price) {
-                        myIndex++;
-                    } else if (used.Price < my.Price) {
-                        usedIndex++;
-                        memesAvailableForStudy.Add(used);
-                    } else { // Если Мемы разные но цена у них полностью одинаковая то в отсортированных массивах такие мемы могут идти в любом порядке. Так что текущий мем придётся сравнить со всеми имеющими строго такую же цену, после чего откатиться назад.
-                        bool finded = false;
-                        for (int nextIndex = myIndex + 1; nextIndex < memes.Count; nextIndex++) {
-                            var nextMy = memes[nextIndex];
-                            if (nextMy.Price > used.Price) { // Если всё просмотрели и начались уже более дорогие мемы прекращаем просмотр. Не найденный мем добавится в список за пределами цикла
-                                break;
-                            } else if (used == nextMy) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
-                                finded = true;
-                                usedIndex++;
-                                break;
-                            }
-                        }
-                        if (!finded) {
-                            usedIndex++;
-                            memesAvailableForStudy.Add(used);
-                        }
-                    }
-                }
-            }
-            // Выход из цикла мог означать, что used ещё может и остались, а вот my точно кончились. Ну ил инаоборот, собственно
-            for (; usedIndex < memesUsedThisYear.Count; usedIndex++)
-                memesAvailableForStudy.Add(memesUsedThisYear[usedIndex]);
+            memesUsedThisYear.ExcludeFromSortedList(memes, memesAvailableForStudy);
 
             /// Всё что может быть выучено отсортировали, можно начинать.
             while (memesAvailableForStudy.Count > 0 && randomizer.Chance(GetFeature(AvailableFeatures.StudyLikelyhood))) // Первый шаг оптимизации: Простое изменение порядка следования проверок сокращает время с 24 до 17
@@ -632,7 +595,7 @@ namespace TribeSim
                 }
                 // Тут есть три возможные причины перехода к следующему элементу цикла - пререквизиты, шанс выучить и недостаток памяти. Наерняка можно сильно съэкономить если расположить их в правильном порядке.
                 Meme memeToStudy = memesAvailableForStudy[randomizer.Next(memesAvailableForStudy.Count)];
-                if (memeToStudy.PrequisitesAreMet(knownMemes.ToList()))
+                if (memeToStudy.PrequisitesAreMet(knownMemes.ToList())) // После всех оптимизаций значимость вот этой беды выросла до 3,5%
                 {
                     resource -= WorldProperties.StudyCosts;
                     if (randomizer.Chance(
@@ -730,7 +693,7 @@ namespace TribeSim
         public bool IsOldEnoughToBreed { get { return Age >= WorldProperties.DontBreedIfYoungerThan; } }
         public int Age { get {return World.Year-yearBorn;} }
 
-        public static Tribesman Breed(Random randomizer, Tribesman PartnerA, Tribesman PartnerB)
+        public static Tribesman Breed(Random randomizer, Tribesman PartnerA, Tribesman PartnerB, List<Meme> cachedList)
         {
             double totalParentsResource = PartnerA.resource + PartnerB.resource;
 
@@ -761,26 +724,28 @@ namespace TribeSim
                 PartnerB.resource = PartnerA.resource = totalParentsResource / 2;
                 PartnerA.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerB.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource).AppendLine();
                 PartnerB.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerA.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource).AppendLine();
-                PartnerA.TeachChild(child);
-                PartnerB.TeachChild(child);
+                PartnerA.TeachChild(child, cachedList);
+                PartnerB.TeachChild(child, cachedList);
                 return child;
             }
             return null;
         }
 
-        private void TeachChild(Tribesman child)
+        private void TeachChild(Tribesman child, List<Meme> cachedListForTeaching)
         {
             if (memes.Count > 0)
             {
+                memes.ExcludeFromSortedList(child.memes, cachedListForTeaching);
                 for (int i = 0; i < WorldProperties.FreeTeachingRoundsForParents; i++)
                 {
-                    List<Meme> memeAssoc = memes.Where(meme => !child.knownMemes.Contains(meme)).ToList();
-                    if (memeAssoc.Count == 0)
+                    if (cachedListForTeaching.Count == 0)
                     {
                         storyOfLife?.AppendFormat("Tried to teach a child {0} something{2}, but he already knows everything his parent {1} can teach him.", child.Name, Name, i > 0 ? " else" : "").AppendLine();
                         return;
                     }
-                    Meme memeToTeach = memeAssoc[randomizer.Next(memeAssoc.Count)];
+                    int memeIndexToTeach = randomizer.Next(cachedListForTeaching.Count);
+                    Meme memeToTeach = cachedListForTeaching[memeIndexToTeach];
+                    // А вот это вообще очень опасный копипейст, если я правильно понимаю.
                     double teachingSuccessChance = SupportFunctions.MultilpyProbabilities(
                         SupportFunctions.SumProbabilities(
                             this.GetFeature(AvailableFeatures.TeachingEfficiency),
@@ -797,6 +762,7 @@ namespace TribeSim
                             else
                             {
                                 child.LearnNewMemeFrom(memeToTeach, this);
+                                cachedListForTeaching.RemoveAt(memeIndexToTeach);
                                 storyOfLife?.AppendFormat("Successfully taught child {0} {2} ({1}).", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription).AppendLine();
                                 UseMemeGroup(AvailableFeatures.TeachingEfficiency, "teaching child");
                                 UseMemeGroup(AvailableFeatures.TeachingLikelyhood, "teaching child");
@@ -822,7 +788,6 @@ namespace TribeSim
                     }
                 }
             }
-
         }
 
         public void ReportJoiningTribe(Tribe tribe)

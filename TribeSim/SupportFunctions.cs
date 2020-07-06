@@ -74,6 +74,47 @@ namespace TribeSim
                 return 0;
             }
         }
+
+        public static void ExcludeFromSortedList(this List<Meme> source, List<Meme> excludeList, List<Meme> target) {
+            target.Clear();
+            int sourceIndex = 0;
+            if (excludeList.Count > 0) {
+                for (int excludedIndex = 0; excludedIndex < excludeList.Count && sourceIndex < source.Count;) {
+                    Meme sourceMeme = source[sourceIndex], excludedMeme = excludeList[excludedIndex];
+                    if (sourceMeme == excludedMeme) { // пропустить совпадающие элементы.
+                        sourceIndex++;
+                        excludedIndex++;
+                        continue;
+                    }
+                    //if (used.Price > MemorySizeRemaining) break; // Может там и есть чё, но оно к нам не влезет. Эта реализация будет отличается отстарого кода тем, что слишком большие мемы не участвуют в попытках обучения.
+                    if (sourceMeme.Price > excludedMeme.Price) {
+                        excludedIndex++;
+                    } else if (sourceMeme.Price < excludedMeme.Price) {
+                        sourceIndex++;
+                        target.Add(sourceMeme);
+                    } else { // Если Мемы разные но цена у них полностью одинаковая то в отсортированных массивах такие мемы могут идти в любом порядке. Так что текущий мем придётся сравнить со всеми имеющими строго такую же цену, после чего откатиться назад.
+                        bool finded = false;
+                        for (int nextIndex = excludedIndex + 1; nextIndex < excludeList.Count; nextIndex++) {
+                            var nextExcluded = excludeList[nextIndex];
+                            if (nextExcluded.Price > sourceMeme.Price) { // Если всё просмотрели и начались уже более дорогие мемы прекращаем просмотр. Не найденный мем добавится в список за пределами цикла
+                                break;
+                            } else if (sourceMeme == nextExcluded) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
+                                finded = true;
+                                sourceIndex++;
+                                break;
+                            }
+                        }
+                        if (!finded) {
+                            sourceIndex++;
+                            target.Add(sourceMeme);
+                        }
+                    }
+                }
+            }
+            // Выход из цикла мог означать, что used ещё может и остались, а вот my точно кончились. Ну ил инаоборот, собственно
+            for (; sourceIndex < source.Count; sourceIndex++)
+                target.Add(source[sourceIndex]);
+        }
     }
 
     class NullableDictionary<K, V> : IDictionary<K, V>
