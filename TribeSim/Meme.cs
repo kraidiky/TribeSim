@@ -31,7 +31,7 @@ namespace TribeSim
 
         private List<Meme> prequisiteMemes = new List<Meme>();
 
-        public bool PrequisitesAreMet(List<Meme> knownMemes)
+        public bool PrequisitesAreMet(IReadOnlyList<Meme> knownMemes)
         {
             foreach (Meme requiredMeme in prequisiteMemes)
             {
@@ -40,7 +40,7 @@ namespace TribeSim
             return true;
         }
 
-        public List<Meme> WhichPrequisitesAreNotMet(List<Meme> knownMemes)
+        public List<Meme> WhichPrequisitesAreNotMet(IReadOnlyList<Meme> knownMemes)
         {
             List<Meme> retVal = new List<Meme>();
             foreach (Meme requiredMeme in prequisiteMemes)

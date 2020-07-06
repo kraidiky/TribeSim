@@ -283,13 +283,7 @@ namespace TribeSim
             }
         }
 
-        public IEnumerable<Meme> knownMemes
-        {
-            get
-            {
-                return memes.Select(tma => (Meme)tma);
-            }
-        }
+        public IReadOnlyList<Meme> knownMemes => memes;
 
         public bool TryToTeach(Tribesman student, bool isCulturalExchange=false)
         {
@@ -310,7 +304,7 @@ namespace TribeSim
                             this.GetFeature(AvailableFeatures.TeachingEfficiency),
                             student.GetFeature(AvailableFeatures.StudyEfficiency)),
                         Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
-                    if (memeToTeach.PrequisitesAreMet(student.knownMemes.ToList()))
+                    if (memeToTeach.PrequisitesAreMet(student.knownMemes))
                     {
                         if (randomizer.Chance(teachingSuccessChance))
                         {
@@ -338,7 +332,7 @@ namespace TribeSim
                     }
                     else
                     {
-                        List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(student.knownMemes.ToList());
+                        List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(student.knownMemes);
                         if (unmetPrequisites.Count == 1)
                         {
                             storyOfLife?.AppendFormat("Tried to teach {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", student.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
@@ -595,7 +589,7 @@ namespace TribeSim
                 }
                 // Тут есть три возможные причины перехода к следующему элементу цикла - пререквизиты, шанс выучить и недостаток памяти. Наерняка можно сильно съэкономить если расположить их в правильном порядке.
                 Meme memeToStudy = memesAvailableForStudy[randomizer.Next(memesAvailableForStudy.Count)];
-                if (memeToStudy.PrequisitesAreMet(knownMemes.ToList())) // После всех оптимизаций значимость вот этой беды выросла до 3,5%
+                if (memeToStudy.PrequisitesAreMet(knownMemes)) // После всех оптимизаций значимость вот этой беды выросла до 3,5%
                 {
                     resource -= WorldProperties.StudyCosts;
                     if (randomizer.Chance(
@@ -618,7 +612,7 @@ namespace TribeSim
                 }
                 else
                 {
-                    List<Meme> unmetPrequisites = memeToStudy.WhichPrequisitesAreNotMet(knownMemes.ToList());
+                    List<Meme> unmetPrequisites = memeToStudy.WhichPrequisitesAreNotMet(knownMemes);
                     if (unmetPrequisites.Count == 1)
                     {
                         storyOfLife?.AppendFormat("Tried to teach himself {0} (#{1}), but was not ready to learn it. Must learn {2} (#{3}) first.", memeToStudy.ActionDescription, memeToStudy.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
@@ -751,7 +745,7 @@ namespace TribeSim
                             this.GetFeature(AvailableFeatures.TeachingEfficiency),
                             child.GetFeature(AvailableFeatures.StudyEfficiency)),
                         Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
-                    if (memeToTeach.PrequisitesAreMet(child.knownMemes.ToList()))
+                    if (memeToTeach.PrequisitesAreMet(child.knownMemes))
                     {
                         if (randomizer.Chance(teachingSuccessChance))
                         {
@@ -776,7 +770,7 @@ namespace TribeSim
                     }
                     else
                     {
-                        List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(child.knownMemes.ToList());
+                        List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(child.knownMemes);
                         if (unmetPrequisites.Count == 1)
                         {
                             storyOfLife?.AppendFormat("Tried to teach child {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", child.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
