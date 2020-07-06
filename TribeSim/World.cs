@@ -56,9 +56,8 @@ namespace TribeSim
             get { return World.simDataFolder; }
         }
         private static List<Tribe> tribes = new List<Tribe>();
-        private static int year = 0;
 
-        public static int Year { get { return World.year; } }
+        public static int Year { get; private set; }
 
         public static void InitializeNext(Dispatcher d) {
             Initialize(d, randomizer.Next(int.MaxValue));
@@ -100,7 +99,7 @@ namespace TribeSim
             {
                 Directory.CreateDirectory(simDataFolder);
             }
-            year = 0;
+            Year = 0;
             for (int i = 0; i < WorldProperties.StartingNumberOfTribes; i++ )
             {
                 Tribe t = new Tribe(randomizer.Next(int.MaxValue));
@@ -135,11 +134,11 @@ namespace TribeSim
 
         public static void SimulateYear(Dispatcher d)
         {
-            year++;
+            Year++;
 
-            if (year == 1000) // Первые 1000 циклов пропускаем. Там всякое медленное делается.
+            if (Year == 1000) // Первые 1000 циклов пропускаем. Там всякое медленное делается.
                 stopwatch = Stopwatch.StartNew();
-            if (year % 11000 == 0) {
+            if (Year % 11000 == 0) {
                 stopwatch.Stop();
                 spendedTime = stopwatch.Elapsed;
             }
@@ -170,7 +169,7 @@ namespace TribeSim
 
             OverpopulationPrevention();
 
-            if (WorldProperties.CollectGraphData > 0.5 || (WorldProperties.CollectFilesData > 0 && (year % (int)WorldProperties.CollectFilesData == 0 || (year + 1) % (int)WorldProperties.CollectFilesData == 0)))
+            if (WorldProperties.CollectGraphData > 0.5 || (WorldProperties.CollectFilesData > 0 && (Year % (int)WorldProperties.CollectFilesData == 0 || (Year + 1) % (int)WorldProperties.CollectFilesData == 0)))
             {
                 ReportEndOfYearStatistics();
 
@@ -179,10 +178,9 @@ namespace TribeSim
                     StatisticsCollector.ConsolidateNewYear();
                 }));
             }
-            TribesmanToMemeAssociation.EndOfTurn();
 
-            if (year % 11000 == 1) {
-                Console.WriteLine($"========== year:{year} ==========");
+            if (Year % 11000 == 1) {
+                Console.WriteLine($"========== year:{Year} ==========");
                 for (int i = 0; i < tribes.Count; i++)
                     Console.WriteLine($"tribe[{tribes[i].seed}] rnd:{tribes[i].randomizer.Next(10000)}");
             }

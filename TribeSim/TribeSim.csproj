@@ -146,7 +146,6 @@
       <DependentUpon>Simulation.xaml</DependentUpon>
     </Compile>
     <Compile Include="StatisticsCollector.cs" />
-    <Compile Include="TribesmanToMemeAssociation.cs" />
     <Compile Include="UserPreferences.cs" />
     <Compile Include="VisualElementsCloner.cs" />
     <Compile Include="GraphWindow.xaml.cs">

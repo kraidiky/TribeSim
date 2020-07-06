@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -78,9 +79,10 @@ namespace TribeSim
             }
         }
 
-        private static TribesmanToMemeAssociation[] EmptyMemes = new TribesmanToMemeAssociation[0];
-        private List<TribesmanToMemeAssociation> memes = new List<TribesmanToMemeAssociation>();
-        private TribesmanToMemeAssociation[][] memesByFeature = new TribesmanToMemeAssociation[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
+        private static Meme[] EmptyMemes = new Meme[0];
+        private List<Meme> memes = new List<Meme>();
+        private List<int> lastYearMemeWasUsed = new List<int>();
+        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         private double BasicPriceToGetThisChild;
@@ -88,33 +90,35 @@ namespace TribeSim
         private double resource;
         
         private void AddMeme(Meme newMeme) {
-            TribesmanToMemeAssociation tma = TribesmanToMemeAssociation.Create(this, newMeme);
             // memes у нас теперь будет отсортирован по возрастанию прайса мемов
-            memes.AddToSortedList(tma);
+            int index = memes.AddToSortedList(newMeme);
+            lastYearMemeWasUsed.Insert(index, World.Year);
 
-            int feature = (int)tma.Meme.AffectedFeature;
+            int feature = (int)newMeme.AffectedFeature;
             memesEffect[feature] = null;
             MemorySizeRemaining -= newMeme.Price;
             var oldByFeatures = memesByFeature[feature];
-            var newByFeatures = new TribesmanToMemeAssociation[oldByFeatures.Length + 1];
+            var newByFeatures = new Meme[oldByFeatures.Length + 1];
             memesByFeature[feature] = newByFeatures;
-            newByFeatures[0] = tma;
+            newByFeatures[0] = newMeme;
             oldByFeatures.CopyTo(newByFeatures, 1);
 
         }
-        private void RemoveMeme(TribesmanToMemeAssociation assoc) {
-            int feature = (int)assoc.Meme.AffectedFeature;
-            memes.Remove(assoc);
+        private void RemoveMeme(Meme meme) {
+            int feature = (int)meme.AffectedFeature;
+            int index = memes.IndexOf(meme);
+            memes.RemoveAt(index);
+            lastYearMemeWasUsed.RemoveAt(index);
             memesEffect[feature] = null;
-            MemorySizeRemaining += assoc.Meme.Price;
+            MemorySizeRemaining += meme.Price;
             var oldByFeatures = memesByFeature[feature];
             if (oldByFeatures.Length == 1) {
                 memesByFeature[feature] = EmptyMemes;
             } else {
-                var newByFeatures = new TribesmanToMemeAssociation[oldByFeatures.Length - 1];
+                var newByFeatures = new Meme[oldByFeatures.Length - 1];
                 memesByFeature[feature] = newByFeatures;
                 for (int i = 0, j = 0; i < oldByFeatures.Length; i++)
-                    if (oldByFeatures[i] != assoc) {
+                    if (oldByFeatures[i] != meme) {
                         newByFeatures[j] = oldByFeatures[i];
                         j++;
                     }
@@ -193,11 +197,11 @@ namespace TribeSim
                 var retval = genes[af];
                 var description = WorldProperties.FeatureDescriptions[(int)af];
                 if (description.Is0to1Feature) { // 0..1 features.
-                    foreach (TribesmanToMemeAssociation assoc in relevantMemes)
-                            retval += assoc.Meme.Efficiency - assoc.Meme.Efficiency * retval;
+                    foreach (Meme meme in relevantMemes)
+                            retval += meme.Efficiency - meme.Efficiency * retval;
                 } else { //0..infinity features.
-                    foreach (TribesmanToMemeAssociation assoc in relevantMemes)
-                        retval += assoc.Meme.Efficiency;
+                    foreach (Meme meme in relevantMemes)
+                        retval += meme.Efficiency;
                 }
                 memesEffect[(int)af] = retval;
                 return retval;
@@ -252,15 +256,16 @@ namespace TribeSim
 
         public void ForgetUnusedMemes()
         {
+            int year = World.Year;
             for (int i = memes.Count - 1; i >= 0; i--) {
-                TribesmanToMemeAssociation assoc = memes[i];
-                if (assoc.TurnsSinceLastUsed > WorldProperties.DontForgetMemesThatWereUsedDuringThisPeriod)
+                Meme meme = memes[i];
+                if (year - lastYearMemeWasUsed[i] > WorldProperties.DontForgetMemesThatWereUsedDuringThisPeriod)
                 {
                     if (randomizer.Chance(WorldProperties.ChanceToForgetTheUnusedMeme))
                     {
-                        assoc.Meme.ReportForgotten(this);
-                        storyOfLife?.AppendFormat("Forgotten how {1} ({0})",assoc.Meme.SignatureString, assoc.Meme.ActionDescription).AppendLine();
-                        RemoveMeme(assoc);
+                        meme.ReportForgotten(this);
+                        storyOfLife?.AppendFormat("Forgotten how {1} ({0})", meme.SignatureString, meme.ActionDescription).AppendLine();
+                        RemoveMeme(meme);
                         ReportPhenotypeChange();                                                
                     }
                 }
@@ -293,7 +298,7 @@ namespace TribeSim
                 if (resource >= WorldProperties.TeachingCosts || randomizer.Chance(WorldProperties.ChanceToTeachIfUnsufficienResources))
                 {
                     resource -= WorldProperties.TeachingCosts;
-                    List<TribesmanToMemeAssociation> memeAssoc = memes.Where(associ => !student.knownMemes.Contains(associ.Meme)).ToList();
+                    List<Meme> memeAssoc = memes.Where(meme => !student.knownMemes.Contains(meme)).ToList();
                     if (memeAssoc.Count == 0)
                     {
                         storyOfLife?.AppendFormat("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts,isCulturalExchange?"Cultural Exchange! ":"").AppendLine();
@@ -382,12 +387,11 @@ namespace TribeSim
                     storyOfLife?.AppendFormat("While {3} invented the new meme but forgot it immediately. Too stupid to remember anything else. Memory size is {1:f2} and meme complexity is {2:f2}", Name, MemorySizeRemaining, inventedMeme.Price, activity).AppendLine();
                 }
             }
-            TribesmanToMemeAssociation[] relevantMemes = memesByFeature[(int)usedFeature];
-            for( int i = 0; i < relevantMemes.Length; i++) {
-                var tma = relevantMemes[i];
-                tma.Use();
-                myTribe.MemeUsed(this, tma.Meme); // Тот, кто не в племени не может пользовать мемы.
-            }
+            for (int i = 0; i < memes.Count; i++)
+                if (memes[i].AffectedFeature == usedFeature) { // Использую пока такую менее эффективную схему чтобы rnd-шники при рефакторинге не поплыли. В дальнейшем lastYearMemeWasUsed можно будет хранить сразу по группам.
+                    lastYearMemeWasUsed[i] = World.Year;
+                    myTribe.MemeUsed(this, memes[i]); // Тот, кто не в племени не может пользовать мемы.
+                }
         }
 
         private void LearnNewMemeFrom(Meme meme, Tribesman teacher)
@@ -560,9 +564,9 @@ namespace TribeSim
             {
                 resource -= resourcesWasted;
 
-                TribesmanToMemeAssociation[] relevantMemes = memesByFeature[(int)AvailableFeatures.UselessActionsLikelihood];
+                Meme[] relevantMemes = memesByFeature[(int)AvailableFeatures.UselessActionsLikelihood];
                 if (relevantMemes.Length > 0) {
-                    Meme randomKnownUselessMeme = relevantMemes[randomizer.Next(relevantMemes.Length)].Meme;
+                    Meme randomKnownUselessMeme = relevantMemes[randomizer.Next(relevantMemes.Length)];
 
                     storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
                     UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
@@ -570,11 +574,6 @@ namespace TribeSim
                     storyOfLife?.AppendFormat($"Geneticaly based useless actins. Chance: {chance}, but wasted {resourcesWasted:f2} resources on it. {resource:f2} remaining.").AppendLine();
                 }
             }
-        }
-
-        public bool HasMemesUsedThisTurn()
-        {
-            return memes.Any(meme => meme.TurnsSinceLastUsed == 0);            
         }
 
         public void PrepareForANewYear()
@@ -603,7 +602,7 @@ namespace TribeSim
                     } else { // Если Мемы разные но цена у них полностью одинаковая то в отсортированных массивах такие мемы могут идти в любом порядке. Так что текущий мем придётся сравнить со всеми имеющими строго такую же цену, после чего откатиться назад.
                         bool finded = false;
                         for (int nextIndex = myIndex + 1; nextIndex < memes.Count; nextIndex++) {
-                            var nextMy = memes[nextIndex].Meme;
+                            var nextMy = memes[nextIndex];
                             if (nextMy.Price > used.Price) { // Если всё просмотрели и начались уже более дорогие мемы прекращаем просмотр. Не найденный мем добавится в список за пределами цикла
                                 break;
                             } else if (used == nextMy) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
@@ -703,7 +702,7 @@ namespace TribeSim
             double totalBrainUsage = 0;
             double totalBrainSize = 0;
             for (int i = 0; i < memes.Count; i++) {
-                totalBrainUsage += memes[i].Meme.Price;
+                totalBrainUsage += memes[i].Price;
             }
             totalBrainSize = totalBrainUsage + MemorySizeRemaining;
             if (totalBrainSize > 0)
@@ -714,11 +713,9 @@ namespace TribeSim
 
         private void ForgetAllMemes()
         {
-            var allMemes = memes.ToArray();
-            foreach (TribesmanToMemeAssociation assoc in allMemes)
-            {
-                assoc.Meme.ReportForgotten(this);                
-                RemoveMeme(assoc);
+            for (int i = memes.Count - 1; i >= 0; i--) {
+                memes[i].ReportForgotten(this);                
+                RemoveMeme(memes[i]);
             }
         }
 
@@ -777,7 +774,7 @@ namespace TribeSim
             {
                 for (int i = 0; i < WorldProperties.FreeTeachingRoundsForParents; i++)
                 {
-                    List<TribesmanToMemeAssociation> memeAssoc = memes.Where(associ => !child.knownMemes.Contains(associ.Meme)).ToList();
+                    List<Meme> memeAssoc = memes.Where(meme => !child.knownMemes.Contains(meme)).ToList();
                     if (memeAssoc.Count == 0)
                     {
                         storyOfLife?.AppendFormat("Tried to teach a child {0} something{2}, but he already knows everything his parent {1} can teach him.", child.Name, Name, i > 0 ? " else" : "").AppendLine();
@@ -893,7 +890,7 @@ namespace TribeSim
                 double totalBrainSize = 0;
                 var brainUsages = FeatureSet.Blank();
                 for (int i = 0; i < memes.Count; i++) {
-                    var meme = memes[i].Meme;
+                    var meme = memes[i];
                     totalBrainUsage += meme.Price;
                     brainUsages[(int)meme.AffectedFeature] += meme.Price;
                 }

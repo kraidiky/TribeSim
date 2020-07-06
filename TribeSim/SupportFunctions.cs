@@ -5,8 +5,7 @@ using System.Linq;
 
 namespace TribeSim
 {
-    static class SupportFunctions
-    {
+    static class SupportFunctions {
         public static readonly Random NotReproducableRandomizer = new Random();
 
         public static double NormalRandom(this Random randomizer, double mean, double stdDev) {
@@ -19,20 +18,17 @@ namespace TribeSim
             return randNormal;
         }
 
-        public static double SumProbabilities(params double[] args)
-        {
+        public static double SumProbabilities(params double[] args) {
             if (args.Count() == 0) return 0;
             double retval = args[0];
-            for (int i=1; i<args.Count(); i++)
-            {
+            for (int i = 1; i < args.Count(); i++) {
                 if (args[i] >= 1) return 1;
                 retval = retval + args[i] - retval * args[i];
             }
-            return retval;            
+            return retval;
         }
 
-        public static double MultilpyProbabilities(double probability, double multiplier)
-        {
+        public static double MultilpyProbabilities(double probability, double multiplier) {
             if (probability >= 1) return 1;
             if (probability <= 0) return 0;
             return 1 - ((1 - probability) / multiplier);
@@ -52,7 +48,7 @@ namespace TribeSim
         public static void Parallel<T>(this IList<T> items, Action<T> action) {
             if (WorldProperties.IgnoreMultithreading < .5)
                 System.Threading.Tasks.Parallel.ForEach<T>(items, action);
-            else 
+            else
                 foreach (var item in items) action(item);
         }
 
@@ -61,36 +57,21 @@ namespace TribeSim
                 action(item);
         }
 
-        // Эти две функции можно было бы объединить кучей разных способов, но почти все они хоть на чуть-чуть снижают производительность.
-        // Сам по себе переход к сортированным спискам изменил время с 17 до 14,5 видимо эволюция пошла по другому пути.
-        public static void AddToSortedList(this List<Meme> target, Meme meme) {
+        // Возвращаем позицию в которую вставлен элемент. Этот функционал нужен не везде, где применяется эта функция.
+        public static int AddToSortedList(this List<Meme> target, Meme meme) {
             int i = target.Count - 1;
-            if (i < 0 || meme.Price >= target[i].Price)
+            if (i < 0 || meme.Price >= target[i].Price) {
                 target.Add(meme);
-            else {
+                return target.Count - 1;
+            } else {
                 for (--i; i >= 0; --i)
                     if (meme.Price > target[i].Price) {
-                        target.Insert(i + 1, meme);
-                        break;
+                        int position = i + 1;
+                        target.Insert(position, meme);
+                        return position;
                     }
-                if (i < 0) {
-                    target.Insert(0, meme);
-                }
-            }
-        }
-        public static void AddToSortedList(this List<TribesmanToMemeAssociation> target, TribesmanToMemeAssociation association) {
-            int i = target.Count - 1;
-            if (i < 0 || association.Meme.Price >= target[i].Meme.Price)
-                target.Add(association);
-            else {
-                for (--i; i >= 0; --i)
-                    if (association.Meme.Price > target[i].Meme.Price) {
-                        target.Insert(i + 1, association);
-                        break;
-                    }
-                if (i < 0) {
-                    target.Insert(0, association);
-                }
+                target.Insert(0, meme);
+                return 0;
             }
         }
     }
