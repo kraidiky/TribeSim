@@ -76,7 +76,7 @@ namespace TribeSim
             endlessSimulationRunning = false;
             if (System.Windows.MessageBox.Show("Are you sure you want to reset the simulator?", "Tribe Sim", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
             {
-                World.Initialize(Dispatcher, (int)WorldProperties.InitialStateRandomSeed);
+                World.Initialize(Dispatcher, (int)WorldProperties.InitialStateRandomSeed >= 0 ? (int)WorldProperties.InitialStateRandomSeed : new Random().Next());
             }
             lblYear.Content = World.Year;
         }

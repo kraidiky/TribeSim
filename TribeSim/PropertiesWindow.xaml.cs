@@ -245,7 +245,7 @@ namespace TribeSim
 
         private void InitiateSimulation(object sender, RoutedEventArgs e)
         {
-            World.Initialize(Dispatcher, (int)WorldProperties.InitialStateRandomSeed);
+            World.Initialize(Dispatcher, (int)WorldProperties.InitialStateRandomSeed >= 0 ? (int)WorldProperties.InitialStateRandomSeed : new Random().Next());
             Simulation simWindow = new Simulation();
             simWindow.ShowActivated = true;
             simWindow.Show();
