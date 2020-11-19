@@ -201,7 +201,7 @@ namespace TribeSim
                                 {
                                     yearRow.Append(ConstructCell(MetricValuesByFileByYearByMetric[metric][year][filecursor], CellValues.Number));
                                     num++;
-                                    sum += Convert.ToDouble(MetricValuesByFileByYearByMetric[metric][year][filecursor]);
+                                    sum += MetricValuesByFileByYearByMetric[metric][year][filecursor].ConvertToDouble();
                                 }
                                 else
                                 {

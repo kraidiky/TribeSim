@@ -1451,7 +1451,7 @@ namespace TribeSim
                     {
                         string namememory = reader.Name;
                         reader.Read();
-                        propertiesDictionary[namememory].SetValue(null, Convert.ToDouble(reader.Value.Trim()));
+                        propertiesDictionary[namememory].SetValue(null, reader.Value.ConvertToDouble());
                         reader.Read();
                     }
                     // The following lines are only needed ones to migrate from older *.trsim files

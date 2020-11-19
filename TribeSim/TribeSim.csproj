@@ -145,6 +145,7 @@
     <Compile Include="Simulation.xaml.cs">
       <DependentUpon>Simulation.xaml</DependentUpon>
     </Compile>
+    <Compile Include="StaticExtentions.cs" />
     <Compile Include="StatisticsCollector.cs" />
     <Compile Include="UserPreferences.cs" />
     <Compile Include="VisualElementsCloner.cs" />
