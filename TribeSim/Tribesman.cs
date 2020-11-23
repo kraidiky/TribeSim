@@ -196,7 +196,7 @@ namespace TribeSim
             double creativity = this.GetFeature(AvailableFeatures.Creativity);
             if (randomizer.Chance(creativity))
             {
-                AvailableFeatures af = (AvailableFeatures)randomizer.Next(WorldProperties.MemesWhichCanBeInvented.Length);
+                AvailableFeatures af = (AvailableFeatures)(WorldProperties.MemesWhichCanBeInvented[randomizer.Next(WorldProperties.MemesWhichCanBeInvented.Length)]);
 
                 if (InventNewMemeForAFeature(af, out Meme inventedMeme))
                 {
