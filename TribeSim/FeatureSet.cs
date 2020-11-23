@@ -18,7 +18,10 @@ namespace TribeSim
             var genes = Blank();
             var features = WorldProperties.FeatureDescriptions;
             for (int i = 0; i < features.Length; i++)
-                genes[i] = randomizer.NormalRandom(features[i].InitialStateGenesMean, features[i].InitialStateGenesStdDev);
+                if (features[i].InitialStateGenesMean != 0 || features[i].InitialStateGenesStdDev != 0)
+                    do {
+                        genes[i] = randomizer.NormalRandom(features[i].InitialStateGenesMean, features[i].InitialStateGenesStdDev);
+                    } while (genes[i] < 0);
             return genes;
         }
 

@@ -5,8 +5,7 @@ using System.Linq;
 
 namespace TribeSim
 {
-    static class SupportFunctions
-    {
+    static class SupportFunctions {
         public static readonly Random NotReproducableRandomizer = new Random();
 
         public static double NormalRandom(this Random randomizer, double mean, double stdDev) {
@@ -19,20 +18,17 @@ namespace TribeSim
             return randNormal;
         }
 
-        public static double SumProbabilities(params double[] args)
-        {
+        public static double SumProbabilities(params double[] args) {
             if (args.Count() == 0) return 0;
             double retval = args[0];
-            for (int i=1; i<args.Count(); i++)
-            {
+            for (int i = 1; i < args.Count(); i++) {
                 if (args[i] >= 1) return 1;
                 retval = retval + args[i] - retval * args[i];
             }
-            return retval;            
+            return retval;
         }
 
-        public static double MultilpyProbabilities(double probability, double multiplier)
-        {
+        public static double MultilpyProbabilities(double probability, double multiplier) {
             if (probability >= 1) return 1;
             if (probability <= 0) return 0;
             return 1 - ((1 - probability) / multiplier);
@@ -49,9 +45,11 @@ namespace TribeSim
                 return false;
         }
         /// <summary> Функция нужна для удобства пошаговой отладки, чтобы можно было в одну строчку заменить все паралелизмы на последовательное выполнение. </summary>
-        public static void Parallel<T>(this IEnumerable<T> items, Action<T> action) {
-            //System.Threading.Tasks.Parallel.ForEach<T>(items, action);
-            foreach (var item in items) action(item);
+        public static void Parallel<T>(this IList<T> items, Action<T> action) {
+            if (WorldProperties.IgnoreMultithreading < .5)
+                System.Threading.Tasks.Parallel.ForEach<T>(items, action);
+            else
+                foreach (var item in items) action(item);
         }
 
         public static void ForEach<T>(this IEnumerable<T> items, Action<T> action) {
@@ -59,6 +57,64 @@ namespace TribeSim
                 action(item);
         }
 
+        // Возвращаем позицию в которую вставлен элемент. Этот функционал нужен не везде, где применяется эта функция.
+        public static int AddToSortedList(this List<Meme> target, Meme meme) {
+            int i = target.Count - 1;
+            if (i < 0 || meme.Price >= target[i].Price) {
+                target.Add(meme);
+                return target.Count - 1;
+            } else {
+                for (--i; i >= 0; --i)
+                    if (meme.Price > target[i].Price) {
+                        int position = i + 1;
+                        target.Insert(position, meme);
+                        return position;
+                    }
+                target.Insert(0, meme);
+                return 0;
+            }
+        }
+
+        public static void ExcludeFromSortedList(this List<Meme> source, List<Meme> excludeList, List<Meme> target) {
+            target.Clear();
+            int sourceIndex = 0;
+            if (excludeList.Count > 0) {
+                for (int excludedIndex = 0; excludedIndex < excludeList.Count && sourceIndex < source.Count;) {
+                    Meme sourceMeme = source[sourceIndex], excludedMeme = excludeList[excludedIndex];
+                    if (sourceMeme == excludedMeme) { // пропустить совпадающие элементы.
+                        sourceIndex++;
+                        excludedIndex++;
+                        continue;
+                    }
+                    //if (used.Price > MemorySizeRemaining) break; // Может там и есть чё, но оно к нам не влезет. Эта реализация будет отличается отстарого кода тем, что слишком большие мемы не участвуют в попытках обучения.
+                    if (sourceMeme.Price > excludedMeme.Price) {
+                        excludedIndex++;
+                    } else if (sourceMeme.Price < excludedMeme.Price) {
+                        sourceIndex++;
+                        target.Add(sourceMeme);
+                    } else { // Если Мемы разные но цена у них полностью одинаковая то в отсортированных массивах такие мемы могут идти в любом порядке. Так что текущий мем придётся сравнить со всеми имеющими строго такую же цену, после чего откатиться назад.
+                        bool finded = false;
+                        for (int nextIndex = excludedIndex + 1; nextIndex < excludeList.Count; nextIndex++) {
+                            var nextExcluded = excludeList[nextIndex];
+                            if (nextExcluded.Price > sourceMeme.Price) { // Если всё просмотрели и начались уже более дорогие мемы прекращаем просмотр. Не найденный мем добавится в список за пределами цикла
+                                break;
+                            } else if (sourceMeme == nextExcluded) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
+                                finded = true;
+                                sourceIndex++;
+                                break;
+                            }
+                        }
+                        if (!finded) {
+                            sourceIndex++;
+                            target.Add(sourceMeme);
+                        }
+                    }
+                }
+            }
+            // Выход из цикла мог означать, что used ещё может и остались, а вот my точно кончились. Ну ил инаоборот, собственно
+            for (; sourceIndex < source.Count; sourceIndex++)
+                target.Add(source[sourceIndex]);
+        }
     }
 
     class NullableDictionary<K, V> : IDictionary<K, V>

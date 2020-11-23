@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Research.DynamicDataDisplay.Common;
+using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,8 @@ namespace TribeSim
 {
     class Tribe
     {
-        private static Random randomizer;
+        public int seed;
+        public Random randomizer;
 
         private List<Tribesman> members = new List<Tribesman>();
         private bool keepsLog = false;
@@ -36,7 +38,7 @@ namespace TribeSim
 
         public Tribe(int randomSeed)
         {
-            randomizer = new Random(randomSeed);
+            randomizer = new Random(seed = randomSeed);
             TribeName = NamesGenerator.GenerateTribeName();
             keepsLog = randomizer.Chance(WorldProperties.ChancesThatTribeWillWriteALog);
             yearBegun = World.Year;
@@ -65,18 +67,20 @@ namespace TribeSim
         {
             get { return members.Count == 0; }
         }
+        public readonly int TribeId;
         public string TribeName = null;
         private int yearBorn = 0;
+        private HashSet<Meme> memesUsedThisYearHash = new HashSet<Meme>();
         private List<Meme> memesUsedThisYear = new List<Meme>();
 
-
+        private int nextFreeMemberId = 0;
         public void AcceptMember(Tribesman member)
         {
-            member.MyTribeName = TribeName;
+            member.MyTribe = this;
+            member.TribeMemberId = nextFreeMemberId++;
             member.SetRandomizer(randomizer);
             members.Add(member);
             member.ReportJoiningTribe(this);
-            member.MemeUsed += member_MemeUsed;
             if (keepsLog && !logTribesmenList.Contains(member))
             {
                 if (logTribesmenList.Count>0) logMembers.Append(", ");
@@ -87,17 +91,14 @@ namespace TribeSim
 
         public void MemberLeaves(Tribesman member)
         {
-            member.MyTribeName = "Unknown";
+            member.MyTribe  = null;
             members.Remove(member);
-            member.MemeUsed -= member_MemeUsed;
         }
 
-        private void member_MemeUsed(object sender, Meme e)
+        public void MemeUsed(Tribesman member, Meme e)
         {
-            if (!memesUsedThisYear.Contains(e))
-            {
-                memesUsedThisYear.Add(e);
-            }
+            if (memesUsedThisYearHash.Add(e))
+                memesUsedThisYear.AddToSortedList(e);
         }
 
         public void ConsumeLifeSupport()
@@ -168,7 +169,7 @@ namespace TribeSim
                     double feature = members[i].GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
                     min = Math.Min(min, feature);
                     max = Math.Max(max, feature);
-                    _freeraidersFeatures[i] = feature;
+                    _freeraidersFeatures.Add(feature);
                 }
                 double threshold = min + (max - min) * 0.25;
                 _freeRaiders.Clear();
@@ -176,8 +177,9 @@ namespace TribeSim
                     if (_freeraidersFeatures[i] > threshold)
                         _freeRaiders.Add(members[i]);
                 }
-                for (int i = 0; i < _punishers.Count; i++)
-                    _punishers[i].DetermineAndPunishAFreeRider(members, _freeRaiders);
+                if (_freeRaiders.Count > 0) // Такая шизовая ситуация возможна если у всех в племени строго одинаковый геном по данному признаку.
+                    for (int i = 0; i < _punishers.Count; i++)
+                        _punishers[i].DetermineAndPunishAFreeRider(members, _freeRaiders);
             }
         }
 
@@ -220,23 +222,28 @@ namespace TribeSim
             
         }
 
+        private double[] takenShares = new double[0];
         public void ReceiveAndShareResource(double resourcesReceivedPerGroup)
         {
             if (double.IsNaN(resourcesReceivedPerGroup))
             {
                 throw new ArgumentException("Received NaN resources");
             }
-            Dictionary<Tribesman, double> takenShares = new Dictionary<Tribesman, double>();
+            if (takenShares.Length != members.Count)
+                takenShares = new double[members.Count]; // Количество мемберов меняется довольно редко, создание массива тут оправдано.
+
             double totalShare = 0;
-            foreach (Tribesman man in members)
-            {
-                double requestedShare = man.TellHowMuchDoYouWant(resourcesReceivedPerGroup);
-                takenShares.Add(man, requestedShare);
+            for (int i = 0; i < takenShares.Length; i++) {
+                double requestedShare = members[i].TellHowMuchDoYouWant(resourcesReceivedPerGroup);
+                takenShares[i] = requestedShare;
                 totalShare += requestedShare;
+
             }
-            foreach (Tribesman man in members)
+
+            double resourcesPerRequest = resourcesReceivedPerGroup / totalShare; // Деление вообще довольно медленная операция, не надо ей злоупотреблять
+            for (int i = 0; i < takenShares.Length; i++)
             {
-                man.RecieveResourcesShare(resourcesReceivedPerGroup/totalShare*takenShares[man]);
+                members[i].RecieveResourcesShare(resourcesPerRequest * takenShares[i]);
             }
         }
 
@@ -248,17 +255,19 @@ namespace TribeSim
             }
         }
 
+        private List<Meme> _memesCache = new List<Meme>(); // Достаточно одного кэшированного листа, потому что массивы никогда не обрабатываются одновременно. 
         public void Study()
-        {            
+        {
             foreach (Tribesman man in members)
             {
-                man.StudyOneOrManyOfTheMemesUsedThisTurn(memesUsedThisYear);
+                man.StudyOneOrManyOfTheMemesUsedThisTurn(memesUsedThisYear, _memesCache);
             }
         }
 
         public void PrepareForANewYear()
         {
-            memesUsedThisYear = new List<Meme>();
+            memesUsedThisYearHash.Clear();
+            memesUsedThisYear.Clear();
             foreach (Tribesman man in members)
             {
                 man.PrepareForANewYear();
@@ -303,7 +312,7 @@ namespace TribeSim
                 breedingPartners[index] = breedingPartners[last];
                 breedingPartners.RemoveAt(last);
 
-                Tribesman child = Tribesman.Breed(randomizer, PartnerA, PartnerB);
+                Tribesman child = Tribesman.Breed(randomizer, PartnerA, PartnerB, _memesCache);
                 if (child != null)
                 {
                     this.AcceptMember(child);

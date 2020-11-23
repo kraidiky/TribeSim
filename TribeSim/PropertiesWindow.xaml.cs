@@ -123,7 +123,7 @@ namespace TribeSim
             PropertyInfo property = (PropertyInfo)(((TextBox)sender).Tag);
             try
             {
-                property.SetValue(null, Convert.ToDouble(((TextBox)sender).Text));
+                property.SetValue(null, ((TextBox)sender).Text.ConvertToDouble());
                 ((TextBox)sender).Background = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
             }
             catch (Exception)
@@ -245,7 +245,7 @@ namespace TribeSim
 
         private void InitiateSimulation(object sender, RoutedEventArgs e)
         {
-            World.Initialize(Dispatcher, (int)WorldProperties.InitialStateRandomSeed);
+            World.Initialize(Dispatcher, (int)WorldProperties.InitialStateRandomSeed >= 0 ? (int)WorldProperties.InitialStateRandomSeed : new Random().Next());
             Simulation simWindow = new Simulation();
             simWindow.ShowActivated = true;
             simWindow.Show();

@@ -33,33 +33,35 @@ namespace TribeSim
         {
             double[] genesInheritedFromMother = FeatureSet.Blank();
             double[] genesInheritedFromFather = FeatureSet.Blank();
+
+            int random = randomizer.Next(1 << WorldProperties.FEATURES_COUNT << WorldProperties.FEATURES_COUNT); // Избавимся от Flip который пустая трата ресурсов в данном месте.
+
             for (int feature = 0; feature < genesInheritedFromMother.Length; feature++)
             {
                 var description = WorldProperties.FeatureDescriptions[feature];
                 
-                var parentGene = randomizer.Flip() ? motherGenes.strandA[feature] : motherGenes.strandB[feature];
-                genesInheritedFromMother[feature] = InheritTheFeatureWithAMutationChance(randomizer, parentGene, description);
+                var parentGene = (random & 1) == 0 ? motherGenes.strandA[feature] : motherGenes.strandB[feature];
+                genesInheritedFromMother[feature] = description.ChancceOfMutation > 0 && randomizer.NextDouble() < description.ChancceOfMutation ? MutateFeature(randomizer, parentGene, description) : parentGene; // Мутация выпадает редко, нефиг делать системкол, который в 99% лишний.
+                random = random >> 1;
 
-                parentGene = randomizer.Flip() ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature];
-                genesInheritedFromFather[feature] = InheritTheFeatureWithAMutationChance(randomizer, parentGene, description);
+                parentGene = (random & 1) == 0 ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature];
+                genesInheritedFromFather[feature] = description.ChancceOfMutation > 0 && randomizer.NextDouble() < description.ChancceOfMutation ? MutateFeature(randomizer, parentGene, description) : parentGene;
+                random = random >> 1;
             }
             return new GeneCode(genesInheritedFromMother, genesInheritedFromFather);
         }
 
-        private static double InheritTheFeatureWithAMutationChance(Random randomizer, double parentGenes, FeatureDescription feature)
+        private static double MutateFeature(Random randomizer, double parentGenes, FeatureDescription feature)
         {
-            if (randomizer.Chance(feature.ChancceOfMutation)) {
-                double newFeatureValue = -1;
-                while (newFeatureValue < 0) // При кривых начальных данных, например mean = -2 std = 1 может замедлиться в сотни раз.
-                {
-                    newFeatureValue = parentGenes + randomizer.NormalRandom(feature.MutationStrengthMean, feature.MutationStrengthStdDev);
-                    if (newFeatureValue > 1 && feature.Is0to1Feature) {
-                        newFeatureValue = -1; // Раз уж мы числа меньше 0 отбрасываем, то и больше 1 надо отбрасывать, а то распределение получится однобокое
-                    }
+            double newFeatureValue = -1;
+            do { // Обычно правильные данные выпадают с первого раза. и получается, что у нас ровно в два раза больше проверок, чем надо.
+                newFeatureValue = parentGenes + randomizer.NormalRandom(feature.MutationStrengthMean, feature.MutationStrengthStdDev);
+                if (newFeatureValue > 1 && feature.Is0to1Feature) {
+                    newFeatureValue = -1; // Раз уж мы числа меньше 0 отбрасываем, то и больше 1 надо отбрасывать, а то распределение получится однобокое
                 }
-                return newFeatureValue;
-            } else
-                return parentGenes;
+            }
+            while (newFeatureValue < 0); // При кривых начальных данных, например mean = -2 std = 1 может замедлиться в сотни раз.
+            return newFeatureValue;
         }
 
         public double this[int feature] { get { return resultingSet[feature]; } }
