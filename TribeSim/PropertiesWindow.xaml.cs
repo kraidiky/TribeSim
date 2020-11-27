@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Reflection;
 using Microsoft.Win32;
 using System.IO;
+using Path = System.IO.Path;
 
 namespace TribeSim
 {
@@ -44,7 +45,18 @@ namespace TribeSim
             this.Top = userPrefs.WindowTop;
             this.Left = userPrefs.WindowLeft;
             this.WindowState = userPrefs.WindowState;
-            
+
+            SetTitle();
+        }
+
+        private void SetTitle() {
+            if (!string.IsNullOrEmpty(currentSavedFileName)) {
+                this.Title = "saved: " + Path.GetFileName(currentSavedFileName) + " - Simulation Properties";
+            } else if (!string.IsNullOrEmpty(currentOpenedFileName)) {
+                this.Title = "opened: " + Path.GetFileName(currentOpenedFileName) + " - Simulation Properties";
+            } else {
+                this.Title = "Simulation Properties";
+            }
         }
 
         private TreeViewItem CreateTreeViewItemFor(PropertyTree properties, string header)
@@ -152,7 +164,7 @@ namespace TribeSim
             userPrefs.Save();
         }
 
-        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
+        private void MenuItem_OpenClicked(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();                     
             if (!String.IsNullOrEmpty(Properties.Settings.Default.UsualFolder))
@@ -166,6 +178,12 @@ namespace TribeSim
             if (dialog.ShowDialog() == true)
             {
                 WorldProperties.LoadPersistance(dialog.FileName);
+
+                currentOpenedFileName = dialog.SafeFileName;
+                if (currentSavedFileName != currentOpenedFileName)
+                    currentSavedFileName = "";
+                SetTitle();
+
                 Properties.Settings.Default.UsualFolder = System.IO.Path.GetDirectoryName(dialog.FileName);
 
                 PropertyTree properties = WorldProperties.PropertyTree;
@@ -178,12 +196,13 @@ namespace TribeSim
             }
         }
 
-        private void MenuItem_Click_2(object sender, RoutedEventArgs e)
+        private void MenuItem_ExitClicked(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown(0);
         }
 
-        private string currentFileName="";
+        private static string currentOpenedFileName = "";
+        private static string currentSavedFileName="";
         private void SaveAsClicked(object sender, RoutedEventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
@@ -198,16 +217,16 @@ namespace TribeSim
             {
                 WorldProperties.PersistChanges(sfd.FileName);
                 Properties.Settings.Default.UsualFolder = System.IO.Path.GetDirectoryName(sfd.FileName);
-                currentFileName = sfd.SafeFileName;
-                this.Title = currentFileName + " - Simulation Properties";
+                currentOpenedFileName = currentSavedFileName = sfd.SafeFileName;
+                SetTitle();
             }
         }
 
         private void SaveClicked(object sender, RoutedEventArgs e)
         {
-            if (currentFileName != "")
+            if (currentSavedFileName != "")
             {
-                WorldProperties.PersistChanges(currentFileName);
+                WorldProperties.PersistChanges(currentSavedFileName);
             }
             else
             {
@@ -215,7 +234,7 @@ namespace TribeSim
             }
         }
 
-        private void MenuItem_Click_3(object sender, RoutedEventArgs e)
+        private void TestGenerateMeme(object sender, RoutedEventArgs e)
         {
             Random randomizer = new Random();
             StringBuilder sb = new StringBuilder();

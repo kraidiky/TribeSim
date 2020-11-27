@@ -5,18 +5,18 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Open" Click="MenuItem_Click_1"/>
+                <MenuItem Header="_Open" Click="MenuItem_OpenClicked"/>
                 <MenuItem Header="_Save" Click="SaveClicked"/>
                 <MenuItem Header="_Consolidate..." Click="ConsolidateResults"/>
                 <MenuItem Header="Save _As" Click="SaveAsClicked"/>
-                <MenuItem Header="E_xit" Click="MenuItem_Click_2"/>
+                <MenuItem Header="E_xit" Click="MenuItem_ExitClicked"/>
             </MenuItem>                        
             <MenuItem Header="_Simulate">
                 <MenuItem Header="_Run simultaion" Click="InitiateSimulation"/>
                 <MenuItem Header="_Set log folder" Click="SetLogFolderClicked"/>
             </MenuItem>
             <MenuItem Header="_Test" Visibility="Hidden">
-                <MenuItem Header="_Meme generation" Click="MenuItem_Click_3"/>
+                <MenuItem Header="_Meme generation" Click="TestGenerateMeme"/>
                 <MenuItem Header="_Names generation" Click="TestGenerateNames"/>
                 <MenuItem Header="_Excuses generation" Click="TestGenerateExcuses"/>
             </MenuItem>
