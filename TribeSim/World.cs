@@ -73,18 +73,18 @@ namespace TribeSim
             GC.WaitForPendingFinalizers();
             if (!string.IsNullOrWhiteSpace(baseFolder))
             {
-                logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmm"));                
+                logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmmss"));                
             }
             else
             {
                 baseFolder = Properties.Settings.Default.LogBaseFolder;
                 if (string.IsNullOrWhiteSpace(baseFolder))
                 {
-                    logFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Tribe Sim Results", DateTime.Now.ToString("yyyyMMdd_HHmm"));
+                    logFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Tribe Sim Results", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                 }
                 else
                 {
-                    logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmm"));    
+                    logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmmss"));    
                 }
             }
             Directory.CreateDirectory(logFolder);
