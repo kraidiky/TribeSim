@@ -6,8 +6,6 @@ using System.Linq;
 namespace TribeSim
 {
     static class SupportFunctions {
-        public static readonly Random NotReproducableRandomizer = new Random();
-
         public static double NormalRandom(this Random randomizer, double mean, double stdDev) {
             double u1 = 1.0 - randomizer.NextDouble(); //uniform(0,1] random doubles
             double u2 = 1.0 - randomizer.NextDouble();

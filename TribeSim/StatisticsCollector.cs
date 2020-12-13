@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -218,12 +219,12 @@ namespace TribeSim
                 {
                     if (!fileRow.ContainsKey(kvp.Key))
                     {
-                        fileRow.Add(kvp.Key, kvp.Value.ToString("F3"));
+                        fileRow.Add(kvp.Key, kvp.Value.ToString("F3", CultureInfo.InvariantCulture));
                         RowHeaderChanged = true;
                     }
                     else
                     {
-                        fileRow[kvp.Key] = kvp.Value.ToString("F3");
+                        fileRow[kvp.Key] = kvp.Value.ToString("F3", CultureInfo.InvariantCulture);
                     }
                 }
             }
@@ -247,7 +248,7 @@ namespace TribeSim
                     {
                         if (unconsolidatedAvgEventsCount[kvp.Key] != 0)
                         {
-                            fileRow.Add(kvp.Key, (kvp.Value / unconsolidatedAvgEventsCount[kvp.Key]).ToString("F3"));
+                            fileRow.Add(kvp.Key, (kvp.Value / unconsolidatedAvgEventsCount[kvp.Key]).ToString("F3", CultureInfo.InvariantCulture));
                         }
                         else
                         {
@@ -259,7 +260,7 @@ namespace TribeSim
                     {
                         if (unconsolidatedAvgEventsCount[kvp.Key] != 0)
                         {
-                            fileRow[kvp.Key] = (kvp.Value / unconsolidatedAvgEventsCount[kvp.Key]).ToString("F3");
+                            fileRow[kvp.Key] = (kvp.Value / unconsolidatedAvgEventsCount[kvp.Key]).ToString("F3", CultureInfo.InvariantCulture);
                         }
                         else
                         {

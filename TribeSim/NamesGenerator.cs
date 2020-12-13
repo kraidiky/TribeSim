@@ -31,24 +31,23 @@ namespace TribeSim
         private static List<string> HuntingEfficiencyActions = new List<string>() { "to throw stones", "to throw sticks", "to make ambushes", "to dig holes", "to wash himself before the hunt", "to be quiet", "to sit on trees", "to throw heavy objects", "to throw stuff from the trees", "to jump from the trees", "to scare animals with fire", "to scare animals with cries", "to approach animals from upwind", "to make pointed sticks", "to aim better", "to bite harder", "to hit the weakspot", "to aim for the eyes", "to grab the tail", "to run fast", "to climb high", "to swim fast", "to jump quietly", "to mislead the prey", "to kill with one throw", "to make landslides", "to read the footprints" };
         private static List<string> CooperationEfficiencyActions = new List<string>() { "to use handsigns", "to watch others", "to make plans", "to follow plans", "to use footsigns", "to use body language", "to make meaningful sounds", "to listen to each other", "to think as a group", "to use broken twigs as signs for each other" };
         
+        private static Random random = new Random();
+        private static object _lock = new object();
 
         public static string GenerateName()
         {
             StringBuilder  sb = new StringBuilder();
-            var NotReproducableRandomizer = SupportFunctions.NotReproducableRandomizer;
-            int n = 0;
             
-            {
-                n++;                
-                sb.AppendFormat("{0}{1}", consonants[NotReproducableRandomizer.Next(consonants.Count)], vowels[NotReproducableRandomizer.Next(vowels.Count)]);
-                if (NotReproducableRandomizer.Flip())
+            lock (_lock) {
+                sb.AppendFormat("{0}{1}", consonants[random.Next(consonants.Count)], vowels[random.Next(vowels.Count)]);
+                if (random.Flip())
                 {
-                    sb.Append(consonants[NotReproducableRandomizer.Next(consonants.Count)]);
+                    sb.Append(consonants[random.Next(consonants.Count)]);
                 }
-                sb.AppendFormat("-{0}{1}", UppercaseFirst(consonants[NotReproducableRandomizer.Next(consonants.Count)]), vowels[NotReproducableRandomizer.Next(vowels.Count)]);
-                if (NotReproducableRandomizer.Flip())
+                sb.AppendFormat("-{0}{1}", UppercaseFirst(consonants[random.Next(consonants.Count)]), vowels[random.Next(vowels.Count)]);
+                if (random.Flip())
                 {
-                    sb.Append(consonants[NotReproducableRandomizer.Next(consonants.Count)]);
+                    sb.Append(consonants[random.Next(consonants.Count)]);
                 }                
             }                                    
             return UppercaseFirst(sb.ToString());
@@ -57,53 +56,54 @@ namespace TribeSim
         public static string GenerateTribeName()
         {
             StringBuilder sb = new StringBuilder();
-            var NotReproducableRandomizer = SupportFunctions.NotReproducableRandomizer;
 
-            if (NotReproducableRandomizer.Flip())
-            {
-                sb.Append(vowels[NotReproducableRandomizer.Next(vowels.Count)]);
-            }
-            sb.AppendFormat("{0}{1}", consonants[NotReproducableRandomizer.Next(consonants.Count)], vowels[NotReproducableRandomizer.Next(vowels.Count)]);
-            if (NotReproducableRandomizer.Flip())
-            {
-                sb.Append(consonants[NotReproducableRandomizer.Next(consonants.Count)]);
-            }
+            lock (_lock) {
+                if (random.Flip())
+                {
+                    sb.Append(vowels[random.Next(vowels.Count)]);
+                }
+                sb.AppendFormat("{0}{1}", consonants[random.Next(consonants.Count)], vowels[random.Next(vowels.Count)]);
+                if (random.Flip())
+                {
+                    sb.Append(consonants[random.Next(consonants.Count)]);
+                }
 
-            if (sb.ToString().ToLower() == "con") return GenerateTribeName();
+                if (sb.ToString().ToLower() == "con") return GenerateTribeName();
+            }
             return UppercaseFirst(sb.ToString());
         }
 
         public static string GenerateLameExcuse()
         {
-            var NotReproducableRandomizer = SupportFunctions.NotReproducableRandomizer;
-
             string format;
             string variable;
-            switch (NotReproducableRandomizer.Next(4))
-            {
-                case 0:
-                    format = "his {0} hurts";
-                    variable = bodyparts[NotReproducableRandomizer.Next(bodyparts.Count)];
-                    break;
-                case 1:
-                    format = "his {0} is sick";
-                    variable = relatives[NotReproducableRandomizer.Next(relatives.Count)];
-                    break;
-                case 2:
-                    format = "he lost his {0}";
-                    variable = objects[NotReproducableRandomizer.Next(objects.Count)];
-                    break;
-                default:
-                    format = "{0}";
-                    variable = otherExcuses[NotReproducableRandomizer.Next(otherExcuses.Count)];
-                    break;
-            }
+            lock (_lock)
+                switch (random.Next(4))
+                {
+                    case 0:
+                        format = "his {0} hurts";
+                        variable = bodyparts[random.Next(bodyparts.Count)];
+                        break;
+                    case 1:
+                        format = "his {0} is sick";
+                        variable = relatives[random.Next(relatives.Count)];
+                        break;
+                    case 2:
+                        format = "he lost his {0}";
+                        variable = objects[random.Next(objects.Count)];
+                        break;
+                    default:
+                        format = "{0}";
+                        variable = otherExcuses[random.Next(otherExcuses.Count)];
+                        break;
+                }
             return string.Format(format, variable);
         }
 
         public static string GenerateBodypart()
         {
-            return bodyparts[SupportFunctions.NotReproducableRandomizer.Next(bodyparts.Count)];
+            lock (_lock)
+                return bodyparts[random.Next(bodyparts.Count)];
         }
 
         public static string GenerateActionDescription(AvailableFeatures af, bool negate = false)
@@ -150,7 +150,10 @@ namespace TribeSim
             }
 
             if (options == null) return "";
-            string retval = options[SupportFunctions.NotReproducableRandomizer.Next(options.Count)];
+
+            string retval = null;
+            lock (_lock)
+                retval = options[random.Next(options.Count)];
 
             if (negate)
             {
@@ -177,6 +180,11 @@ namespace TribeSim
             char[] a = s.ToCharArray();
             a[0] = char.ToUpper(a[0]);
             return new string(a);
+        }
+
+        public static bool Flip() {
+            lock (_lock)
+                return random.Flip();
         }
     }
 }
