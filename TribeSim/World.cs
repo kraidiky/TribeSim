@@ -128,6 +128,12 @@ namespace TribeSim
             }
             return false;
         }
+        public static int GetTribeId(string key) {
+            foreach (Tribe t in tribes) {
+                if (t.TribeName == key) return t.id;
+            }
+            return -1;
+        }
 
         private static Stopwatch stopwatch;
         public static TimeSpan spendedTime;

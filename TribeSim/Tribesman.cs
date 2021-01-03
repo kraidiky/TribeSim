@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -211,7 +212,7 @@ namespace TribeSim
         public void ConsumeLifeSupport()
         {
             resource -= WorldProperties.LifeSupportCosts;
-            storyOfLife?.Append("Eaten ").Append(WorldProperties.LifeSupportCosts).Append(" resources. ").Append(resource.ToString("f2")).Append(" left.").AppendLine();
+            storyOfLife?.Append("Eaten ").Append(WorldProperties.LifeSupportCosts).Append(" resources. ").Append(resource.ToString("f2", CultureInfo.InvariantCulture)).Append(" left.").AppendLine();
         }
 
         public void TryInventMemeSpontaneously()

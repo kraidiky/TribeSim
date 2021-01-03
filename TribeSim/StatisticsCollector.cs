@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace TribeSim
 {
@@ -64,9 +65,12 @@ namespace TribeSim
             List<string> toRemove = new List<string>();
             foreach (KeyValuePair<string, TribeDataSet> kvp in tribeDataSets)
             {
-                if (World.TribeExists(kvp.Key) || kvp.Key == StatisticsCollector.GLOBAL)
-                {
+                if (kvp.Key == StatisticsCollector.GLOBAL) {
                     kvp.Value.ConsolidateNewYear(kvp.Key);
+                }
+                if (World.TribeExists(kvp.Key))
+                {
+                    kvp.Value.ConsolidateNewYear(kvp.Key + '-' + World.GetTribeId(kvp.Key));
                 }
                 else if (WorldProperties.CollectFilesData>0.5)
                 {
@@ -163,7 +167,7 @@ namespace TribeSim
         private ConcurrentDictionary<string, int> unconsolidatedAvgEventsCount = new ConcurrentDictionary<string, int>();
         private Dictionary<string, string> fileRow = new Dictionary<string, string>();
 
-        public void ConsolidateNewYear(string TribeName)
+        public void ConsolidateNewYear(string TribeFileName)
         {
             bool RowHeaderChanged = false;
             bool shouldCollectFiles = WorldProperties.CollectFilesData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectFilesData)) == 0;
@@ -274,7 +278,7 @@ namespace TribeSim
 
             if (shouldCollectFiles)
             {
-                string filename = Path.Combine(World.SimDataFolder, TribeName + ".txt");
+                string filename = Path.Combine(World.SimDataFolder, $"{TribeFileName}.txt");
                 StringBuilder outData = new StringBuilder();
                 foreach (KeyValuePair<string, string> kvp in fileRow)
                 {

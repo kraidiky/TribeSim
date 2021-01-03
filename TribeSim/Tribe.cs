@@ -11,6 +11,9 @@ namespace TribeSim
 {
     class Tribe
     {
+        private static int nextFreeId = 0;
+
+        public int id;
         public int seed;
         public Random randomizer;
 
@@ -38,6 +41,7 @@ namespace TribeSim
 
         public Tribe(int randomSeed)
         {
+            id = nextFreeId++; // Племена создаются только из майнтрэда
             randomizer = new Random(seed = randomSeed);
             TribeName = NamesGenerator.GenerateTribeName();
             keepsLog = randomizer.Chance(WorldProperties.ChancesThatTribeWillWriteALog);
