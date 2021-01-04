@@ -72,7 +72,7 @@ namespace TribeSim
                 {
                     kvp.Value.ConsolidateNewYear(kvp.Key + '-' + World.GetTribeId(kvp.Key));
                 }
-                else if (WorldProperties.CollectFilesData>0.5)
+                else if (kvp.Key != StatisticsCollector.GLOBAL && WorldProperties.CollectFilesData>0.5)
                 {
                     toRemove.Add(kvp.Key);
                 }
