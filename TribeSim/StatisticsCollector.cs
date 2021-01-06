@@ -165,24 +165,22 @@ namespace TribeSim
         private ConcurrentDictionary<string, float> unconsolidatedSumEvents = new ConcurrentDictionary<string, float>();
         private ConcurrentDictionary<string, float> unconsolidatedAvgEventsSum = new ConcurrentDictionary<string, float>();
         private ConcurrentDictionary<string, int> unconsolidatedAvgEventsCount = new ConcurrentDictionary<string, int>();
-        private Dictionary<string, string> fileRow = new Dictionary<string, string>();
+        private static List<string> fileColumnNames;        
+
+        static TribeDataSet() {
+            fileColumnNames = new List<string>();
+            fileColumnNames.Add("Year");
+        }
 
         public void ConsolidateNewYear(string TribeFileName)
         {
-            bool RowHeaderChanged = false;
+            Dictionary<string, string> fileRow = new Dictionary<string, string>();
+            List<string> columnsToAdd = new List<string>();            
             bool shouldCollectFiles = WorldProperties.CollectFilesData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectFilesData)) == 0;
 
             if (shouldCollectFiles)
             {
-                if (!fileRow.ContainsKey("Year"))
-                {
-                    fileRow.Add("Year", World.Year.ToString());
-                    RowHeaderChanged = true;
-                }
-                else
-                {
-                    fileRow["Year"] = World.Year.ToString();
-                }
+                fileRow.Add("Year", World.Year.ToString());             
             }
             foreach (KeyValuePair<string, int> kvp in unconsolidatedCountEvents)
             {
@@ -196,15 +194,10 @@ namespace TribeSim
                 }
                 if (shouldCollectFiles)
                 {
-                    if (!fileRow.ContainsKey(kvp.Key))
-                    {
-                        fileRow.Add(kvp.Key, kvp.Value.ToString());
-                        RowHeaderChanged = true;
-                    }
-                    else
-                    {
-                        fileRow[kvp.Key] = kvp.Value.ToString();
-                    }
+                    if (!fileColumnNames.Contains(kvp.Key)) {
+                        columnsToAdd.Add(kvp.Key);
+                    }                    
+                    fileRow.Add(kvp.Key, kvp.Value.ToString());
                 }
                 unconsolidatedCountEvents[kvp.Key] = 0;
             }
@@ -221,20 +214,19 @@ namespace TribeSim
                 }
                 if (shouldCollectFiles)
                 {
-                    if (!fileRow.ContainsKey(kvp.Key))
-                    {
-                        fileRow.Add(kvp.Key, kvp.Value.ToString("F3", CultureInfo.InvariantCulture));
-                        RowHeaderChanged = true;
-                    }
-                    else
-                    {
-                        fileRow[kvp.Key] = kvp.Value.ToString("F3", CultureInfo.InvariantCulture);
-                    }
+                    if (!fileColumnNames.Contains(kvp.Key)) {
+                        columnsToAdd.Add(kvp.Key);
+                    }           
+                    fileRow.Add(kvp.Key, kvp.Value.ToString("F3", CultureInfo.InvariantCulture));                    
                 }
             }
             unconsolidatedSumEvents.Clear();
             foreach (KeyValuePair<string, float> kvp in unconsolidatedAvgEventsSum)
             {
+                float avgValue = 0;
+                if (unconsolidatedAvgEventsCount[kvp.Key] != 0) {
+                    avgValue = kvp.Value / unconsolidatedAvgEventsCount[kvp.Key];
+                }
                 if (WorldProperties.CollectGraphData > 0.5)
                 {
                     if (!consolidatedData.ContainsKey(kvp.Key))
@@ -243,34 +235,16 @@ namespace TribeSim
                     }
                     if (unconsolidatedAvgEventsCount[kvp.Key] != 0)
                     {
-                        consolidatedData[kvp.Key].AddPoint(World.Year, kvp.Value / unconsolidatedAvgEventsCount[kvp.Key]);
+                        consolidatedData[kvp.Key].AddPoint(World.Year, avgValue);
                     }
                 }
                 if (shouldCollectFiles)
                 {
-                    if (!fileRow.ContainsKey(kvp.Key))
-                    {
-                        if (unconsolidatedAvgEventsCount[kvp.Key] != 0)
-                        {
-                            fileRow.Add(kvp.Key, (kvp.Value / unconsolidatedAvgEventsCount[kvp.Key]).ToString("F3", CultureInfo.InvariantCulture));
-                        }
-                        else
-                        {
-                            fileRow.Add(kvp.Key, "0");
-                        }
-                        RowHeaderChanged = true;
+                    if (!fileColumnNames.Contains(kvp.Key))
+                    {                        
+                         columnsToAdd.Add(kvp.Key);
                     }
-                    else
-                    {
-                        if (unconsolidatedAvgEventsCount[kvp.Key] != 0)
-                        {
-                            fileRow[kvp.Key] = (kvp.Value / unconsolidatedAvgEventsCount[kvp.Key]).ToString("F3", CultureInfo.InvariantCulture);
-                        }
-                        else
-                        {
-                            fileRow[kvp.Key] = "0";
-                        }
-                    }
+                    fileRow.Add(kvp.Key, avgValue.ToString("F3", CultureInfo.InvariantCulture));                    
                 }
             }
             unconsolidatedAvgEventsSum.Clear();
@@ -278,56 +252,69 @@ namespace TribeSim
 
             if (shouldCollectFiles)
             {
-                string filename = Path.Combine(World.SimDataFolder, $"{TribeFileName}.txt");
-                StringBuilder outData = new StringBuilder();
-                foreach (KeyValuePair<string, string> kvp in fileRow)
-                {
-                    outData.AppendFormat("{0}, ", kvp.Key);
-                }
-                if (RowHeaderChanged)
-                {
-                    if (File.Exists(filename))
-                    {
-                        bool firstRow = true;
-                        string tempFilename = Path.Combine(Path.GetTempPath(), Guid.NewGuid()+".trsimtmp");
-                        using (StreamReader reader = new StreamReader(filename))
-                        {
-                            using (StreamWriter writer = new StreamWriter(tempFilename))
-                            {
-                                writer.WriteLine(outData.ToString());
-                                string line;
-                                while ((line = reader.ReadLine()) != null)
-                                {
-                                    if (firstRow)
-                                    {
-                                        firstRow = false;
-                                    }
-                                    else
-                                    {
-                                        writer.WriteLine(line);
-                                    }
-                                }
+                // по идее должно быть быстрее чем Count считать
+                if (columnsToAdd.Any()) {
+                    lock(fileColumnNames) {
+                        // увеличиваем шанс повторяемости
+                        columnsToAdd.Sort(); 
+                        foreach (string newColumn in columnsToAdd) {
+                            // тут нужна повторная проверка потому что список мог измениться в другом потоке
+                            if (!fileColumnNames.Contains(newColumn)) {
+                                fileColumnNames.Add(newColumn);
                             }
                         }
-                        File.Copy(tempFilename, filename, true);
-                        File.Delete(tempFilename);
-                    }
-                    else
-                    {
-                        outData.AppendLine();
-                        File.AppendAllText(filename, outData.ToString());
                     }
                 }
+                string filename = Path.Combine(World.SimDataFolder, $"{TribeFileName}.txt");
+                Task.Run(() => AddLineToFile(filename, fileRow));                
+            }
+        }
+
+        private void AddLineToFile(string filename, Dictionary<string, string> fileRow) {
+            lock(this) {
+                StringBuilder outData = new StringBuilder();
+                foreach (string columnHeader in fileColumnNames)
+                {
+                    outData.AppendFormat("{0}, ", columnHeader);
+                }
+                if (!File.Exists(filename)) {
+                    outData.AppendLine();
+                    File.AppendAllText(filename, outData.ToString());
+                } else {
+                    string tempFilename = Path.Combine(Path.GetTempPath(), Guid.NewGuid()+".trsimtmp");    
+                    bool RowHeaderChanged;
+                    using (StreamReader reader = new StreamReader(filename)) {
+                        string firstRow = reader.ReadLine();
+                        RowHeaderChanged = !firstRow.Equals(outData.ToString());
+                        if (RowHeaderChanged) {                                                                                                            
+                            using (StreamWriter writer = new StreamWriter(tempFilename)) {
+                                writer.WriteLine(outData.ToString());
+                                string line;
+                                while ((line = reader.ReadLine()) != null) {                                    
+                                    writer.WriteLine(line);                                 
+                                }
+                            }                                                                               
+                        }
+                    }
+                    if (RowHeaderChanged) {
+                        File.Copy(tempFilename, filename, true);
+                        File.Delete(tempFilename);     
+                    }
+                }               
 
                 outData.Clear();
-                foreach (KeyValuePair<string, string> kvp in fileRow)
-                {
-                    outData.AppendFormat("{0}, ", kvp.Value);
+                foreach (string column in fileColumnNames) {
+                    if (fileRow.ContainsKey(column)) {
+                        outData.AppendFormat("{0}, ", fileRow[column]);
+                    } else {
+                        outData.Append("0, ");
+                    }
                 }
                 outData.AppendLine();
                 File.AppendAllText(filename, outData.ToString());
             }
         }
+
         public void ReportCountEvent(string eventName)
         {
             lock (unconsolidatedCountEvents)
