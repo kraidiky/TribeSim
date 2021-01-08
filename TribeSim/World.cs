@@ -118,6 +118,7 @@ namespace TribeSim
             {
                 StatisticsCollector.ConsolidateNewYear();
             }));
+            Tribesman.UseGompertzAgeing = WorldProperties.UseGompertzAgeing > 0.5;
         }
 
         public static bool TribeExists(string key)

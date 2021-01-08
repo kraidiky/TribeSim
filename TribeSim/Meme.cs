@@ -86,7 +86,7 @@ namespace TribeSim
                 {
                     if (prequisiteMemes.Count != 1)
                     {
-                        actionDescription = NamesGenerator.GenerateActionDescription(AffectedFeature, efficiency < 0);
+                        actionDescription = NamesGenerator.GenerateActionDescription(AffectedFeature, AffectedFeature == AvailableFeatures.AgeingRate ? efficiency > 0 : efficiency < 0);
                     }
                     else if (prequisiteMemes.Count == 1)
                     {
@@ -114,14 +114,15 @@ namespace TribeSim
             meme.keepDiary = randomizer.Chance(WorldProperties.ChancesThatMemeWillWriteALog);
             meme.efficiency = -1;
             meme.price = -1;
-            if (featureDescription.MemeEfficiencyMean > 1 && featureDescription.Is0to1Feature) {
+            if (featureDescription.MemeEfficiencyMean > 1 && (featureDescription.range == FeatureRange.ZeroToOne || featureDescription.range == FeatureRange.MinusOneToPlusOne)) {
                 meme.efficiency = 1;
+            } else if (featureDescription.MemeEfficiencyMean <= -1 && featureDescription.range == FeatureRange.MinusOneToPlusOne) {
+                meme.efficiency = -1;
             } else
-                do
-                {
+                do {
                     meme.efficiency = randomizer.NormalRandom(featureDescription.MemeEfficiencyMean, featureDescription.MemeEfficiencyStdDev);
                 }
-                while (meme.efficiency < 0 || (featureDescription.Is0to1Feature && meme.efficiency > 1)); // А что, все мымы теперь 0-1? Может у нас специальный мем снижающий какое-то качество, почему бы и нет, собственно? Пусть отбор решает. Заодно посмотрим что он там нарешать сможет.
+                while (meme.efficiency < featureDescription.LowerRange || (meme.efficiency > featureDescription.UpperRange)); // А что, все мымы теперь 0-1? Может у нас специальный мем снижающий какое-то качество, почему бы и нет, собственно? Пусть отбор решает. Заодно посмотрим что он там нарешать сможет.
 
             meme.complexityCoefficient = Math.Pow(2, (meme.efficiency - featureDescription.MemeEfficiencyMean) / featureDescription.MemeEfficiencyStdDev); // Зачем вообще complexityCoefficient считать внутри цикла?
 
@@ -293,7 +294,11 @@ namespace TribeSim
         {
             get
             {
-               return $"#{MemeId} {AffectedFeature.GetAcronym()}:{Efficiency:f2}";
+                if (AffectedFeature == AvailableFeatures.AgeingRate) {
+                    return $"#{MemeId} {AffectedFeature.GetAcronym()}:{Efficiency:f6}";
+                } else {
+                    return $"#{MemeId} {AffectedFeature.GetAcronym()}:{Efficiency:f2}";
+                }
             }
         }
     }

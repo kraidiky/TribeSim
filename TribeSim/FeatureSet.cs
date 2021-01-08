@@ -70,6 +70,8 @@ namespace TribeSim
         Creativity,
         [Description("Useless actions likelihood|Usl")]
         UselessActionsLikelihood,
+        [Description("Ageing rate|AR")]
+        AgeingRate
     }
 
     static class EnumExtender

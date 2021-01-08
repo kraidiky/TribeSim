@@ -83,7 +83,7 @@ namespace TribeSim
         private static Meme[] EmptyMemes = new Meme[0];
         private List<Meme> memes = new List<Meme>();
         private List<int> lastYearMemeWasUsed = new List<int>();
-        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
+        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         private double BasicPriceToGetThisChild;
@@ -130,7 +130,7 @@ namespace TribeSim
         {
             this.randomizer = randomizer;
             if (randomizer.Chance(WorldProperties.ChancesToWriteALog))
-                KeepsDiary();
+                KeepsDiary();            
         }
 
         public static Tribesman GenerateTribesmanFromAStartingSet(Random randomizer)
@@ -196,23 +196,39 @@ namespace TribeSim
             } else {
                 var relevantMemes = memesByFeature[(int)af];// .Where(assoc => assoc.Meme.AffectedFeature == af);
                 var retval = genes[af];
-                var description = WorldProperties.FeatureDescriptions[(int)af];
-                if (description.Is0to1Feature) { // 0..1 features.
+                var description = WorldProperties.FeatureDescriptions[(int)af];                
+                if (description.range == FeatureRange.ZeroToOne || description.range == FeatureRange.MinusOneToPlusOne) { // 0..1 features.
                     foreach (Meme meme in relevantMemes)
                             retval += meme.Efficiency - meme.Efficiency * retval;
                 } else { //0..infinity features.
                     foreach (Meme meme in relevantMemes)
                         retval += meme.Efficiency;
                 }
+                
                 memesEffect[(int)af] = retval;
                 return retval;
             }
         }
 
-        public void ConsumeLifeSupport()
-        {
-            resource -= WorldProperties.LifeSupportCosts;
-            storyOfLife?.Append("Eaten ").Append(WorldProperties.LifeSupportCosts).Append(" resources. ").Append(resource.ToString("f2", CultureInfo.InvariantCulture)).Append(" left.").AppendLine();
+        public void ConsumeLifeSupport() {
+            double lifeSupportCosts = WorldProperties.LifeSupportCosts;
+            if (UseGompertzAgeing) {
+                double ARdifference = GetFeature(AvailableFeatures.AgeingRate) - WorldProperties.BaseGompertzAgeingRate;
+                if (ARdifference != 0) {
+                    if (ARdifference < 0 && WorldProperties.BaseGompertzAgeingRateLifeCostIncrease != 0) {
+                        lifeSupportCosts -= ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostIncreaseInverse; // ARDifference отрицательная, то есть цена жизнеобеспечения возрастёт.
+                    } else if (WorldProperties.BaseGompertzAgeingRateLifeCostDecrease != 0) {
+                        lifeSupportCosts -= ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostDecreaseInverse; // ARDifference положительная, то есть цена жизнеобеспечения упадёт.
+                    }
+                    if (lifeSupportCosts < 0) {
+                        lifeSupportCosts = 0;
+                    }
+                }
+            }
+        
+            
+            resource -= lifeSupportCosts;
+            storyOfLife?.Append("Eaten ").Append(lifeSupportCosts.ToString("f2", CultureInfo.InvariantCulture)).Append(" resources. ").Append(resource.ToString("f2", CultureInfo.InvariantCulture)).Append(" left.").AppendLine();
         }
 
         public void TryInventMemeSpontaneously()
@@ -566,7 +582,7 @@ namespace TribeSim
                     storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
                     UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
                 } else {
-                    storyOfLife?.AppendFormat($"Geneticaly based useless actins. Chance: {chance}, but wasted {resourcesWasted:f2} resources on it. {resource:f2} remaining.").AppendLine();
+                    storyOfLife?.AppendFormat($"Geneticaly based useless actions. Chance: {chance}, but wasted {resourcesWasted:f2} resources on it. {resource:f2} remaining.").AppendLine();
                 }
             }
         }
@@ -574,6 +590,11 @@ namespace TribeSim
         public void PrepareForANewYear()
         {
             storyOfLife?.Append("    --------------    ");
+            if (UseGompertzAgeing) {
+                if (Age >= WorldProperties.GompertzAgeingAgeAtWhichAgeingStarts) {
+                    UseMemeGroup(AvailableFeatures.AgeingRate, "caring for himself.");
+                }
+            }
         }
 
         public void StudyOneOrManyOfTheMemesUsedThisTurn(List<Meme> memesUsedThisYear, List<Meme> memesAvailableForStudy)
@@ -585,7 +606,7 @@ namespace TribeSim
             {
                 if (resource <= WorldProperties.StudyCosts)
                 {
-                    storyOfLife?.Append("Wanted to learn something new but couldn't. Too hungry.");
+                    storyOfLife?.AppendLine("Wanted to learn something new but couldn't. Too hungry.");
                     break;
                 }
                 // Тут есть три возможные причины перехода к следующему элементу цикла - пререквизиты, шанс выучить и недостаток памяти. Наерняка можно сильно съэкономить если расположить их в правильном порядке.
@@ -627,22 +648,49 @@ namespace TribeSim
                 if (WorldProperties.AllowRepetitiveStudying < 0.5) break;
             }
         }
-
+        public static Boolean? useGompertzAgeing = null;
+        public static Boolean UseGompertzAgeing {
+            get {
+                if (!useGompertzAgeing.HasValue) {                    
+                    useGompertzAgeing = WorldProperties.UseGompertzAgeing > 0.5;
+                }
+                return useGompertzAgeing.Value;
+            }
+            set {
+                useGompertzAgeing = value;
+            }
+        }
         public bool WantsToDie()
         {
             int age = World.Year - yearBorn;
-            if (age >= WorldProperties.DontDieIfYoungerThan)            
-            {
-                double chanceOfDeathOfOldAge = WorldProperties.DeathLinearChance + age * WorldProperties.DeathAgeDependantChance;
-                if (randomizer.Chance(chanceOfDeathOfOldAge))
+            double chanceOfDeathOfOldAge = 0;
+            if (UseGompertzAgeing) {
+                if (age <= WorldProperties.GompertzAgeingAgeAtWhichAgeingStarts) {
+                    chanceOfDeathOfOldAge = WorldProperties.GompertzAgeingBasicMortalityRate;
+                } else {
+                    chanceOfDeathOfOldAge = WorldProperties.GompertzAgeingBasicMortalityRate * Math.Exp(GetFeature(AvailableFeatures.AgeingRate)*(age - WorldProperties.GompertzAgeingAgeAtWhichAgeingStarts));
+                    double mortalityPlateau = 1;
+                    if (WorldProperties.GompertzAgeingMortalityPlateau < WorldProperties.GompertzAgeingBasicMortalityRate || WorldProperties.GompertzAgeingMortalityPlateau > 1 ) {
+                        mortalityPlateau = 1;
+                    } else {
+                        mortalityPlateau = WorldProperties.GompertzAgeingMortalityPlateau;
+                    }
+                    chanceOfDeathOfOldAge = Math.Max(WorldProperties.GompertzAgeingBasicMortalityRate, Math.Min(mortalityPlateau, chanceOfDeathOfOldAge));
+                }
+            } else {
+                if (age >= WorldProperties.DontDieIfYoungerThan)            
+                {
+                    chanceOfDeathOfOldAge = WorldProperties.DeathLinearChance + age * WorldProperties.DeathAgeDependantChance;                    
+                }
+            }
+            if (randomizer.Chance(chanceOfDeathOfOldAge))
                 {
                     ReportOnDeathStatistics(age);
                     ForgetAllMemes();
-                    storyOfLife?.AppendFormat("Died of natural causes at the age of {0}.", age).AppendLine();
+                    storyOfLife?.AppendFormat("Died of natural causes at the age of {0}. Chances of dying were {1:f1}%.", age, chanceOfDeathOfOldAge*100).AppendLine();
                     StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of old age");                    
                     return true;
                 }
-            }
             if (resource <= 0)
             {
                 ReportOnDeathStatistics(age);
