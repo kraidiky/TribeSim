@@ -58,6 +58,8 @@ namespace TribeSim
         private static double initialStateGenesCreativityStdDev;
         private static double initialStateGenesUselessActionsLikelihoodMean;
         private static double initialStateGenesUselessActionsLikelihoodStdDev;
+        private static double initialStateGenesAgeingRateMean;
+        private static double initialStateGenesAgeingRateStdDev;            
 
         private static double newMemeTrickLikelyhoodMean;
         private static double newMemeTrickLikelyhoodStdDev;
@@ -83,6 +85,8 @@ namespace TribeSim
         private static double newMemeCooperationEfficiencyStdDev;
         private static double newMemeUselessCostMean;
         private static double newMemeUselessCostStdDev;
+        private static double newMemeAgeingRateMean;
+        private static double newMemeAgeingRateStdDev;
         private static double chanceToInventNewMemeWhileUsingItModifier;
         private static double chanceToInventNewMemeWhileUsingItThreshold;
 
@@ -218,6 +222,10 @@ namespace TribeSim
         private static double memeCostEfficiencyRatioUseless;
         private static double memeCostRandomAverageUseless;
         private static double memeCostRandomStdDevUseless;
+        private static double memeCostPedestalAgeingRate;
+        private static double memeCostEfficiencyRatioAgeingRate;
+        private static double memeCostRandomAverageAgeingRate;
+        private static double memeCostRandomStdDevAgeingRate;
 
         private static double memeCostComplexityPriceCoefficient;
         private static double memeComplexityToLearningChanceCoefficient;
@@ -243,6 +251,7 @@ namespace TribeSim
         private static double mutationChanceMemoryLimit;
         private static double mutationChanceCreativity;
         private static double mutationChanceUselessActionsLikelihood;
+        private static double mutationChanceAgeingRate;
         private static double mutationStrengthMeanTrickLikelyhood;
         private static double mutationStrengthMeanTrickEfficiency;
         private static double mutationStrengthMeanTeachingLikelyhood;
@@ -257,6 +266,7 @@ namespace TribeSim
         private static double mutationStrengthMeanMemoryLimit;
         private static double mutationStrengthMeanCreativity;
         private static double mutationStrengthMeanUselessActionsLikelihood;
+        private static double mutationStrengthMeanAgeingRate;
         private static double mutationStrengthStdDevTrickLikelyhood;
         private static double mutationStrengthStdDevTrickEfficiency;
         private static double mutationStrengthStdDevTeachingLikelyhood;
@@ -271,16 +281,26 @@ namespace TribeSim
         private static double mutationStrengthStdDevMemoryLimit;
         private static double mutationStrengthStdDevCreativity;
         private static double mutationStrengthStdDevUselessActionsLikelihood;
+        private static double mutationStrengthStdDevAgeingRate;
 
         private static double collectGraphData;
         private static double collectFilesData;
         private static double collectBrainUsagePercentages;
         private static double collectLiveMemes;
 
+        private static double useGompertzAgeing;
+        private static double gompertzAgeingAgeAtWhichAgeingStarts;
+        private static double gompertzAgeingBasicMortalityRate;        
+        private static double gompertzAgeingMortalityPlateau;
+
+        private static double baseGompertzAgeingRate;
+        private static double baseGompertzAgeingRateLifeCostIncrease;
+        private static double baseGompertzAgeingRateLifeCostDecrease;
+
+        
+
 
         #endregion
-
-
 
         #region Modifiable propereties
 
@@ -315,6 +335,8 @@ namespace TribeSim
         public static double MutationStrengthStdDevTrickEfficiency { get => mutationStrengthStdDevTrickEfficiency; set {  mutationStrengthStdDevTrickEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Trick likelyhood")]
         public static double MutationStrengthStdDevTrickLikelyhood { get => mutationStrengthStdDevTrickLikelyhood; set {  mutationStrengthStdDevTrickLikelyhood = value; PersistChanges(); } }
+        [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Gompertz Ageing")]
+        public static double MutationStrengthStdDevAgeingRate{ get => mutationStrengthStdDevAgeingRate; set {  mutationStrengthStdDevAgeingRate = value; PersistChanges(); } }
 
         [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Useless Actions Likelihood")]
         public static double MutationStrengthMeanUselessActionsLikelihood { get => mutationStrengthMeanUselessActionsLikelihood; set { mutationStrengthMeanUselessActionsLikelihood = value; PersistChanges(); } }
@@ -344,6 +366,8 @@ namespace TribeSim
         public static double MutationStrengthMeanTrickEfficiency { get => mutationStrengthMeanTrickEfficiency; set { mutationStrengthMeanTrickEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Trick likelyhood")]
         public static double MutationStrengthMeanTrickLikelyhood { get => mutationStrengthMeanTrickLikelyhood; set { mutationStrengthMeanTrickLikelyhood = value; PersistChanges(); } }
+        [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Gompertz Ageing")]
+        public static double MutationStrengthMeanAgeingRate{ get => mutationStrengthMeanAgeingRate; set {  mutationStrengthMeanAgeingRate = value; PersistChanges(); } }
 
 
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Useless Actions Likelihood")]
@@ -374,6 +398,8 @@ namespace TribeSim
         public static double MutationChanceTrickEfficiency { get => mutationChanceTrickEfficiency; set { mutationChanceTrickEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Trick likelyhood")]
         public static double MutationChanceTrickLikelyhood { get => mutationChanceTrickLikelyhood; set { mutationChanceTrickLikelyhood = value; PersistChanges(); } }
+        [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Gompertz Ageing")]
+        public static double MutationChanceAgeingRate { get => mutationChanceAgeingRate; set { mutationChanceAgeingRate = value; PersistChanges(); } }
 
         [DisplayableProperty("Random part StdDev", group = "Memes\\Invention\\Costs\\Free rider punishment likelyhood")]
         public static double MemeCostRandomStdDevFreeRiderPunishmentLikelyhood { get => memeCostRandomStdDevFreeRiderPunishmentLikelyhood; set { memeCostRandomStdDevFreeRiderPunishmentLikelyhood = value; PersistChanges(); } }
@@ -474,6 +500,16 @@ namespace TribeSim
         [DisplayableProperty("Pedestal value (P)", group = "Memes\\Invention\\Costs\\Trick efficiency", description = "The cost of the meme will be calculated using the following formula: Cost = P + C*Efficiency + Random, where random part is determined by its mean and standard deviation")]
         public static double MemeCostPedestalTrickEfficiency { get => memeCostPedestalTrickEfficiency; set { memeCostPedestalTrickEfficiency =value; PersistChanges(); }}
         
+        [DisplayableProperty("Random part StdDev", group = "Memes\\Invention\\Costs\\Ageing rate")]
+        public static double MemeCostRandomStdDevAgeingRate { get => memeCostRandomStdDevAgeingRate; set { memeCostRandomStdDevAgeingRate =value; PersistChanges(); }}
+        [DisplayableProperty("Random part mean", group = "Memes\\Invention\\Costs\\Ageing rate")]
+        public static double MemeCostRandomAverageAgeingRate { get => memeCostRandomAverageAgeingRate; set { memeCostRandomAverageAgeingRate =value; PersistChanges(); }}
+        [DisplayableProperty("Correlation part coefficient (C)", group = "Memes\\Invention\\Costs\\Ageing rate")]
+        public static double MemeCostEfficiencyRatioAgeingRate { get => memeCostEfficiencyRatioAgeingRate; set { memeCostEfficiencyRatioAgeingRate=value; PersistChanges(); }}
+        [DisplayableProperty("Pedestal value (P)", group = "Memes\\Invention\\Costs\\Ageing rate", description = "The cost of the meme will be calculated using the following formula: Cost = P + C*Efficiency + Random, where random part is determined by its mean and standard deviation")]
+        public static double MemeCostPedestalAgeingRate { get => memeCostPedestalAgeingRate; set { memeCostPedestalAgeingRate=value; PersistChanges(); }}
+       
+
         [DisplayableProperty("Meme cost complexity price coef.", group = "Memes\\Invention\\Costs", description = "Meme complexity (CMPLX) is a coefficient equal to CMPLX = 2^(MemeEfficiency - MemeEfficiencyMean) / StdDev. It equals 1 if efficiency equals mean, 2 if efficiency is StdDev more than mean, 4 if efficiency is 2StdDevs more than mean, 0.5 of efficiency is StdDev less than mean. This parameter determines how does CMPLX affect meme cost. If set to 0 CMPLX will not affect the cost at all. If set to 1 price will be multiplied by the CMPLX. General equation is Price = UmaffectedPrice * (CMPLX ^ x) where x is this parameter.")]
         public static double MemeCostComplexityPriceCoefficient { get => memeCostComplexityPriceCoefficient; set { memeCostComplexityPriceCoefficient = value; PersistChanges(); } }
         [DisplayableProperty("Complexity to learning chance coef.", group = "Memes\\Transition", description = "If set to 0 meme complexity won't affect the learning success chance. If set to 1 chance will be multiplied by CMPLX coefficient. General equation is LearningChance = UnaffectedLearningChance*(CMPLX ^ x) where is the current parameter.")]
@@ -1191,6 +1227,20 @@ namespace TribeSim
             set { WorldProperties.initialStateGenesCreativityStdDev = value; PersistChanges(); }
         }
 
+        [DisplayableProperty("Mean", group = "Initial state\\Genes\\Ageing rate")]
+        public static double InitialStateGenesAgeingRateMean
+        {
+            get { return WorldProperties.initialStateGenesAgeingRateMean; }
+            set { WorldProperties.initialStateGenesAgeingRateMean= value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Ageing rate", description = "Ageing rate for the Gompertz ageing law. [0, 1]")]
+        public static double InitialStateGenesAgeingRateStdDev
+        {
+            get { return WorldProperties.initialStateGenesAgeingRateStdDev; }
+            set { WorldProperties.initialStateGenesAgeingRateStdDev = value; PersistChanges(); }
+        }
+
         [DisplayableProperty("Mean", group = "Initial state\\Genes\\UselessActionsLikelihood")]
         public static double InitialStateGenesUselessActionsLikelihoodMean
         {
@@ -1366,6 +1416,20 @@ namespace TribeSim
             set { WorldProperties.newMemeCooperationEfficiencyStdDev = value; PersistChanges(); }
         }
 
+        [DisplayableProperty("Efficiency increase mean", group = "Memes\\Invention\\Ageing rate", description = "The mean of the efficiency of the newly invented meme that increases the bearer's chances to live longer. [0, 1)")]
+        public static double NewMemeAgeingRateMean
+        {
+            get { return WorldProperties.newMemeAgeingRateMean; }
+            set { WorldProperties.newMemeAgeingRateMean = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Efficiency increase StdDev", group = "Memes\\Invention\\Ageing rate")]
+        public static double NewMemeAgeingRateStdDev
+        {
+            get { return WorldProperties.newMemeAgeingRateStdDev; }
+            set { WorldProperties.newMemeAgeingRateStdDev = value; PersistChanges(); }
+        }
+
         [DisplayableProperty("Average cost", group = "Memes\\Invention\\Useless memes", description = "The average efficiency of a useless meme. [0, 1)")]
         public static double NewMemeUselessEfficiencyMean
         {
@@ -1410,6 +1474,39 @@ namespace TribeSim
         public static double CollectBrainUsagePercentages { get => collectBrainUsagePercentages; set { collectBrainUsagePercentages = value; PersistChanges(); } }
         [DisplayableProperty("Collect number of live memes", group = "Program settings", description = "If set to 1, the number of live memes will be recorded.")]
         public static double CollectLiveMemes { get => collectLiveMemes; set { collectLiveMemes = value; PersistChanges(); } }
+
+        [DisplayableProperty("Use Gompertz Ageing", group = "Lifestyle\\Death\\Gompertz Ageing", description = "If set to 0, the tribesmen will age according to the old method. Otherwise Gompertz law will be used. Until the age of (AR) the chances of dying will be equal to (BMR). After the age of (AR) chances of dying of natural causes will equal (BMR) *e^( (AR) * (Age - (AS) )). AR is determined from genes and memes. Chances of dying cannot go higher than plateau value if set.")]
+        public static double UseGompertzAgeing { get => useGompertzAgeing; set {useGompertzAgeing = value; PersistChanges();}}
+
+        [DisplayableProperty("Basic mortality rate", group = "Lifestyle\\Death\\Gompertz Ageing", description = "(BMR) The chance of dying before the ageing begins.")]
+        public static double GompertzAgeingBasicMortalityRate  { get => gompertzAgeingBasicMortalityRate; set {gompertzAgeingBasicMortalityRate = value; PersistChanges();}}
+
+        [DisplayableProperty("Age at which ageing starts", group = "Lifestyle\\Death\\Gompertz Ageing", description = "(AS) Before that age the chances of dying are equal to basic mortality rate, and increase exponentially afterwards.")]
+        public static double GompertzAgeingAgeAtWhichAgeingStarts { get => gompertzAgeingAgeAtWhichAgeingStarts; set {gompertzAgeingAgeAtWhichAgeingStarts = value; PersistChanges();}}
+
+        [DisplayableProperty("Mortality plateau", group = "Lifestyle\\Death\\Gompertz Ageing", description = "Chance of death cannot go higher than this value. This should not be lower than BMR. Values outside the range [BMR, 1] will be treated as 1.")]
+        public static double GompertzAgeingMortalityPlateau { get => gompertzAgeingMortalityPlateau; set {gompertzAgeingMortalityPlateau = value; PersistChanges();}}
+
+        [DisplayableProperty("Basic ageing rate", group = "Environment\\Ageing costs", description = "Basic ageing rate. Any genetic or cultural difference from it may affect the living costs.")]
+        public static double BaseGompertzAgeingRate { get => baseGompertzAgeingRate; set {
+                baseGompertzAgeingRate = value;
+                PersistChanges();
+            } }
+
+        [DisplayableProperty("Ageing based cost increase", group = "Environment\\Ageing costs", description = "The difference in the ageing rate (AR) that will increase living costs by 1. Ex: if base (AR) is 0.05, and this value is set to 0.01 than someone with (AR) of 0.04 will have to spend 1 extra resource per year, and someone with (AR) of 0.03 will have to spend extra 2. The resulting increase is not rounded. If set to 0 the AR will not affect the living costs. Can be negative for reverse effect.")]
+        public static double BaseGompertzAgeingRateLifeCostIncrease { get => baseGompertzAgeingRateLifeCostIncrease; set { 
+                baseGompertzAgeingRateLifeCostIncrease = value;
+                baseGompertzAgeingRateLifeCostIncreaseInverse = 1 / value;
+                PersistChanges(); 
+            } }
+
+        [DisplayableProperty("Ageing based cost decrease", group = "Environment\\Ageing costs", description = "The difference in the ageing rate (AR) that will decrease living costs by 1. Ex: if base (AR) is 0.05, and this value is set to 0.01 than someone with (AR) of 0.06 will have to spend 1 less resource per year, and someone with (AR) of 0.07 will have to spend 2 less. The resulting decrease is not rounded. If set to 0 the AR will not affect the living costs. Can be negative for reverse effect. Living costs will not go lower than zero.")]
+        public static double BaseGompertzAgeingRateLifeCostDecrease { get => baseGompertzAgeingRateLifeCostDecrease; set {
+                baseGompertzAgeingRateLifeCostDecrease = value;
+                baseGompertzAgeingRateLifeCostDecreaseInverse = 1 / value;
+                PersistChanges();
+            } }
+
 
         #endregion
 
@@ -1546,9 +1643,8 @@ namespace TribeSim
                 }
                 return WorldProperties.propertyTree;
             }
-        }
+        }      
 
-        
         private static TribeSim.PropertyTree BuildPropertyTree()
         {
             PropertyTree retval = new PropertyTree();
@@ -1583,7 +1679,7 @@ namespace TribeSim
 
         #region Structured property description
         /// <summary> Количество фич. Эту цифру можно рассчитывать, и это будет надёжнее, но чуть-чуть медленнее. Поэтому вместо того чтобы её вычислять мы будем её проверять. </summary>
-        public const int FEATURES_COUNT = 14;
+        public const int FEATURES_COUNT = 15;
         public static FeatureDescription[] FeatureDescriptions;
         public static int[] MemesWhichCanBeInvented;
         public static void ResetFeatureDescriptions() {
@@ -1596,7 +1692,7 @@ namespace TribeSim
 
             FeatureDescriptions = new FeatureDescription[WorldProperties.FEATURES_COUNT];
             FeatureDescriptions[(int)AvailableFeatures.TrickLikelyhood] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesTrickLikelyhoodMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesTrickLikelyhoodStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceTrickLikelyhood,
@@ -1612,7 +1708,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeTrickLikelyhoodMean != 0 || WorldProperties.NewMemeTrickLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TrickEfficiency] = new FeatureDescription() {
-                Is0to1Feature = false,
+                range = FeatureRange.Positive,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesTrickEfficiencyMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesTrickEfficiencyStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceTrickEfficiency,
@@ -1628,7 +1724,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeTrickEfficiencyMean != 0 || WorldProperties.NewMemeTrickEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingLikelyhood] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesTeachingLikelyhoodMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesTeachingLikelyhoodStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceTeachingLikelyhood,
@@ -1644,7 +1740,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeTeachingLikelyhoodMean != 0 || WorldProperties.NewMemeTeachingLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingEfficiency] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesTeachingEfficiencyMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesTeachingEfficiencyStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceTeachingEfficiency,
@@ -1660,7 +1756,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeTeachingEfficiencyMean != 0 || WorldProperties.NewMemeTeachingEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyLikelyhood] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesStudyLikelyhoodMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesStudyLikelyhoodStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceStudyLikelyhood,
@@ -1676,7 +1772,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeStudyLikelyhoodMean != 0 || WorldProperties.NewMemeStudyLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyEfficiency] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesStudyEfficiencyMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesStudyEfficiencyStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceStudyEfficiency,
@@ -1692,7 +1788,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeStudyEfficiencyMean != 0 || WorldProperties.NewMemeStudyEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesFreeRiderPunishmentLikelyhoodMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesFreeRiderPunishmentLikelyhoodStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceFreeRiderPunishmentLikelyhood,
@@ -1708,7 +1804,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean != 0 || WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderDeterminationEfficiency] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesFreeRiderDeterminationEfficiencyMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesFreeRiderDeterminationEfficiencyStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceFreeRiderDeterminationEfficiency,
@@ -1724,7 +1820,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean != 0 || WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceLikelyhoodOfNotBeingAFreeRider,
@@ -1740,7 +1836,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean != 0 || WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.HuntingEfficiency] = new FeatureDescription() {
-                Is0to1Feature = false,
+                range = FeatureRange.Positive,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesHuntingEfficiencyMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesHuntingEfficiencyStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceHuntingEfficiency,
@@ -1756,7 +1852,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeHuntingEfficiencyMean != 0 || WorldProperties.NewMemeHuntingEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.CooperationEfficiency] = new FeatureDescription() {
-                Is0to1Feature = false,
+                range = FeatureRange.Positive,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesCooperationEfficiencyMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesCooperationEfficiencyStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceCooperationEfficiency,
@@ -1772,7 +1868,7 @@ namespace TribeSim
                 MemCanBeInvented = WorldProperties.NewMemeCooperationEfficiencyMean != 0 || WorldProperties.NewMemeCooperationEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.MemoryLimit] = new FeatureDescription() {
-                Is0to1Feature = false,
+                range = FeatureRange.Positive,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesMemorySizeMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesMemorySizeStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceMemoryLimit,
@@ -1788,7 +1884,7 @@ namespace TribeSim
                 MemCanBeInvented = false,
             };
             FeatureDescriptions[(int)AvailableFeatures.Creativity] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesCreativityMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesCreativityStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceCreativity,
@@ -1804,7 +1900,7 @@ namespace TribeSim
                 MemCanBeInvented = false,
             };
             FeatureDescriptions[(int)AvailableFeatures.UselessActionsLikelihood] = new FeatureDescription() {
-                Is0to1Feature = true,
+                range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesUselessActionsLikelihoodMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesUselessActionsLikelihoodStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceUselessActionsLikelihood,
@@ -1819,6 +1915,22 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevUseless,
                 MemCanBeInvented = WorldProperties.NewMemeUselessEfficiencyMean != 0 || WorldProperties.NewMemeUselessEfficiencyStdDev != 0,
             };
+            FeatureDescriptions[(int)AvailableFeatures.AgeingRate] = new FeatureDescription() {
+                range = FeatureRange.MinusOneToPlusOne,
+                InitialStateGenesMean = WorldProperties.InitialStateGenesAgeingRateMean,
+                InitialStateGenesStdDev = WorldProperties.InitialStateGenesAgeingRateStdDev,
+                ChancceOfMutation = WorldProperties.MutationChanceAgeingRate,
+                MutationStrengthMean = WorldProperties.MutationStrengthMeanAgeingRate,
+                MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevAgeingRate,
+
+                MemeEfficiencyMean = WorldProperties.NewMemeAgeingRateMean,
+                MemeEfficiencyStdDev = WorldProperties.NewMemeAgeingRateStdDev,
+                MemePricePedestal = WorldProperties.MemeCostPedestalAgeingRate,
+                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioAgeingRate,
+                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageAgeingRate,
+                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevAgeingRate,
+                MemCanBeInvented = WorldProperties.NewMemeAgeingRateMean != 0 || WorldProperties.NewMemeAgeingRateStdDev != 0,
+            };
             // Заранее отсортировать те мемы, которые могут быть изобретены
             MemesWhichCanBeInvented = FeatureDescriptions
                 .Select((description, i) => description.MemCanBeInvented ? i : -1)
@@ -1826,6 +1938,27 @@ namespace TribeSim
                 .ToArray();
         }
         #endregion
+
+
+        private static double? baseGompertzAgeingRateLifeCostIncreaseInverse = null;
+        private static double? baseGompertzAgeingRateLifeCostDecreaseInverse = null;
+        public static double BaseGompertzAgeingRateLifeCostIncreaseInverse {
+            get {
+                if (!baseGompertzAgeingRateLifeCostIncreaseInverse.HasValue) {
+                    baseGompertzAgeingRateLifeCostIncreaseInverse = 1 / baseGompertzAgeingRateLifeCostIncrease;
+                }
+                return baseGompertzAgeingRateLifeCostIncreaseInverse.Value;
+            }
+        }
+
+        public static double BaseGompertzAgeingRateLifeCostDecreaseInverse {
+            get {
+                if (!baseGompertzAgeingRateLifeCostDecreaseInverse.HasValue) {
+                    baseGompertzAgeingRateLifeCostDecreaseInverse = 1 / baseGompertzAgeingRateLifeCostDecrease;
+                }
+                return baseGompertzAgeingRateLifeCostDecreaseInverse.Value;
+            }
+        }
     }
 
     [System.AttributeUsage(System.AttributeTargets.Property)]
@@ -1863,7 +1996,7 @@ namespace TribeSim
     }
 
     public struct FeatureDescription {
-        public bool Is0to1Feature;
+        public FeatureRange range;
         public double InitialStateGenesMean;
         public double InitialStateGenesStdDev;
         public double ChancceOfMutation;
@@ -1877,5 +2010,37 @@ namespace TribeSim
         public double MemePriceRandomMean;
         public double MemePriceRandomStdDev;
         public bool MemCanBeInvented;
+
+        public Double UpperRange {
+            get {
+                switch (range) {
+                    case FeatureRange.MinusOneToPlusOne:
+                    case FeatureRange.ZeroToOne:
+                        return 1;
+                    case FeatureRange.Positive:
+                        return Double.PositiveInfinity;                        
+                }
+                throw new NotImplementedException("The range " + range.ToString() + " is not implemented.");
+            }
+        }
+
+        public Double LowerRange {
+            get {
+                switch (range) {
+                    case FeatureRange.MinusOneToPlusOne:
+                        return -1;
+                    case FeatureRange.ZeroToOne:                        
+                    case FeatureRange.Positive:
+                        return 0;
+                }
+                throw new NotImplementedException("The range " + range.ToString() + " is not implemented.");
+            }
+        }
+    }
+
+    public enum FeatureRange {
+        Positive,
+        ZeroToOne,
+        MinusOneToPlusOne
     }
 }

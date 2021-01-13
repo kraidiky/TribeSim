@@ -13,7 +13,7 @@ namespace TribeSim
         private static List<string> consonants = new List<string>() { "qu", "w", "r","t","p","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m","nt","kl","gh","ck","rt","kh","nj","th","rs","st","bs","rk","sp","nd","dr","rd","ks"};
         private static List<string> vowels = new List<string>() { "e", "u", "i", "o", "a", "y", "ee", "ii", "ae", "oe", "ea","ei","eo","uu","ie","ue","aa","ao"};
 
-        private static List<string> bodyparts = new List<string>() { "leg", "arm", "tooth", "eye", "head", "stomach", "soul", "back", "finger", "neck", "entire body", "knee", "toe", "thumb"};
+        private static List<string> bodyparts = new List<string>() { "leg", "arm", "tooth", "eye", "head", "stomach", "soul", "back", "finger", "neck", "entire body", "knee", "toe", "thumb", "gut", "hand", "foot"};
         private static List<string> relatives = new List<string>() { "mother", "father", "brother", "sister", "son", "daughter", "stepsister", "wife", "mother in law", "grandmother", "god", "friend", "pet frog", "dog" };
         private static List<string> objects = new List<string>() { "spear", "boots", "will to live", "conciosness", "bow", "respect to others", "hunting socks", "lucky arrow", "waistband", "aim", "understanding of the reason of life", "mammoth bat", "sence of smell", "sence of direction" };
         private static List<string> otherExcuses = new List<string>() { "the weather is bad", "the forest is too scary", "he is a pacifist", "hunting is too old-fashioned", "he lost his hunting boots", "the gods are against it", "animals are too cute to kill", "he is not hungry", "he is too important for the tribe", "it's too dirty in the forest", "he prefers singing", "he doesn't like the weather", "he is afraid of mosquitoes", "there is too many spiders in the forest", "it is too gloomy outside", "he's not in the mood for hunting", "they are a bunch of loosers he doesn't want to hunt with" };
@@ -30,6 +30,7 @@ namespace TribeSim
         private static List<string> LikelyhoodOfNotBeingAFreeRiderActions = new List<string>() { "to be honest at all times", "to wish to contribute", "to be responsible", "to be a team player", "to like to hunt with others", "to like to help others", "to like to hunt", "to value the needs of others above his own", "to consider laziness bad" };
         private static List<string> HuntingEfficiencyActions = new List<string>() { "to throw stones", "to throw sticks", "to make ambushes", "to dig holes", "to wash himself before the hunt", "to be quiet", "to sit on trees", "to throw heavy objects", "to throw stuff from the trees", "to jump from the trees", "to scare animals with fire", "to scare animals with cries", "to approach animals from upwind", "to make pointed sticks", "to aim better", "to bite harder", "to hit the weakspot", "to aim for the eyes", "to grab the tail", "to run fast", "to climb high", "to swim fast", "to jump quietly", "to mislead the prey", "to kill with one throw", "to make landslides", "to read the footprints" };
         private static List<string> CooperationEfficiencyActions = new List<string>() { "to use handsigns", "to watch others", "to make plans", "to follow plans", "to use footsigns", "to use body language", "to make meaningful sounds", "to listen to each other", "to think as a group", "to use broken twigs as signs for each other" };
+        private static List<string> AgeingRateActions = new List<string>() { "not to eat dirty stuff", "to wash hands", "to rest when injured", "not to play with snakes", "to take care of himself", "to cook well", "to relax from time to time", "not to overexcercise", "to drink only clear water", "to be careful", "to use bandages", "to eat halucinogenic mushrooms only in safe conditions", "to be positive in general", "to make everyone around take care of him", "not to eat poisonous mushrooms", "not to pet big spiders", "to avoid floods", "to keep away from panthers", "to avoid bears", "not to hunt mammothes alone", "to wear furs in winter", "not to wear furs in the summer", "to wash himself", "not to hand feed the tribal crocodile", "to keep fingers away from piranhas", "to brush the teeth with some moss", "to chew healing plants at random", "to sleep well", "to sleep in a safe spot", "to chew well", "to swim", "to tell fever from stomachache", "not to bite rocks", "to slap mosquitoes", "to avoid conflicts", "to fight back", "to steer away from wasp nests" };
         
         private static Random random = new Random();
         private static object _lock = new object();
@@ -146,6 +147,9 @@ namespace TribeSim
                     break;  
                 case AvailableFeatures.UselessActionsLikelihood:
                     options = uselessActions;
+                    break;
+                case AvailableFeatures.AgeingRate:
+                    options = AgeingRateActions;
                     break;
             }
 

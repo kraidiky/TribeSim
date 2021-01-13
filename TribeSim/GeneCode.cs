@@ -1,9 +1,5 @@
-﻿using DocumentFormat.OpenXml.Drawing.Diagrams;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using System.Windows.Forms;
 
 namespace TribeSim
 {
@@ -54,13 +50,26 @@ namespace TribeSim
         private static double MutateFeature(Random randomizer, double parentGenes, FeatureDescription feature)
         {
             double newFeatureValue = -1;
-            do { // Обычно правильные данные выпадают с первого раза. и получается, что у нас ровно в два раза больше проверок, чем надо.
-                newFeatureValue = parentGenes + randomizer.NormalRandom(feature.MutationStrengthMean, feature.MutationStrengthStdDev);
-                if (newFeatureValue > 1 && feature.Is0to1Feature) {
-                    newFeatureValue = -1; // Раз уж мы числа меньше 0 отбрасываем, то и больше 1 надо отбрасывать, а то распределение получится однобокое
-                }
+            Double lowerBound = 0;
+            Double upperBound = Double.PositiveInfinity;
+            switch (feature.range) {
+                case FeatureRange.ZeroToOne:
+                    upperBound = 1;
+                    break;
+                case FeatureRange.MinusOneToPlusOne:
+                    upperBound = 1;
+                    lowerBound = -1;
+                    break;
             }
-            while (newFeatureValue < 0); // При кривых начальных данных, например mean = -2 std = 1 может замедлиться в сотни раз.
+            short attempts = 0;
+            do { // Обычно правильные данные выпадают с первого раза. и получается, что у нас ровно в два раза больше проверок, чем надо.
+                if (attempts == 500) {
+                    MessageBox.Show("Randomizer could not produce a value for a feature to fit between " + lowerBound + " and " + upperBound + " after 500 consecutive throws. The last attempt was " + newFeatureValue + ". Please fix the genetic values.", "Bad genetic initial data", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                newFeatureValue = parentGenes + randomizer.NormalRandom(feature.MutationStrengthMean, feature.MutationStrengthStdDev);
+                attempts++;                
+            }
+            while (newFeatureValue < lowerBound || newFeatureValue > upperBound); // При кривых начальных данных, например mean = -2 std = 1 может замедлиться в сотни раз.
             return newFeatureValue;
         }
 
