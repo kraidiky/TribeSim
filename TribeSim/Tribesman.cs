@@ -919,8 +919,10 @@ namespace TribeSim
                 {
                     StatisticsCollector.ReportAverageEvent(MyTribeName, "% memory: unused", MemorySizeRemaining / totalBrainSize);
                     for (int i = 0; i < brainUsages.Length; i++)
-                        if (brainUsages[i] > 0)
-                            StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("% memory: {0}", ((AvailableFeatures)i).ToString()), brainUsages[i] / totalBrainSize);
+                        // if (brainUsages[i] > 0)
+                        // нехорошо, конечно, отчитываться по заведомо ненужным величинам, но и убирать из статистики тех, кто не знает ни одного мема из данной категории тоже не годится.
+                        // видимо нужен статический фильтр
+                        StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("% memory: {0}", ((AvailableFeatures)i).ToString()), brainUsages[i] / totalBrainSize);
                 }
             }
         }
