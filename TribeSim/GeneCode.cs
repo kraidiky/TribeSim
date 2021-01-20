@@ -52,14 +52,8 @@ namespace TribeSim
             double newFeatureValue = -1;
             Double lowerBound = 0;
             Double upperBound = Double.PositiveInfinity;
-            switch (feature.range) {
-                case FeatureRange.ZeroToOne:
-                    upperBound = 1;
-                    break;
-                case FeatureRange.MinusOneToPlusOne:
-                    upperBound = 1;
-                    lowerBound = -1;
-                    break;
+            if (feature.range == FeatureRange.ZeroToOne) {                
+                upperBound = 1;                    
             }
             short attempts = 0;
             do { // Обычно правильные данные выпадают с первого раза. и получается, что у нас ровно в два раза больше проверок, чем надо.

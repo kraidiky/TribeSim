@@ -196,15 +196,27 @@ namespace TribeSim
             } else {
                 var relevantMemes = memesByFeature[(int)af];// .Where(assoc => assoc.Meme.AffectedFeature == af);
                 var retval = genes[af];
-                var description = WorldProperties.FeatureDescriptions[(int)af];                
-                if (description.range == FeatureRange.ZeroToOne || description.range == FeatureRange.MinusOneToPlusOne) { // 0..1 features.
-                    foreach (Meme meme in relevantMemes)
-                            retval += meme.Efficiency - meme.Efficiency * retval;
-                } else { //0..infinity features.
-                    foreach (Meme meme in relevantMemes)
-                        retval += meme.Efficiency;
+                var description = WorldProperties.FeatureDescriptions[(int)af];        
+                if (af == AvailableFeatures.AgeingRate) { 
+                    // AR надо считать вообще по-другому! тут вероятностная алгебра не работает, потому что этот показатель в принципе не вероятность!
+                    // Надо следить за коммутативностью, сохраняя при этом значение выше нуля.
+                    // Может ответ в логарифмической шкале? Надо думать. Пока не придумалось ничего лучше, чем обрезать после вычислений. 
+                    // Это должно углубить потенциальную яму нулевого AR, но придумать что-то более элегантное мозгов пока не хватило.
+                    foreach (Meme meme in relevantMemes) {
+                        retval += meme.Efficiency - meme.Efficiency * retval;                        
+                    }
+                    if (retval<0) {
+                        retval = 0;
+                    }
+                } else {
+                    if (description.range == FeatureRange.ZeroToOne) { // 0..1 features.
+                        foreach (Meme meme in relevantMemes)
+                                retval += meme.Efficiency - meme.Efficiency * retval;                        
+                    } else { //0..infinity features.
+                        foreach (Meme meme in relevantMemes)
+                            retval += meme.Efficiency;
+                    }
                 }
-                
                 memesEffect[(int)af] = retval;
                 return retval;
             }
