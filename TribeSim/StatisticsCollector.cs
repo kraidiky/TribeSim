@@ -177,6 +177,7 @@ namespace TribeSim
             Dictionary<string, string> fileRow = new Dictionary<string, string>();
             List<string> columnsToAdd = new List<string>();            
             bool shouldCollectFiles = WorldProperties.CollectFilesData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectFilesData)) == 0;
+            bool shouldCollectGraphs = WorldProperties.CollectGraphData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectGraphData)) == 0;
 
             if (shouldCollectFiles)
             {
@@ -184,7 +185,7 @@ namespace TribeSim
             }
             foreach (KeyValuePair<string, int> kvp in unconsolidatedCountEvents)
             {
-                if (WorldProperties.CollectGraphData > 0.5)
+                if (shouldCollectGraphs)
                 {
                     if (!consolidatedData.ContainsKey(kvp.Key))
                     {
@@ -204,7 +205,7 @@ namespace TribeSim
 
             foreach (KeyValuePair<string, float> kvp in unconsolidatedSumEvents)
             {
-                if (WorldProperties.CollectGraphData > 0.5)
+                if (shouldCollectGraphs)
                 {
                     if (!consolidatedData.ContainsKey(kvp.Key))
                     {
@@ -227,7 +228,7 @@ namespace TribeSim
                 if (unconsolidatedAvgEventsCount[kvp.Key] != 0) {
                     avgValue = kvp.Value / unconsolidatedAvgEventsCount[kvp.Key];
                 }
-                if (WorldProperties.CollectGraphData > 0.5)
+                if (shouldCollectGraphs)
                 {
                     if (!consolidatedData.ContainsKey(kvp.Key))
                     {

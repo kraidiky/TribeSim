@@ -1472,7 +1472,7 @@ namespace TribeSim
             set { WorldProperties.startingTribePopulationMean = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Collect data for graphs", group = "Program settings\\Output", description = "If set to 1, live graphs will be available, but the speed and running time will be limited")]
+        [DisplayableProperty("Collect data for graphs", group = "Program settings\\Output", description = "If set to 0, live graphs will be disabled. Otherwise it will specify how often a graph point will be created. 1 will create a really fine graph, but seriously affect the performance, while 1000 will create very coarse graphs fast.")]
         public static double CollectGraphData { get => collectGraphData; set { collectGraphData = value; PersistChanges(); } }
         [DisplayableProperty("Collect data in files", group = "Program settings\\Output", description = "If set to 0, files with the data will not be generated. Otherwise the files will be generated and will contain the data for every nth year where N is the number you insert. (Ex: 1 - every year will be recorded, 2 - every second year, 10 - every tenth year etc). Warning! The program will run slower the more tribes exist in the world and the more often you record the file.")]
         public static double CollectFilesData { get => collectFilesData; set { collectFilesData = value; PersistChanges(); } }

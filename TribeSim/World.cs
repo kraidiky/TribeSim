@@ -176,7 +176,7 @@ namespace TribeSim
 
             OverpopulationPrevention();
 
-            if (WorldProperties.CollectGraphData > 0.5 || (WorldProperties.CollectFilesData > 0 && (Year % (int)WorldProperties.CollectFilesData == 0 || (Year + 1) % (int)WorldProperties.CollectFilesData == 0)))
+            if ((WorldProperties.CollectGraphData > 0.5 && (Year % (int)WorldProperties.CollectGraphData == 0)) || (WorldProperties.CollectFilesData > 0 && (Year % (int)WorldProperties.CollectFilesData == 0 || (Year + 1) % (int)WorldProperties.CollectFilesData == 0)))
             {
                 ReportEndOfYearStatistics();
 
