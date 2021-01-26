@@ -296,6 +296,12 @@ namespace TribeSim
         private static double baseGompertzAgeingRate;
         private static double baseGompertzAgeingRateLifeCostIncrease;
         private static double baseGompertzAgeingRateLifeCostDecrease;
+        private static double baseGompertzAgeingRateLifeCostQuadraticIncrease;
+        private static double baseGompertzAgeingRateLifeCostQuadraticDecrease;
+        private static double baseGompertzAgeingRateLifeCostExponentialMultiplierIncrease;
+        private static double baseGompertzAgeingRateLifeCostExponentialMultiplierDecrease;
+        private static double baseGompertzAgeingRateLifeCostExponentialCoefficientIncrease;
+        private static double baseGompertzAgeingRateLifeCostExponentialCoefficientDecrease;
 
         
 
@@ -1487,23 +1493,57 @@ namespace TribeSim
         [DisplayableProperty("Mortality plateau", group = "Lifestyle\\Death\\Gompertz Ageing", description = "Chance of death cannot go higher than this value. This should not be lower than BMR. Values outside the range [BMR, 1] will be treated as 1.")]
         public static double GompertzAgeingMortalityPlateau { get => gompertzAgeingMortalityPlateau; set {gompertzAgeingMortalityPlateau = value; PersistChanges();}}
 
-        [DisplayableProperty("Basic ageing rate", group = "Environment\\Ageing costs", description = "Basic ageing rate. Any genetic or cultural difference from it may affect the living costs.")]
+        [DisplayableProperty("Basic ageing rate", group = "Environment\\Ageing costs", description = "Basic ageing rate. Any genetic or cultural difference from it may affect the living costs. \n If Gompertz ageing is enabled the living costs will be calculated using the formula LC = A + BΔ + CΔ² + De^EΔ, where Δ is a difference between actual AR and the base AR, A is basic costs of living, and B, C D, and E are parameters which are set in this section. \n The lc decrease uses the same formula, but a separate set of parameters, marked with ₂ (IE A₂). All parameters should be positive for default behaviour. If a parameter is set to a negative value this will revert the living costs change. I.E. make life less expensive for long livers, or more expensive for short livers.")]
         public static double BaseGompertzAgeingRate { get => baseGompertzAgeingRate; set {
                 baseGompertzAgeingRate = value;
                 PersistChanges();
             } }
 
-        [DisplayableProperty("Ageing based cost increase", group = "Environment\\Ageing costs", description = "The difference in the ageing rate (AR) that will increase living costs by 1. Ex: if base (AR) is 0.05, and this value is set to 0.01 than someone with (AR) of 0.04 will have to spend 1 extra resource per year, and someone with (AR) of 0.03 will have to spend extra 2. The resulting increase is not rounded. If set to 0 the AR will not affect the living costs. Can be negative for reverse effect.")]
+        [DisplayableProperty("(B)", group = "Environment\\Ageing costs", description = "")]
         public static double BaseGompertzAgeingRateLifeCostIncrease { get => baseGompertzAgeingRateLifeCostIncrease; set { 
-                baseGompertzAgeingRateLifeCostIncrease = value;
-                baseGompertzAgeingRateLifeCostIncreaseInverse = 1 / value;
+                baseGompertzAgeingRateLifeCostIncrease = value;                
                 PersistChanges(); 
             } }
 
-        [DisplayableProperty("Ageing based cost decrease", group = "Environment\\Ageing costs", description = "The difference in the ageing rate (AR) that will decrease living costs by 1. Ex: if base (AR) is 0.05, and this value is set to 0.01 than someone with (AR) of 0.06 will have to spend 1 less resource per year, and someone with (AR) of 0.07 will have to spend 2 less. The resulting decrease is not rounded. If set to 0 the AR will not affect the living costs. Can be negative for reverse effect. Living costs will not go lower than zero.")]
+        [DisplayableProperty("(C)", group = "Environment\\Ageing costs", description = "")]
+        public static double BaseGompertzAgeingRateLifeCostQuadraticIncrease { get => baseGompertzAgeingRateLifeCostQuadraticIncrease; set { 
+                baseGompertzAgeingRateLifeCostQuadraticIncrease = value;                
+                PersistChanges(); 
+            } }
+
+        [DisplayableProperty("(D)", group = "Environment\\Ageing costs", description = "")]
+        public static double BaseGompertzAgeingRateLifeCostExponentialCoefficientIncrease{ get => baseGompertzAgeingRateLifeCostExponentialCoefficientIncrease; set { 
+                baseGompertzAgeingRateLifeCostExponentialCoefficientIncrease = value;                
+                PersistChanges(); 
+            } }
+
+        [DisplayableProperty("(E)", group = "Environment\\Ageing costs", description = "")]
+        public static double BaseGompertzAgeingRateLifeCostExponentialMultiplierIncrease { get => baseGompertzAgeingRateLifeCostExponentialMultiplierIncrease; set { 
+                baseGompertzAgeingRateLifeCostExponentialMultiplierIncrease = value;                
+                PersistChanges(); 
+            } }
+
+        [DisplayableProperty("(B₂)", group = "Environment\\Ageing costs", description = "")]
         public static double BaseGompertzAgeingRateLifeCostDecrease { get => baseGompertzAgeingRateLifeCostDecrease; set {
-                baseGompertzAgeingRateLifeCostDecrease = value;
-                baseGompertzAgeingRateLifeCostDecreaseInverse = 1 / value;
+                baseGompertzAgeingRateLifeCostDecrease = value;                
+                PersistChanges();
+            } }
+        
+        [DisplayableProperty("(C₂)", group = "Environment\\Ageing costs", description = "")]
+        public static double BaseGompertzAgeingRateLifeCostQuadraticDecrease { get => baseGompertzAgeingRateLifeCostQuadraticDecrease; set {
+                baseGompertzAgeingRateLifeCostQuadraticDecrease = value;                
+                PersistChanges();
+            } }
+        
+        [DisplayableProperty("(D₂)", group = "Environment\\Ageing costs", description = "")]
+        public static double BaseGompertzAgeingRateLifeCostExponentialCoefficientDecrease { get => baseGompertzAgeingRateLifeCostExponentialCoefficientDecrease; set {
+                baseGompertzAgeingRateLifeCostExponentialCoefficientDecrease = value;                
+                PersistChanges();
+            } }
+
+        [DisplayableProperty("(E₂)", group = "Environment\\Ageing costs", description = "")]
+        public static double BaseGompertzAgeingRateLifeCostExponentialMultiplierDecrease { get => baseGompertzAgeingRateLifeCostExponentialMultiplierDecrease; set {
+                baseGompertzAgeingRateLifeCostExponentialMultiplierDecrease = value;                
                 PersistChanges();
             } }
 
@@ -1981,7 +2021,7 @@ namespace TribeSim
                 if (xmlNameCache == null)
                 {
                     string retval = group + "\\" + name;
-                    retval = retval.Replace(" ", "").Replace('\\', '_').Replace('(','_').Replace(')','_').Replace('*','-').Replace('=','-').Replace('\'','_');
+                    retval = retval.Replace(" ", "").Replace('\\', '_').Replace('(','_').Replace(')','_').Replace('*','-').Replace('=','-').Replace('\'','_').Replace('₂','2').Replace('Δ','D');
                     xmlNameCache = retval;
                 }
                 return xmlNameCache;

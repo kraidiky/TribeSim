@@ -33,10 +33,7 @@ namespace TribeSim
             {
                 PropertiesTree.Items.Add(CreateTreeViewItemFor(properties.treeBranches[name], name));                
             }
-            foreach (TreeViewItem item in PropertiesTree.Items)
-            {
-                item.IsExpanded = true;
-            }
+            ReadPersistedExpandedItems();
 
             var userPrefs = new UserPreferences();
 
@@ -68,9 +65,10 @@ namespace TribeSim
             headerLabel.Padding = new Thickness(0, 5, 0, 0);
             headerLabel.MinWidth = 300;
             headerLabel.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
-
+            
             
             newItem.Header = headerLabel;
+            newItem.Tag = header;
             foreach (string name in properties.treeLeafs.Keys)
             {
                 newItem.Items.Add(CreateTreeViewItemForProperty(properties.treeLeafs[name], name));
@@ -80,7 +78,76 @@ namespace TribeSim
                 newItem.Items.Add(CreateTreeViewItemFor(properties.treeBranches[name], name));                
             }            
             KeyboardNavigation.SetTabNavigation(newItem, KeyboardNavigationMode.Continue);
+            newItem.Expanded += TreeItem_Expanded;
+            newItem.Collapsed += TreeItem_Collapsed;
             return newItem;
+        }
+
+        private List<string> expandedItems = new List<string>();
+
+        private void TreeItem_Expanded(object sender, RoutedEventArgs e) {
+            if (suppressExpansionEvents)
+                return;
+            TreeViewItem item = (TreeViewItem)sender;
+            string pathString = getPathString(item);
+            if (!expandedItems.Contains(pathString)) {
+                expandedItems.Add(pathString);
+                PersistExpandedItems();
+            }
+        }
+
+        private void PersistExpandedItems() {
+            string filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Tribe Sim", "expandedItems.txt");
+            File.WriteAllLines(filename, expandedItems);
+        }
+
+        private void ReadPersistedExpandedItems() {
+            string filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Tribe Sim", "expandedItems.txt");
+            expandedItems.Clear();
+            expandedItems.AddRange(File.ReadAllLines(filename));
+            ExpandAsPerList();
+        }
+
+        private void ExpandAsPerList() {
+            ExpandItems(PropertiesTree.Items);
+        }
+
+        private bool suppressExpansionEvents = false;
+        private void ExpandItems(ItemCollection items) {
+            if (items == null || items.IsEmpty)
+                return;
+            suppressExpansionEvents = true;
+            foreach (TreeViewItem item in items) {
+                string pathString = getPathString(item);                
+                if (pathString != null && expandedItems.Contains(pathString)) {
+                    item.IsExpanded = true;
+                    ExpandItems(item.Items);
+                }
+            }
+            suppressExpansionEvents = false;
+        }
+
+        private string getPathString(TreeViewItem item) {
+            if (item.Tag == null)
+                return null;
+            string retVal = '[' + item.Tag.ToString() + ']';
+            while (item.Parent is TreeViewItem) {
+                item = (TreeViewItem)item.Parent;
+                retVal = '[' + item.Tag.ToString() + ']' + retVal;
+            }
+            return retVal;
+        }
+        
+
+        private void TreeItem_Collapsed(object sender, RoutedEventArgs e) {
+            if (suppressExpansionEvents)
+                return;
+            TreeViewItem item = (TreeViewItem)sender;
+            string pathString = getPathString(item);
+            if (expandedItems.Contains(pathString)) {
+                expandedItems.Remove(pathString);
+                PersistExpandedItems();
+            }
         }
 
         private object CreateTreeViewItemForProperty(PropertyInfo propertyInfo, string name)
@@ -107,8 +174,8 @@ namespace TribeSim
             propertyText.IsTabStop = true;
             propertyText.TabIndex = tabStopIndex++;
 
-            TextBlock descriptionLabel = new TextBlock();
-            descriptionLabel.Text = propertyData.description;
+            TextBlock descriptionLabel = new TextBlock();            
+            descriptionLabel.Text = propertyData.description;            
             descriptionLabel.Width = 300;
             descriptionLabel.TextAlignment = TextAlignment.Justify;
             descriptionLabel.Margin = new Thickness(0, 0, 5, 0);
@@ -187,12 +254,14 @@ namespace TribeSim
                 Properties.Settings.Default.UsualFolder = System.IO.Path.GetDirectoryName(dialog.FileName);
 
                 PropertyTree properties = WorldProperties.PropertyTree;
+                suppressExpansionEvents = true;
                 PropertiesTree.Items.Clear();
                 foreach (string name in properties.treeBranches.Keys)
                 {
                     PropertiesTree.Items.Add(CreateTreeViewItemFor(properties.treeBranches[name], name));
                 }
-
+                ExpandAsPerList();
+                suppressExpansionEvents = false;
             }
         }
 
