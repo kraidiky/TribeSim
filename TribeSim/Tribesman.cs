@@ -231,9 +231,9 @@ namespace TribeSim
                         if (WorldProperties.BaseGompertzAgeingRateLifeCostIncrease != 0) 
                             lifeSupportCosts -= ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostIncrease; // ARDifference отрицательная, то есть цена жизнеобеспечения возрастёт.
                         if (WorldProperties.BaseGompertzAgeingRateLifeCostQuadraticIncrease != 0)
-                            lifeSupportCosts -= ARdifference * ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostQuadraticIncrease;
+                            lifeSupportCosts += ARdifference * ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostQuadraticIncrease;
                         if (WorldProperties.BaseGompertzAgeingRateLifeCostExponentialCoefficientIncrease != 0 && WorldProperties.BaseGompertzAgeingRateLifeCostExponentialMultiplierIncrease != 0)
-                            lifeSupportCosts += WorldProperties.BaseGompertzAgeingRateLifeCostExponentialCoefficientIncrease * Math.Exp(ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostExponentialMultiplierIncrease);
+                            lifeSupportCosts += WorldProperties.BaseGompertzAgeingRateLifeCostExponentialCoefficientIncrease * Math.Exp(Math.Abs(ARdifference) * WorldProperties.BaseGompertzAgeingRateLifeCostExponentialMultiplierIncrease);
                     } else if (ARdifference > 0) {
                         if (WorldProperties.BaseGompertzAgeingRateLifeCostDecrease != 0)
                             lifeSupportCosts -= ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostDecrease; // ARDifference положительная, то есть цена жизнеобеспечения падает.
