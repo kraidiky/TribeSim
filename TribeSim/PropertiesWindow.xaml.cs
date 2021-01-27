@@ -103,13 +103,26 @@ namespace TribeSim
 
         private void ReadPersistedExpandedItems() {
             string filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Tribe Sim", "expandedItems.txt");
-            expandedItems.Clear();
-            expandedItems.AddRange(File.ReadAllLines(filename));
-            ExpandAsPerList();
+            if (File.Exists(filename)) {
+                expandedItems.Clear();
+                expandedItems.AddRange(File.ReadAllLines(filename));
+                ExpandAsPerList();
+            } else {
+                ExpandFirstLevel();
+            }
         }
+
 
         private void ExpandAsPerList() {
             ExpandItems(PropertiesTree.Items);
+        }
+
+        private void ExpandFirstLevel() {
+            suppressExpansionEvents = true;
+            foreach (TreeViewItem item in PropertiesTree.Items) {
+                item.IsExpanded = true;
+            }
+            suppressExpansionEvents = false;
         }
 
         private bool suppressExpansionEvents = false;
