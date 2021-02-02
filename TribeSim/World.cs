@@ -100,7 +100,8 @@ namespace TribeSim
                 Directory.CreateDirectory(simDataFolder);
             }
             Year = 0;
-            for (int i = 0; i < WorldProperties.StartingNumberOfTribes; i++ )
+            int i;
+            for (i = 0; i < WorldProperties.StartingNumberOfTribes; i++ )
             {
                 Tribe t = new Tribe(randomizer.Next(int.MaxValue));
                 int numberOfTribesmen = (int)Math.Round(randomizer.NormalRandom(WorldProperties.StartingTribePopulationMean, WorldProperties.StartingTribePopulationStdDev));
@@ -110,6 +111,17 @@ namespace TribeSim
                     t.AcceptMember(man);
                 }
                 tribes.Add(t);
+            }
+            int maxReproductionAge = 500; // Это сломатся если у нас появятся сверхдолгожители
+            if (WorldProperties.MaximumBreedingAge > 0)
+                maxReproductionAge = (int)WorldProperties.MaximumBreedingAge + 1;
+            Tribesman.reproductionCostIncrease = new double[maxReproductionAge];
+            i = 0;
+            for (; i < WorldProperties.BreedingCostsIncreaseAge; i++) {
+                Tribesman.reproductionCostIncrease[i] = 0;
+            }
+            for (; i < maxReproductionAge; i++) {
+                Tribesman.reproductionCostIncrease[i] = (i - WorldProperties.BreedingCostsIncreaseAge) * WorldProperties.BreedingCostsIncreaseCoefficient;
             }
 
             ReportEndOfYearStatistics();

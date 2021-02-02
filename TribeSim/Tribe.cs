@@ -299,7 +299,7 @@ namespace TribeSim
         {
             breedingPartners.Clear();
             members
-                .Where(member => member.IsOldEnoughToBreed)
+                .Where(member => member.IsOfReproductionAge)
                 .ForEach(member => breedingPartners.Add(member)); // То же самое, что toList(), но не срёт в память. А у нас GC на секундочку, 17% производительности жрёт на момент когда я до этого места дорвался.
 
             while (breedingPartners.Count > 1)

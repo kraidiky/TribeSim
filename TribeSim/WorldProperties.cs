@@ -303,7 +303,9 @@ namespace TribeSim
         private static double baseGompertzAgeingRateLifeCostExponentialCoefficientIncrease;
         private static double baseGompertzAgeingRateLifeCostExponentialCoefficientDecrease;
 
-        
+        private static double maximumBreedingAge;
+        private static double breedingCostsIncreaseAge;
+        private static double breedingCostsIncreaseCoefficient;        
 
 
         #endregion
@@ -845,6 +847,25 @@ namespace TribeSim
             get { return WorldProperties.brainSizePedestal; }
             set { WorldProperties.brainSizePedestal = value; PersistChanges(); }
         }
+
+        [DisplayableProperty("Maximum breeding age", group = "Lifestyle\\Breeding", description = "Tribesmen older than this value can not reproduce. If set to 0 the breding will not be limited by the age.")]
+        public static double MaximumBreedingAge {
+            get { return maximumBreedingAge; }
+            set { maximumBreedingAge = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Increase after", group = "Lifestyle\\Breeding\\Costs", description = "Reproduction costs start to increase at this age. [0, infinity]")]
+        public static double BreedingCostsIncreaseAge {
+            get { return breedingCostsIncreaseAge; }
+            set { breedingCostsIncreaseAge = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Increase coefficient", group = "Lifestyle\\Breeding\\Costs", description = "Reproduction costs will increase by A*x, where A is this parameter and x is the difference between the age and 'Increase after' parameter.")]
+        public static double BreedingCostsIncreaseCoefficient {
+            get { return breedingCostsIncreaseCoefficient; }
+            set { breedingCostsIncreaseCoefficient = value; PersistChanges(); }
+        }
+
 
         [DisplayableProperty("C1*TrickEfficiency C1=", group = "Genetics\\Brain size")]
         public static double BrainSizeToTrickEfficiencyCoefficient

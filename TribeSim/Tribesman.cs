@@ -86,6 +86,8 @@ namespace TribeSim
         private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
+        public static double[] reproductionCostIncrease;
+
         private double BasicPriceToGetThisChild;
         private GeneCode genes = null;
         private double resource;
@@ -755,7 +757,7 @@ namespace TribeSim
             storyOfLife?.AppendFormat("Died of lonliness at the age of {0}. Remained the only one in the tribe.", age).AppendLine();            
         }
 
-        public bool IsOldEnoughToBreed { get { return Age >= WorldProperties.DontBreedIfYoungerThan; } }
+        public bool IsOfReproductionAge { get { return Age >= WorldProperties.DontBreedIfYoungerThan && (WorldProperties.MaximumBreedingAge < 0.5 || Age <= WorldProperties.MaximumBreedingAge); } }
         public int Age { get {return World.Year-yearBorn;} }
 
         public static Tribesman Breed(Random randomizer, Tribesman PartnerA, Tribesman PartnerB, List<Meme> cachedList)
@@ -770,9 +772,13 @@ namespace TribeSim
 
             double priceToGetThisChildBrainSizePart = child.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             double priceToGetThisChildGiftPart = WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * (totalParentsResource - priceToGetThisChildBrainSizePart);
+            double priceDueToAge = 0;
+            if (WorldProperties.BreedingCostsIncreaseCoefficient > 0) {
+                priceDueToAge = reproductionCostIncrease[PartnerA.Age] + reproductionCostIncrease[PartnerB.Age];
+            }
             child.BasicPriceToGetThisChild = priceToGetThisChildBrainSizePart + WorldProperties.ChildStartingResourcePedestal; // Записываем только минимально необходимую часть ресурса, пошедшую на мозг и родительский бонус. Наследство может быть большим, маленьким или вообще нулевым.
 
-            if (totalParentsResource > priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart)
+            if (totalParentsResource > priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart + priceDueToAge)
             {
                 StatisticsCollector.ReportCountEvent(PartnerA.MyTribeName, "Child births");
                 StatisticsCollector.ReportAverageEvent(PartnerA.MyTribeName, "Child average brain size", child.BrainSize);
@@ -783,12 +789,15 @@ namespace TribeSim
                 child.myTribe = PartnerA.myTribe;
                 child.storyOfLife?.AppendFormat("Was born from {0} and {1}. His brain size is {2:f1}. His parents spent {3:f1} resources to raise him.", PartnerA.Name, PartnerB.Name, child.BrainSize, priceToGetThisChildBrainSizePart).AppendLine();
                 child.MemorySizeRemaining = child.MemorySizeTotal = child.GetFeature(AvailableFeatures.MemoryLimit);
-                totalParentsResource -= priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
+                totalParentsResource -= priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart + priceDueToAge;
                 child.resource =  WorldProperties.ChildStartingResourceSpendingsReceivedCoefficient * priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
-                child.storyOfLife?.AppendFormat("Parents have given {0:f1} resource as a birthday gift.", child.resource).AppendLine();                
+                child.storyOfLife?.AppendFormat("Parents have given {0:f1} resource as a birthday gift.", child.resource).AppendLine();   
+                if (priceDueToAge > 0) {
+                    child.storyOfLife?.AppendFormat("Parents also wasted {0:f1} resources because they were old.", priceDueToAge).AppendLine();
+                }
                 PartnerB.resource = PartnerA.resource = totalParentsResource / 2;
-                PartnerA.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerB.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource).AppendLine();
-                PartnerB.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child.", PartnerA.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource).AppendLine();
+                PartnerA.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child. {5:f1} extra resources were wasted due to age.", PartnerB.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource, reproductionCostIncrease[PartnerA.Age]).AppendLine();
+                PartnerB.storyOfLife?.AppendFormat("Together with {0} have given birth to {1}. His brain size is {2:f1}. {3:f1} resources taken from each of the parents for birth. {4:f1} extra resources were taken to give to the child. {5:f1} extra resources were wasted due to age.", PartnerA.Name, child.Name, child.BrainSize, priceToGetThisChildBrainSizePart, WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * totalParentsResource, reproductionCostIncrease[PartnerB.Age]).AppendLine();
                 PartnerA.TeachChild(child, cachedList);
                 PartnerB.TeachChild(child, cachedList);
                 return child;
