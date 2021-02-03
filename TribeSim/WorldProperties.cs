@@ -106,6 +106,8 @@ namespace TribeSim
         private static double freeRiderPunishmentAmount;
 
         private static double resourcesAvailableFromEnvironmentOnEveryStep;
+        private static double resourcesAvailableFromEnvironmentOnEveryStepStdDev;
+        private static double resourcesAvailableFromEnvironmentOnEveryStepDeviationLimit;
 
         private static double huntingCosts;
         private static double uselessActionCost;
@@ -985,6 +987,20 @@ namespace TribeSim
         {
             get { return WorldProperties.resourcesAvailableFromEnvironmentOnEveryStep; }
             set { WorldProperties.resourcesAvailableFromEnvironmentOnEveryStep = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Environment support standard deviation", group = "Environment", description = "Стандартное отклонение количества ресурсов на каждый ход. Отсекаются варианты меньше 0")]
+        public static double ResourcesAvailableFromEnvironmentOnEveryStepStdDev
+        {
+            get { return WorldProperties.resourcesAvailableFromEnvironmentOnEveryStepStdDev; }
+            set { WorldProperties.resourcesAvailableFromEnvironmentOnEveryStepStdDev = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Environment support deviation limit", group = "Environment", description = "Ограничение выбросов в количестве ресурсов, измеряется в сигмах. Значение 3 значит отсекаться будут попытки случайно сгенерировать количество ресурсов отличающееся от среднего больше чем 3 сигмы стандартного отклонения")]
+        public static double ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit
+        {
+            get { return WorldProperties.resourcesAvailableFromEnvironmentOnEveryStepDeviationLimit; }
+            set { WorldProperties.resourcesAvailableFromEnvironmentOnEveryStepDeviationLimit = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Cost to punish a free rider", group = "Lifestyle\\Free riders", description = "The amount of resources that will be deducted from the punisher for the attempt to punish a free rider. The amount will be taken disregarding whether the punished one is a free rider or not. [0, infinity)")]

@@ -322,6 +322,25 @@ namespace TribeSim
 
         private static void HuntAndShare()
         {
+            var totalEnvironmentResources = WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep;
+            if (WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepStdDev > 0 && totalEnvironmentResources >= 0)
+            {
+                while (true)
+                {
+                    var deviation = randomizer.NormalRandom(0, WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepStdDev);
+                    if (WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit > 0)
+                    {
+                        var relativeDeviation = deviation / WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepStdDev;
+                        if (relativeDeviation > WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit
+                            || WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit < -relativeDeviation)
+                            continue;
+                    }
+                    if (totalEnvironmentResources + deviation < 0)
+                        continue;
+                    totalEnvironmentResources += deviation;
+                    break;
+                }
+            }
             ConcurrentDictionary<Tribe, double> tribeHuntingEfforts = new ConcurrentDictionary<Tribe, double>(); // Тут порядок всё равно не важен, используется только сумма, поэтому тут ConcurrentDictionary не трогаем
             World.tribes.Parallel((tribe) => { tribeHuntingEfforts.TryAdd(tribe, tribe.GoHunting()); });
             double totalHuntingEffort = 0;
@@ -330,7 +349,7 @@ namespace TribeSim
                 totalHuntingEffort += tribeHuntingEfforts[t];
             }            
             Dictionary<Tribe, double> resourcesRecievedByTribes = new Dictionary<Tribe, double>(); // Тут запись идёт в основном потоке, а из тредов только чтение. Чтение не может нарушить целостность, так что нефиг тут ConcurrentDictionary плодить.
-            if (totalHuntingEffort <= WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep || WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep < 0)
+            if (totalHuntingEffort <= totalEnvironmentResources || totalEnvironmentResources < 0)
             {
                 foreach (Tribe t in tribes)
                 {
@@ -339,7 +358,7 @@ namespace TribeSim
             }
             else
             {
-                var resourcePerHuntingEffort = WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep / totalHuntingEffort; // Деление - медленная операция. Это, конечно, копейки, но зачем их в пустую тратить.
+                var resourcePerHuntingEffort = totalEnvironmentResources / totalHuntingEffort; // Деление - медленная операция. Это, конечно, копейки, но зачем их в пустую тратить.
                 foreach (Tribe t in tribes)
                 {
                     resourcesRecievedByTribes.Add(t, resourcePerHuntingEffort * tribeHuntingEfforts[t]);
