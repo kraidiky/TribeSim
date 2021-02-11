@@ -112,7 +112,7 @@ namespace TribeSim
                 }
                 tribes.Add(t);
             }
-            int maxReproductionAge = 500; // Это сломатся если у нас появятся сверхдолгожители
+            int maxReproductionAge = 5000; // Это сломатся если у нас появятся сверхдолгожители
             if (WorldProperties.MaximumBreedingAge > 0)
                 maxReproductionAge = (int)WorldProperties.MaximumBreedingAge + 1;
             Tribesman.reproductionCostIncrease = new double[maxReproductionAge];
