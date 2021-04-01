@@ -168,7 +168,8 @@ namespace TribeSim
             if (WorldProperties.SkipForgettingMemesStep < 0.5) ForgetUnusedMemes();
             if (WorldProperties.SkipTeachingStep < 0.5) Teach();
             if (WorldProperties.SkipFreeRiderPunishmentStep < 0.5) PunishFreeRiders();
-            if (WorldProperties.SkipHuntingStep < 0.5) HuntAndShare();
+            if (WorldProperties.SkipHuntingStep < 0.5) HuntAndShare(AvailableFeatures.HuntingEfficiency);
+            if (WorldProperties.SkipHuntingBStep < 0.5) HuntAndShare(AvailableFeatures.HuntingBEfficiency);
             if (WorldProperties.SkipUselessActionsStep < 0.5) UselessAction();
             if (WorldProperties.SkipStudyingStep < 0.5) Study();
             if (WorldProperties.SkipDeathStep < 0.5) Die();
@@ -320,29 +321,57 @@ namespace TribeSim
             World.tribes.Parallel((tribe) => { tribe.PerformUselessActions(); });  
         }
 
-        private static void HuntAndShare()
-        {
-            var totalEnvironmentResources = WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep;
-            if (WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepStdDev > 0 && totalEnvironmentResources >= 0)
-            {
-                while (true)
-                {
-                    var deviation = randomizer.NormalRandom(0, WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepStdDev);
-                    if (WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit > 0)
-                    {
-                        var relativeDeviation = deviation / WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepStdDev;
-                        if (relativeDeviation > WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit
-                            || WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit < -relativeDeviation)
+        private static double RandomizeResources(double resources, double stdDev, double deviationLimit) {
+            if (stdDev > 0 && resources >= 0) {
+                while (true) {
+                    var deviation = randomizer.NormalRandom(0, stdDev);
+                    if (deviationLimit > 0) {
+                        var relativeDeviation = deviation / stdDev;
+                        if (relativeDeviation > deviationLimit || deviationLimit < -relativeDeviation)
                             continue;
                     }
-                    if (totalEnvironmentResources + deviation < 0)
+                    if (resources + deviation < 0)
                         continue;
-                    totalEnvironmentResources += deviation;
+                    resources += deviation;
                     break;
                 }
             }
+            return resources;
+        }
+
+        private static void HuntAndShare(AvailableFeatures huntingEfficiencyFeature)
+        {
+            double totalEnvironmentResources = 0;
+            if (huntingEfficiencyFeature == AvailableFeatures.HuntingEfficiency)
+            {
+                totalEnvironmentResources = RandomizeResources(
+                    WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep,
+                    WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepStdDev,
+                    WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStepDeviationLimit);
+                if (WorldProperties.ResourcesABReplacementPeriod > 0)
+                    totalEnvironmentResources *=
+                        ((1 + Math.Cos(Year * 2 * Math.PI / WorldProperties.ResourcesABReplacementPeriod)) / 2 *
+                         (WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep - WorldProperties.ResourcesAAvailableFromEnvironmentMinimum)
+                         + WorldProperties.ResourcesAAvailableFromEnvironmentMinimum) / WorldProperties.ResourcesAvailableFromEnvironmentOnEveryStep;
+            }
+            else
+            {
+                totalEnvironmentResources = RandomizeResources(
+                    WorldProperties.ResourcesBAvailableFromEnvironmentOnEveryStep,
+                    WorldProperties.ResourcesBAvailableFromEnvironmentOnEveryStepStdDev,
+                    WorldProperties.ResourcesBAvailableFromEnvironmentOnEveryStepDeviationLimit);
+                if (WorldProperties.ResourcesABReplacementPeriod > 0)
+                    totalEnvironmentResources *=
+                        ((1 - Math.Cos(Year * 2 * Math.PI / WorldProperties.ResourcesABReplacementPeriod)) / 2 *
+                         (WorldProperties.ResourcesBAvailableFromEnvironmentOnEveryStep - WorldProperties.ResourcesBAvailableFromEnvironmentMinimum)
+                         + WorldProperties.ResourcesBAvailableFromEnvironmentMinimum) / WorldProperties.ResourcesBAvailableFromEnvironmentOnEveryStep;
+            }
+
+            if (totalEnvironmentResources == 0)
+                return;
+
             ConcurrentDictionary<Tribe, double> tribeHuntingEfforts = new ConcurrentDictionary<Tribe, double>(); // Тут порядок всё равно не важен, используется только сумма, поэтому тут ConcurrentDictionary не трогаем
-            World.tribes.Parallel((tribe) => { tribeHuntingEfforts.TryAdd(tribe, tribe.GoHunting()); });
+            World.tribes.Parallel((tribe) => { tribeHuntingEfforts.TryAdd(tribe, tribe.GoHunting(huntingEfficiencyFeature)); });
             double totalHuntingEffort = 0;
             foreach (Tribe t in tribes)
             {

@@ -83,7 +83,7 @@ namespace TribeSim
         private static Meme[] EmptyMemes = new Meme[0];
         private List<Meme> memes = new List<Meme>();
         private List<int> lastYearMemeWasUsed = new List<int>();
-        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
+        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         public static double[] reproductionCostIncrease;
@@ -527,19 +527,19 @@ namespace TribeSim
             return Name;
         }
 
-        public double GoHunting()
+        public double GoHunting(AvailableFeatures huntingEfficiencyFeature)
         {
             if (resource <= WorldProperties.HuntingCosts)
             {
-                storyOfLife?.AppendFormat("Wanted to go hunting, but could not. Too hungry. Resources remaining - {0:f2}, needed for the hunt - {1}.", resource, WorldProperties.HuntingCosts).AppendLine();
+                storyOfLife?.AppendFormat("Wanted to go hunting, but could not. Too hungry. Resources remaining - {0:f2}, needed for the hunt - {1}.", resource, huntingEfficiencyFeature).AppendLine();
                 return 0;
             }
             resource -= WorldProperties.HuntingCosts;
-            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", GetFeature(AvailableFeatures.HuntingEfficiency), GetFeature(AvailableFeatures.CooperationEfficiency), WorldProperties.HuntingCosts, resource).AppendLine();
-            UseMemeGroup(AvailableFeatures.HuntingEfficiency, "hunting");
+            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", GetFeature(huntingEfficiencyFeature), GetFeature(AvailableFeatures.CooperationEfficiency), WorldProperties.HuntingCosts, resource).AppendLine();
+            UseMemeGroup(huntingEfficiencyFeature, "hunting");
             UseMemeGroup(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, "hunting");
             UseMemeGroup(AvailableFeatures.CooperationEfficiency, "hunting");            
-            return GetFeature(AvailableFeatures.HuntingEfficiency);            
+            return GetFeature(huntingEfficiencyFeature);            
         }
 
         public void SkipHunting()
@@ -879,6 +879,7 @@ namespace TribeSim
                     genes[AvailableFeatures.StudyEfficiency] * WorldProperties.BrainSizeToStudyEfficiencyCoefficient +
                     genes[AvailableFeatures.FreeRiderDeterminationEfficiency] * WorldProperties.BrainSizeToFreeRiderDeterminationEfficiencyCoefficient +
                     genes[AvailableFeatures.HuntingEfficiency] * WorldProperties.BrainSizeToHuntingEfficiencyCoefficient +
+                    genes[AvailableFeatures.HuntingBEfficiency] * WorldProperties.BrainSizeToHuntingBEfficiencyCoefficient +
                     genes[AvailableFeatures.CooperationEfficiency] * WorldProperties.BrainSizeToCooperationEfficiencyCoefficient +
                     genes[AvailableFeatures.MemoryLimit] * WorldProperties.BrainSizeToMemorySizeCoefficient +
                     genes[AvailableFeatures.Creativity] * WorldProperties.BrainSizeToCreativityCoefficient;

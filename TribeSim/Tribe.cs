@@ -187,7 +187,7 @@ namespace TribeSim
             }
         }
 
-        public double GoHunting()
+        public double GoHunting(AvailableFeatures huntingEfficiencyFeature)
         {
             double sumHuntingPowers = 0;
             double cooperationCoefficient = 0;
@@ -197,7 +197,7 @@ namespace TribeSim
                 var chance = man.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
                 if (randomizer.Chance(chance))
                 {
-                    double huntingEfforts = man.GoHunting();
+                    double huntingEfforts = man.GoHunting(huntingEfficiencyFeature);
                     if (huntingEfforts > 0)
                     {
                         sumHuntingPowers += huntingEfforts;

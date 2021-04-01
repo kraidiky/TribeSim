@@ -62,6 +62,8 @@ namespace TribeSim
         LikelyhoodOfNotBeingAFreeRider,
         [Description("Hunting efficiency|HE")]
         HuntingEfficiency,
+        [Description("Hunting B efficiency|HBE")]
+        HuntingBEfficiency,
         [Description("Cooperation efficiency|CE")]
         CooperationEfficiency,
         [Description("Memory limit|ML")]
