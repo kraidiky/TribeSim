@@ -247,7 +247,7 @@ namespace TribeSim
             double resourcesPerRequest = resourcesReceivedPerGroup / totalShare; // Деление вообще довольно медленная операция, не надо ей злоупотреблять
             for (int i = 0; i < takenShares.Length; i++)
             {
-                members[i].RecieveResourcesShare(resourcesPerRequest * takenShares[i]);
+                members[i].RecieveResourcesShare(resourcesPerRequest * takenShares[i], resourcesPerRequest);
             }
         }
 

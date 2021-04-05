@@ -91,7 +91,8 @@ namespace TribeSim
         private double BasicPriceToGetThisChild;
         private GeneCode genes = null;
         private double resource;
-        
+        private double totalTrickedResource;
+
         private void AddMeme(Meme newMeme) {
             // memes у нас теперь будет отсортирован по возрастанию прайса мемов
             int index = memes.AddToSortedList(newMeme);
@@ -564,9 +565,10 @@ namespace TribeSim
             return requestedShare;
         }
 
-        public void RecieveResourcesShare(double recievedShare)
+        public void RecieveResourcesShare(double recievedShare, double fairShareResource)
         {
             resource += recievedShare;
+            totalTrickedResource += recievedShare - fairShareResource;
             if (storyOfLife != null)
                 if (randomizer.Chance(0.99))
                 {
@@ -910,6 +912,7 @@ namespace TribeSim
         {
             StatisticsCollector.ReportAverageEvent(MyTribeName, "Average memes known", memes.Count);
             StatisticsCollector.ReportAverageEvent(MyTribeName, "Average resources posessed", resource);
+            StatisticsCollector.ReportAverageEvent(MyTribeName, "Average resources tricked", totalTrickedResource);
             if (WorldProperties.CollectPhenotypeValues > 0.5)
             {
                 foreach (AvailableFeatures af in Enum.GetValues(typeof(AvailableFeatures)))
