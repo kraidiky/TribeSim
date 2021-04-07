@@ -30,19 +30,20 @@ namespace TribeSim
             double[] genesInheritedFromMother = FeatureSet.Blank();
             double[] genesInheritedFromFather = FeatureSet.Blank();
 
-            int random = randomizer.Next(1 << WorldProperties.FEATURES_COUNT << WorldProperties.FEATURES_COUNT); // Избавимся от Flip который пустая трата ресурсов в данном месте.
+            int randomMother = randomizer.Next(1 << WorldProperties.FEATURES_COUNT); // Избавимся от Flip который пустая трата ресурсов в данном месте.
+            int randomFather = randomizer.Next(1 << WorldProperties.FEATURES_COUNT); // Рандомы по отдельности, потому что, внезапно, фич стало 16 и их количество перестало в int помещаться.
 
             for (int feature = 0; feature < genesInheritedFromMother.Length; feature++)
             {
                 var description = WorldProperties.FeatureDescriptions[feature];
                 
-                var parentGene = (random & 1) == 0 ? motherGenes.strandA[feature] : motherGenes.strandB[feature];
+                var parentGene = (randomMother & 1) == 0 ? motherGenes.strandA[feature] : motherGenes.strandB[feature];
                 genesInheritedFromMother[feature] = description.ChancceOfMutation > 0 && randomizer.NextDouble() < description.ChancceOfMutation ? MutateFeature(randomizer, parentGene, description) : parentGene; // Мутация выпадает редко, нефиг делать системкол, который в 99% лишний.
-                random = random >> 1;
+                randomMother = randomMother >> 1;
 
-                parentGene = (random & 1) == 0 ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature];
+                parentGene = (randomFather & 1) == 0 ? fatherGenes.strandA[feature] : fatherGenes.strandB[feature];
                 genesInheritedFromFather[feature] = description.ChancceOfMutation > 0 && randomizer.NextDouble() < description.ChancceOfMutation ? MutateFeature(randomizer, parentGene, description) : parentGene;
-                random = random >> 1;
+                randomFather = randomFather >> 1;
             }
             return new GeneCode(genesInheritedFromMother, genesInheritedFromFather);
         }
