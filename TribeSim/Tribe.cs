@@ -93,6 +93,12 @@ namespace TribeSim
             }
         }
 
+        public void MemberDie(Tribesman member)
+        {
+            member.Release();
+            MemberLeaves(member);
+        }
+
         public void MemberLeaves(Tribesman member)
         {
             member.MyTribe  = null;
@@ -279,18 +285,20 @@ namespace TribeSim
         }
 
         public void Die()
-        {            
-            foreach (Tribesman man in members.ToArray())
+        {
+            for (var i = members.Count - 1; i >= 0; --i)
             {
+                Tribesman man = members[i];
                 if (man.WantsToDie())
                 {
-                    MemberLeaves(man);         
+                    MemberDie(man);
                 }
-            }            
+            }
+
             if (members.Count == 1)
             {
                 members[0].DieOfLonliness();
-                MemberLeaves(members[0]);
+                MemberDie(members[0]);
             }
         }
 
@@ -319,6 +327,8 @@ namespace TribeSim
                 Tribesman child = Tribesman.Breed(randomizer, PartnerA, PartnerB, _memesCache);
                 if (child != null)
                 {
+                    PartnerA.childrenCount++;
+                    PartnerB.childrenCount++;
                     this.AcceptMember(child);
                 }
             }

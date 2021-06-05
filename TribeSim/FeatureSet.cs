@@ -9,7 +9,7 @@ namespace TribeSim
     {
         /// <summary> Генерит пустой массив нужного размера, чтобы не таскать по всему коду знгания о константе FEATURES_COUNT. Пул делать не нужно, GC работает с этими массивами быстрее, чем я. </summary>
         public static double[] Blank() {
-            return new double[WorldProperties.FEATURES_COUNT];
+            return FeaturesDoubleArray.Get();
         }
 
         /// <summary> Для индексации используются целые числа, к которм приводятся enum-ы: (int)AvailableFeatures.value</summary>

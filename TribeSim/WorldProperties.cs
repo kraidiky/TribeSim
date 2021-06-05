@@ -122,6 +122,7 @@ namespace TribeSim
         private static double resourcesBAvailableFromEnvironmentMinimum;
 
         private static double huntingCosts;
+        private static double huntingBCosts;
         private static double uselessActionCost;
         private static double allowRepetitiveUselessActions;
 
@@ -161,6 +162,8 @@ namespace TribeSim
         private static double chancesThatTribeWillWriteALog;
         private static double collectPhenotypeValues;
         private static double collectGenotypeValues;
+        private static double collectIndividualPhenotypeValues;
+        private static double collectIndividualGenotypeValues;
 
         private static double skipLifeSupportStep;
         private static double skipSpontaneousMemeInventionStep;
@@ -309,8 +312,11 @@ namespace TribeSim
 
         private static double collectGraphData;
         private static double collectFilesData;
+        private static double collectIndividualSuccess;
+        private static double chanceToCollectIndividualSuccess;
         private static double collectBrainUsagePercentages;
         private static double collectLiveMemes;
+        private static double collectDetaliedMemesData;
 
         private static double useGompertzAgeing;
         private static double gompertzAgeingAgeAtWhichAgeingStarts;
@@ -1033,11 +1039,18 @@ namespace TribeSim
             set { WorldProperties.uselessActionCost = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Hunting costs", group = "Lifestyle", description = "The amount of resources that will be deducted for hunting. [0, infinity) both to A and B resource the same")]
+        [DisplayableProperty("Hunting costs", group = "Lifestyle", description = "The amount of resources that will be deducted for hunting. [0, infinity) First resource")]
         public static double HuntingCosts
         {
             get { return WorldProperties.huntingCosts; }
             set { WorldProperties.huntingCosts = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Hunting B costs", group = "Lifestyle", description = "The amount of resources that will be deducted for hunting. [0, infinity) B resource")]
+        public static double HuntingBCosts
+        {
+            get { return WorldProperties.huntingBCosts; }
+            set { WorldProperties.huntingBCosts = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Environment support", group = "Environment", description = "The amount of resources that environment can provide for the hunters. If resources is not enough to match total hunting efforts of all tribes the tribes will receive resources respective to their share in total hunting effort. [0, infinity) or -1 for unlimited")]
@@ -1645,6 +1658,18 @@ namespace TribeSim
         public static double CollectBrainUsagePercentages { get => collectBrainUsagePercentages; set { collectBrainUsagePercentages = value; PersistChanges(); } }
         [DisplayableProperty("Collect number of live memes", group = "Program settings", description = "If set to 1, the number of live memes will be recorded.")]
         public static double CollectLiveMemes { get => collectLiveMemes; set { collectLiveMemes = value; PersistChanges(); } }
+        [DisplayableProperty("Collect detalied memes data", group = "Program settings", description = "If set to 1, memes data will detalied recorded.")]
+        public static double CollectDetaliedMemesData { get => collectDetaliedMemesData; set { collectDetaliedMemesData = value; PersistChanges(); } }
+
+        [DisplayableProperty("Collect Individual Success", group = "Program settings\\Collect Individual Success", description = "[ATTENTION!!! Очень ресурсоёмко] If set to 1, мы записываем в момент смерти каждого tribesman, сколько детей он успел породить и (выжиывание не проверяем) и размеры всех его признаков, генетические и фенотипические, а также возраст и аккумулированный за жизнь ресурс. Очень подробная информация для анализа. Очень много места занимает.")]
+        public static double CollectIndividualSuccess { get => collectIndividualSuccess; set { collectIndividualSuccess = value; PersistChanges(); } }
+        [DisplayableProperty("Chance to Collect Individual Success", group = "Program settings\\Collect Individual Success", description = "Вероятность, с которой записывать умерших, чтобы иметь не миллионы записей, а меньше.")]
+        public static double ChanceToCollectIndividualSuccess { get => chanceToCollectIndividualSuccess; set { chanceToCollectIndividualSuccess = value; PersistChanges(); } }
+        [DisplayableProperty("Collect Individual phenotype", group = "Program settings\\Collect Individual Success", description = "1 - collect individual phenotype values will collected 0 - the model will run faster")]
+        public static double CollectIndividualPhenotypeValues { get { return WorldProperties.collectIndividualPhenotypeValues; } set { WorldProperties.collectIndividualPhenotypeValues = value; PersistChanges(); }}
+        [DisplayableProperty("Collect Individual genotype", group = "Program settings\\Collect Individual Success", description = "1 - collect individual genetic values will be collected 0 - the model will run faster")]
+        public static double CollectIndividualGenotypeValues { get { return WorldProperties.collectIndividualGenotypeValues; } set { WorldProperties.collectIndividualGenotypeValues = value; PersistChanges(); } }
+
 
         [DisplayableProperty("Use Gompertz Ageing", group = "Lifestyle\\Death\\Gompertz Ageing", description = "If set to 0, the tribesmen will age according to the old method. Otherwise Gompertz law will be used. Until the age of (AR) the chances of dying will be equal to (BMR). After the age of (AR) chances of dying of natural causes will equal (BMR) *e^( (AR) * (Age - (AS) )). AR is determined from genes and memes. Chances of dying cannot go higher than plateau value if set.")]
         public static double UseGompertzAgeing { get => useGompertzAgeing; set {useGompertzAgeing = value; PersistChanges();}}

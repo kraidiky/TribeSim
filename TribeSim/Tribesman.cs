@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace TribeSim
         private string name = null;
         private int yearBorn = 0;
         private Tribe myTribe;
+        public int childrenCount;
 
         public int YearBorn
         {
@@ -91,7 +93,8 @@ namespace TribeSim
         private double BasicPriceToGetThisChild;
         private GeneCode genes = null;
         private double resource;
-        
+        private double totalResourcesCollected;
+
         private void AddMeme(Meme newMeme) {
             // memes у нас теперь будет отсортирован по возрастанию прайса мемов
             int index = memes.AddToSortedList(newMeme);
@@ -158,6 +161,7 @@ namespace TribeSim
             boost += this.GetFeature(AvailableFeatures.FreeRiderDeterminationEfficiency) * WorldProperties.GeneticFreeRiderDeterminationEfficiencytoMemoryRatio;
             boost += this.GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood) * WorldProperties.GeneticFreeRiderPunishmentLikelyhoodToMemoryRatio;
             boost += this.GetFeature(AvailableFeatures.HuntingEfficiency) * WorldProperties.GeneticHuntingEfficiencyToMemoryRatio;
+            boost += this.GetFeature(AvailableFeatures.HuntingBEfficiency) * WorldProperties.GeneticHuntingBEfficiencyToMemoryRatio;
             boost += this.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider) * WorldProperties.GeneticLikelyhoodOfNotBeingAFreeRiderToMemoryRatio;
             boost += this.GetFeature(AvailableFeatures.StudyEfficiency) * WorldProperties.GeneticStudyEfficiencyToMemoryRatio;
             boost += this.GetFeature(AvailableFeatures.StudyLikelyhood) * WorldProperties.GeneticStudyLikelyhoodToMemoryRatio;
@@ -529,13 +533,14 @@ namespace TribeSim
 
         public double GoHunting(AvailableFeatures huntingEfficiencyFeature)
         {
-            if (resource <= WorldProperties.HuntingCosts)
+            var huntingCosts = huntingEfficiencyFeature == AvailableFeatures.HuntingEfficiency ? WorldProperties.HuntingCosts : WorldProperties.HuntingBCosts;
+            if (resource <= huntingCosts)
             {
                 storyOfLife?.AppendFormat("Wanted to go hunting, but could not. Too hungry. Resources remaining - {0:f2}, needed for the hunt - {1}.", resource, huntingEfficiencyFeature).AppendLine();
                 return 0;
             }
-            resource -= WorldProperties.HuntingCosts;
-            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", GetFeature(huntingEfficiencyFeature), GetFeature(AvailableFeatures.CooperationEfficiency), WorldProperties.HuntingCosts, resource).AppendLine();
+            resource -= huntingCosts;
+            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", GetFeature(huntingEfficiencyFeature), GetFeature(AvailableFeatures.CooperationEfficiency), huntingCosts, resource).AppendLine();
             UseMemeGroup(huntingEfficiencyFeature, "hunting");
             UseMemeGroup(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, "hunting");
             UseMemeGroup(AvailableFeatures.CooperationEfficiency, "hunting");            
@@ -567,6 +572,7 @@ namespace TribeSim
         public void RecieveResourcesShare(double recievedShare)
         {
             resource += recievedShare;
+            totalResourcesCollected += recievedShare;
             if (storyOfLife != null)
                 if (randomizer.Chance(0.99))
                 {
@@ -707,17 +713,20 @@ namespace TribeSim
                     chanceOfDeathOfOldAge = WorldProperties.DeathLinearChance + age * WorldProperties.DeathAgeDependantChance;                    
                 }
             }
+
             if (randomizer.Chance(chanceOfDeathOfOldAge))
-                {
-                    ReportOnDeathStatistics(age);
-                    ForgetAllMemes();
-                    storyOfLife?.AppendFormat("Died of natural causes at the age of {0}. Chances of dying were {1:f1}%.", age, chanceOfDeathOfOldAge*100).AppendLine();
-                    StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of old age");                    
-                    return true;
-                }
+            {
+                ReportOnDeathStatistics(age, "age");
+                ForgetAllMemes();
+                storyOfLife?.AppendFormat("Died of natural causes at the age of {0}. Chances of dying were {1:f1}%.",
+                    age, chanceOfDeathOfOldAge * 100).AppendLine();
+                StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of old age");
+                return true;
+            }
+
             if (resource <= 0)
             {
-                ReportOnDeathStatistics(age);
+                ReportOnDeathStatistics(age,"hunger");
                 ForgetAllMemes();
                 storyOfLife?.AppendFormat("Died of hunger at the age of {0}.", age).AppendLine();
                 StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of hunger");                
@@ -726,8 +735,7 @@ namespace TribeSim
             return false;
         }
 
-        private void ReportOnDeathStatistics(int age)
-        {
+        private void ReportOnDeathStatistics(int age, string cause) {
             StatisticsCollector.ReportAverageEvent(MyTribeName, "Longevity", age);
             double totalBrainUsage = 0;
             double totalBrainSize = 0;
@@ -738,6 +746,94 @@ namespace TribeSim
             if (totalBrainSize > 0)
             {
                 StatisticsCollector.ReportAverageEvent(MyTribeName, "% memory: unused when died", MemorySizeRemaining / totalBrainSize);
+            }
+            // Подбиваем подробную статистику по репродуктивному успеху.
+            if (WorldProperties.CollectIndividualSuccess > 0.5) {
+                if (randomizer.Chance(WorldProperties.ChanceToCollectIndividualSuccess)) {
+                    var individualSucess = new IndividualSucess()
+                    {
+                        birthYear = yearBorn,
+                        age = World.Year - yearBorn,
+                        children = childrenCount,
+                        totalResourcesCollected = (float)totalResourcesCollected,
+                        tribeName = $"{myTribe.TribeName}-{myTribe.id}",
+                        deathCause = cause
+                    };
+                    if (WorldProperties.CollectIndividualGenotypeValues > 0.5)
+                    {
+                        individualSucess.genotype = FeaturesFloatArray.Get();
+                        for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                            individualSucess.genotype[i] = (float)genes[i];
+                    }
+                    if (WorldProperties.CollectIndividualGenotypeValues > 0.5)
+                    {
+                        individualSucess.phenotype = FeaturesFloatArray.Get();
+                        for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                            individualSucess.phenotype[i] = (float)GetFeature((AvailableFeatures)i);
+                    }
+                    StatisticsCollector.ReportEvent(individualSucess);
+                }
+            }
+        }
+
+        public struct IndividualSucess : IDetaliedEvent
+        {
+            public static string[] genotypeHeader;
+            public static string[] phenotypeHeader;
+
+            public int birthYear;
+            public int age;
+            public int children;
+            public float totalResourcesCollected;
+            public string deathCause;
+            public string tribeName;
+            public float[] genotype;
+            public float[] phenotype;
+
+            public string Header()
+            {
+                var sb = StringBuilderPool.Get();
+                sb.Append("birthYear");
+                sb.Append(',').Append("age");
+                sb.Append(',').Append("children");
+                sb.Append(',').Append("totalResourcesCollected");
+                sb.Append(',').Append("deathCause");
+                sb.Append(',').Append("tribeName");
+                if (genotype != null)
+                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                        sb.Append(",gen.").Append(((AvailableFeatures)i).GetAcronym());
+                if (phenotype != null)
+                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                        sb.Append(",phen.").Append(((AvailableFeatures)i).GetAcronym());
+                sb.Append('\n');
+                return sb.Release();
+            }
+
+            public string Data()
+            {
+                var sb = StringBuilderPool.Get();
+                sb.Append(birthYear);
+                sb.Append(',').Append(age);
+                sb.Append(',').Append(children);
+                sb.Append(',').Append(totalResourcesCollected.ToString("F3", CultureInfo.InvariantCulture));
+                sb.Append(',').Append(deathCause);
+                sb.Append(',').Append(tribeName);
+                if (genotype != null) {
+                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                        sb.Append(',').Append(genotype[i].ToString("F3", CultureInfo.InvariantCulture));
+                }
+                if (phenotype != null) {
+                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                        sb.Append(',').Append(phenotype[i].ToString("F3", CultureInfo.InvariantCulture));
+                }
+                sb.Append('\n');
+                return sb.Release();
+            }
+
+            public void Clear()
+            {
+                genotype?.ReleaseFeatures();
+                phenotype?.ReleaseFeatures();
             }
         }
 
@@ -752,10 +848,16 @@ namespace TribeSim
         public void DieOfLonliness()
         {
             int age = World.Year - yearBorn;
-            ReportOnDeathStatistics(age);
+            ReportOnDeathStatistics(age, "lonliness");
             ForgetAllMemes();            
             storyOfLife?.AppendFormat("Died of lonliness at the age of {0}. Remained the only one in the tribe.", age).AppendLine();            
         }
+
+        public void Release()
+        {
+            genes.Release();
+        }
+
 
         public bool IsOfReproductionAge { get { return Age >= WorldProperties.DontBreedIfYoungerThan && (WorldProperties.MaximumBreedingAge < 0.5 || Age <= WorldProperties.MaximumBreedingAge); } }
         public int Age { get {return World.Year-yearBorn;} }
@@ -802,6 +904,7 @@ namespace TribeSim
                 PartnerB.TeachChild(child, cachedList);
                 return child;
             }
+            child.genes.Release();
             return null;
         }
 

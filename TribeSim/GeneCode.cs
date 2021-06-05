@@ -70,5 +70,12 @@ namespace TribeSim
 
         public double this[int feature] { get { return resultingSet[feature]; } }
         public double this[AvailableFeatures feature] { get { return resultingSet[(int)feature]; } }
+
+        public void Release()
+        {
+            strandA.ReleaseFeatures();
+            strandB.ReleaseFeatures();
+            resultingSet.ReleaseFeatures();
+        }
     }
 }

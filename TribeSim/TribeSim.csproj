@@ -142,6 +142,7 @@
     <Compile Include="PleaseWaitWindow.xaml.cs">
       <DependentUpon>PleaseWaitWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pool.cs" />
     <Compile Include="Simulation.xaml.cs">
       <DependentUpon>Simulation.xaml</DependentUpon>
     </Compile>

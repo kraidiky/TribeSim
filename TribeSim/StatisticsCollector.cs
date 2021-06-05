@@ -17,6 +17,7 @@ namespace TribeSim
     {
         public const string GLOBAL = "Global";
         private static ConcurrentDictionary<string, TribeDataSet> tribeDataSets = new ConcurrentDictionary<string, TribeDataSet>();
+        private static ConcurrentDictionary<Type, IDetaliedData> dataSets = new ConcurrentDictionary<Type, IDetaliedData>();
 
         public static void ReportCountEvent(string tribeName, string eventName)
         {
@@ -60,6 +61,14 @@ namespace TribeSim
             dataset.ReportAverageEvent(eventName, value);
         }
 
+        public static void ReportEvent<T>(T dValue) where T : struct, IDetaliedEvent
+        {
+            var type = dValue.GetType();
+            var storage = (DetaliedData<T>)dataSets.GetOrAdd(type, t => new DetaliedData<T>());
+            storage.Store(dValue);
+        }
+
+        private static object _individualSucessLocker = new object();
         public static void ConsolidateNewYear()
         {
             List<string> toRemove = new List<string>();
@@ -83,6 +92,31 @@ namespace TribeSim
                 {
                     TribeDataSet tds;
                     tribeDataSets.TryRemove(extinctTribe, out tds);
+                }
+            }
+
+            if (dataSets.ContainsKey(typeof(Tribesman.IndividualSucess))) {
+                string filename = Path.Combine(World.TribesmanLogFolder, $"IndividualSucess.txt");
+                if (dataSets.TryRemove(typeof(Tribesman.IndividualSucess), out var queue))
+                {
+                    Task.Run(() => {
+                        lock (_individualSucessLocker)
+                        {
+                            var fileExists = File.Exists(filename);
+                            while (queue.ReStore(out var data))
+                            {
+                                if (!fileExists)
+                                {
+                                    fileExists = true;
+                                    File.AppendAllText(filename, data.Header());
+                                }
+
+                                File.AppendAllText(filename, data.Data());
+                                data.Clear();
+                            }
+
+                        }
+                    });
                 }
             }
         }
@@ -118,6 +152,7 @@ namespace TribeSim
         public static void Reset()
         {
             tribeDataSets.Clear();
+            dataSets.Clear();
         }
 
         public static void ConsolidateAllRuns()
@@ -273,7 +308,7 @@ namespace TribeSim
 
         private void AddLineToFile(string filename, Dictionary<string, string> fileRow) {
             lock(this) {
-                StringBuilder outData = new StringBuilder();
+                StringBuilder outData = StringBuilderPool.Get();
                 foreach (string columnHeader in fileColumnNames)
                 {
                     outData.AppendFormat("{0}, ", columnHeader);
@@ -312,7 +347,7 @@ namespace TribeSim
                     }
                 }
                 outData.AppendLine();
-                File.AppendAllText(filename, outData.ToString());
+                File.AppendAllText(filename, outData.Release());
             }
         }
 
@@ -375,6 +410,38 @@ namespace TribeSim
         public List<string> GetEventNames()
         {
             return consolidatedData.Keys.ToList();
+        }
+    }
+
+    public interface IDetaliedEvent
+    {
+        string Header();
+        string Data();
+        void Clear();
+    }
+
+    public interface IDetaliedData
+    {
+        bool ReStore(out IDetaliedEvent tevent);
+    }
+
+    public class DetaliedData<TEvent> : IDetaliedData where TEvent: struct, IDetaliedEvent
+    {
+        private ConcurrentQueue<TEvent> dataSets = new ConcurrentQueue<TEvent>();
+        public void Store(TEvent tevent)
+        {
+            dataSets.Enqueue(tevent);
+        }
+        public bool ReStore(out IDetaliedEvent tevent)
+        {
+            if (dataSets.TryDequeue(out var t))
+            {
+                tevent = t;
+                return true;
+            }
+
+            tevent = default;
+            return false;
         }
     }
 }
