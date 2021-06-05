@@ -29,30 +29,6 @@ namespace TribeSim
 
         private string actionDescription = "";
 
-        private List<Meme> prequisiteMemes = new List<Meme>();
-
-        public bool PrequisitesAreMet(IReadOnlyList<Meme> knownMemes)
-        {
-            foreach (Meme requiredMeme in prequisiteMemes)
-            {
-                if (!knownMemes.Contains(requiredMeme)) return false;
-            }
-            return true;
-        }
-
-        public List<Meme> WhichPrequisitesAreNotMet(IReadOnlyList<Meme> knownMemes)
-        {
-            List<Meme> retVal = new List<Meme>();
-            foreach (Meme requiredMeme in prequisiteMemes)
-            {
-                if (!knownMemes.Contains(requiredMeme))
-                {
-                    retVal.Add(requiredMeme);
-                }
-            }
-            return retVal;
-        }
-
         public double ComplexityCoefficient
         {            
             get { return complexityCoefficient; }
@@ -79,27 +55,7 @@ namespace TribeSim
             get { return efficiency; }
         }
 
-        public string ActionDescription {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(actionDescription))
-                {
-                    if (prequisiteMemes.Count != 1)
-                    {
-                        actionDescription = NamesGenerator.GenerateActionDescription(AffectedFeature, AffectedFeature == AvailableFeatures.AgeingRate ? efficiency > 0 : efficiency < 0);
-                    }
-                    else if (prequisiteMemes.Count == 1)
-                    {
-                        string oldDescription = prequisiteMemes[0].ActionDescription;
-                        if (oldDescription.Contains("even better")) { actionDescription = oldDescription.Replace("even better", "much better"); }
-                        else if (oldDescription.Contains("significantly better")) { actionDescription = oldDescription.Replace("significantly better", "even better"); }
-                        else if (oldDescription.Contains("slightly better")) { actionDescription = oldDescription.Replace("slightly better", "significantly better"); }
-                        else { actionDescription = oldDescription + " slightly better"; }
-                    }
-                }
-                return actionDescription;
-            }
-        }
+        public string ActionDescription => actionDescription ?? (actionDescription = NamesGenerator.GenerateActionDescription(AffectedFeature, AffectedFeature == AvailableFeatures.AgeingRate ? efficiency > 0 : efficiency < 0));
 
         private Meme(AvailableFeatures affectedFeature) {
             this.AffectedFeature = affectedFeature;
@@ -135,48 +91,8 @@ namespace TribeSim
                 meme.price = (pedestalPrice + efficiencyPrice + randomPricePart) * complexityMultiplier;
             }
 
-            #region Complex culture
-            if (WorldProperties.MemePrequisitesChance>0.000001 && memesAlreadyKnown!=null && memesAlreadyKnown.Count() > 0)
-            {
-                if (randomizer.Chance(WorldProperties.MemePrequisitesChance))
-                {
-                    do
-                    {
-                        int memeNo = randomizer.Next(memesAlreadyKnown.Count());
-                        meme.prequisiteMemes.Add(memesAlreadyKnown[memeNo]);
-                        memesAlreadyKnown.RemoveAt(memeNo);
-                    } while (memesAlreadyKnown.Count > 0 && randomizer.Chance(WorldProperties.MemeSubsequentPrequisitesChance));
-                    meme.price *= WorldProperties.MemePrequisiteExtraPricePedestal;
-                    meme.efficiency *= WorldProperties.MemePrequisiteBonusGainPedestal;
-                    double totalPrequisitePrice = 0;
-                    double totalPrequisiteEfficiency = 0;
-                    foreach (Meme prequisite in meme.prequisiteMemes)
-                    {
-                        totalPrequisiteEfficiency += prequisite.Efficiency;
-                        totalPrequisitePrice += prequisite.Price;
-                    }
-                    meme.price += totalPrequisitePrice * WorldProperties.MemePrequisiteExtraPriceMultiplier;
-                    meme.efficiency += totalPrequisiteEfficiency * WorldProperties.MemePrequisiteBonusGainMultiplier;
-                }
-            }
-            #endregion
-
             meme.Report(string.Format("Meme teaches how {3}. It affects: {0}; Efficiency: {1:f5}; It takes {2:f2} memory.", memeAffectedFeature.GetDescription(), meme.Efficiency, meme.Price, meme.ActionDescription)); // Логер, конечно, можно не переделывать, потому что мемы создаются шибко редко.
 
-            if (meme.prequisiteMemes.Count > 0)
-            {
-                if (meme.prequisiteMemes.Count == 1)
-                {
-                    meme.Report(string.Format("To learn it one must know how to {0} (#{1})", meme.prequisiteMemes[0].ActionDescription, meme.prequisiteMemes[0].MemeId));
-                } else
-                {
-                    meme.Report("To learn it ione must know how to:");
-                    foreach(Meme prequisite in meme.prequisiteMemes)
-                    {
-                        meme.Report(string.Format("  - {0} (#{1})", prequisite.ActionDescription, prequisite.MemeId));
-                    }
-                }
-            }
             return meme;
         }
 

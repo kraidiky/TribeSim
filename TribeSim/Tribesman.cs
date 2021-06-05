@@ -349,45 +349,28 @@ namespace TribeSim
                             this.GetFeature(AvailableFeatures.TeachingEfficiency),
                             student.GetFeature(AvailableFeatures.StudyEfficiency)),
                         Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
-                    if (memeToTeach.PrequisitesAreMet(student.knownMemes))
+                    if (randomizer.Chance(teachingSuccessChance))
                     {
-                        if (randomizer.Chance(teachingSuccessChance))
+                        if (student.MemorySizeRemaining < memeToTeach.Price)
                         {
-                            if (student.MemorySizeRemaining < memeToTeach.Price)
-                            {
-                                storyOfLife?.AppendFormat("{3}Tried to teach {0} how {4} ({1}) and failed. {0} was too stupid to remember it. {2} resources wasted.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription).AppendLine();
-                                return false;
-                            }
-                            else
-                            {
-                                student.LearnNewMemeFrom(memeToTeach, this);
-                                if (isCulturalExchange) memeToTeach.Report("Cultural Exchange!");
-                                storyOfLife?.AppendFormat("{3}Successfully taught {0} how {4} ({1}). {2} resources used for teaching.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription).AppendLine();
-                                UseMemeGroup(AvailableFeatures.TeachingEfficiency, "teaching");
-                                UseMemeGroup(AvailableFeatures.TeachingLikelyhood, "teaching");
-                                student.UseMemeGroup(AvailableFeatures.StudyEfficiency, "studying");
-                                return true;
-                            }
+                            storyOfLife?.AppendFormat("{3}Tried to teach {0} how {4} ({1}) and failed. {0} was too stupid to remember it. {2} resources wasted.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription).AppendLine();
+                            return false;
                         }
                         else
                         {
-                            storyOfLife?.AppendFormat("Tried to teach {0} how {4} ({1}) and failed. Chances were {2:2}%. {3} resources wasted.", student.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, WorldProperties.TeachingCosts, memeToTeach.ActionDescription).AppendLine();
-                            return false;
+                            student.LearnNewMemeFrom(memeToTeach, this);
+                            if (isCulturalExchange) memeToTeach.Report("Cultural Exchange!");
+                            storyOfLife?.AppendFormat("{3}Successfully taught {0} how {4} ({1}). {2} resources used for teaching.", student.Name, memeToTeach.SignatureString, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "", memeToTeach.ActionDescription).AppendLine();
+                            UseMemeGroup(AvailableFeatures.TeachingEfficiency, "teaching");
+                            UseMemeGroup(AvailableFeatures.TeachingLikelyhood, "teaching");
+                            student.UseMemeGroup(AvailableFeatures.StudyEfficiency, "studying");
+                            return true;
                         }
                     }
                     else
                     {
-                        List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(student.knownMemes);
-                        if (unmetPrequisites.Count == 1)
-                        {
-                            storyOfLife?.AppendFormat("Tried to teach {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", student.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
-                            return false;
-                        }
-                        else
-                        {
-                            storyOfLife?.AppendFormat("Tried to teach {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} other things first.", student.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites.Count).AppendLine();
-                            return false;
-                        }
+                        storyOfLife?.AppendFormat("Tried to teach {0} how {4} ({1}) and failed. Chances were {2:2}%. {3} resources wasted.", student.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, WorldProperties.TeachingCosts, memeToTeach.ActionDescription).AppendLine();
+                        return false;
                     }
                 }
                 else
@@ -641,37 +624,22 @@ namespace TribeSim
                 }
                 // Тут есть три возможные причины перехода к следующему элементу цикла - пререквизиты, шанс выучить и недостаток памяти. Наерняка можно сильно съэкономить если расположить их в правильном порядке.
                 Meme memeToStudy = memesAvailableForStudy[randomizer.Next(memesAvailableForStudy.Count)];
-                if (memeToStudy.PrequisitesAreMet(knownMemes)) // После всех оптимизаций значимость вот этой беды выросла до 3,5%
+                resource -= WorldProperties.StudyCosts;
+                if (randomizer.Chance(
+                    SupportFunctions.MultilpyProbabilities(
+                        GetFeature(AvailableFeatures.StudyEfficiency),
+                        Math.Pow(1d / memeToStudy.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient))))
                 {
-                    resource -= WorldProperties.StudyCosts;
-                    if (randomizer.Chance(
-                        SupportFunctions.MultilpyProbabilities(
-                            GetFeature(AvailableFeatures.StudyEfficiency),
-                            Math.Pow(1d / memeToStudy.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient))))
+                    if (MemorySizeRemaining > memeToStudy.Price)
                     {
-                        if (MemorySizeRemaining > memeToStudy.Price)
-                        {
-                            LearnNewMemeFrom(memeToStudy, null);
-                            UseMemeGroup(AvailableFeatures.StudyEfficiency, "learning");
-                            UseMemeGroup(AvailableFeatures.StudyLikelyhood, "learning");
-                        }
-                        else
-                        {
-                            storyOfLife?.AppendFormat("Tried to teach himself {3} ({0}), but was too stupid to remember it. Meme complexity is {1:f2} and memory size remianing is {2:f2}", memeToStudy.SignatureString, memeToStudy.Price, MemorySizeRemaining, memeToStudy.ActionDescription).AppendLine();
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    List<Meme> unmetPrequisites = memeToStudy.WhichPrequisitesAreNotMet(knownMemes);
-                    if (unmetPrequisites.Count == 1)
-                    {
-                        storyOfLife?.AppendFormat("Tried to teach himself {0} (#{1}), but was not ready to learn it. Must learn {2} (#{3}) first.", memeToStudy.ActionDescription, memeToStudy.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
+                        LearnNewMemeFrom(memeToStudy, null);
+                        UseMemeGroup(AvailableFeatures.StudyEfficiency, "learning");
+                        UseMemeGroup(AvailableFeatures.StudyLikelyhood, "learning");
                     }
                     else
                     {
-                        storyOfLife?.AppendFormat("Tried to teach himself {0} (#{1}), but was not ready to learn it. Must learn {2} other things first.", memeToStudy.ActionDescription, memeToStudy.MemeId, unmetPrequisites.Count).AppendLine();
+                        storyOfLife?.AppendFormat("Tried to teach himself {3} ({0}), but was too stupid to remember it. Meme complexity is {1:f2} and memory size remianing is {2:f2}", memeToStudy.SignatureString, memeToStudy.Price, MemorySizeRemaining, memeToStudy.ActionDescription).AppendLine();
+                        break;
                     }
                 }
                 memesAvailableForStudy.Remove(memeToStudy);
@@ -928,40 +896,25 @@ namespace TribeSim
                             this.GetFeature(AvailableFeatures.TeachingEfficiency),
                             child.GetFeature(AvailableFeatures.StudyEfficiency)),
                         Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
-                    if (memeToTeach.PrequisitesAreMet(child.knownMemes))
+                    if (randomizer.Chance(teachingSuccessChance))
                     {
-                        if (randomizer.Chance(teachingSuccessChance))
+                        if (child.MemorySizeRemaining < memeToTeach.Price)
                         {
-                            if (child.MemorySizeRemaining < memeToTeach.Price)
-                            {
-                                storyOfLife?.AppendFormat("Tried to teach child {0} {2} ({1}) and failed. {0} was too stupid to remember it.", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription).AppendLine();
-                            }
-                            else
-                            {
-                                child.LearnNewMemeFrom(memeToTeach, this);
-                                cachedListForTeaching.RemoveAt(memeIndexToTeach);
-                                storyOfLife?.AppendFormat("Successfully taught child {0} {2} ({1}).", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription).AppendLine();
-                                UseMemeGroup(AvailableFeatures.TeachingEfficiency, "teaching child");
-                                UseMemeGroup(AvailableFeatures.TeachingLikelyhood, "teaching child");
-                                child.UseMemeGroup(AvailableFeatures.StudyEfficiency, "learning from parents");
-                            }
+                            storyOfLife?.AppendFormat("Tried to teach child {0} {2} ({1}) and failed. {0} was too stupid to remember it.", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription).AppendLine();
                         }
                         else
                         {
-                            storyOfLife?.AppendFormat("Tried to teach child {0} {3} ({1}) and failed. Chances were {2:2}%.", child.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, memeToTeach.ActionDescription).AppendLine();
+                            child.LearnNewMemeFrom(memeToTeach, this);
+                            cachedListForTeaching.RemoveAt(memeIndexToTeach);
+                            storyOfLife?.AppendFormat("Successfully taught child {0} {2} ({1}).", child.Name, memeToTeach.SignatureString, memeToTeach.ActionDescription).AppendLine();
+                            UseMemeGroup(AvailableFeatures.TeachingEfficiency, "teaching child");
+                            UseMemeGroup(AvailableFeatures.TeachingLikelyhood, "teaching child");
+                            child.UseMemeGroup(AvailableFeatures.StudyEfficiency, "learning from parents");
                         }
                     }
                     else
                     {
-                        List<Meme> unmetPrequisites = memeToTeach.WhichPrequisitesAreNotMet(child.knownMemes);
-                        if (unmetPrequisites.Count == 1)
-                        {
-                            storyOfLife?.AppendFormat("Tried to teach child {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} (#{4}) first.", child.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites[0].ActionDescription, unmetPrequisites[0].MemeId).AppendLine();
-                        } 
-                        else
-                        {
-                            storyOfLife?.AppendFormat("Tried to teach child {0} {1} (#{2}), but found out that {0} is not ready to learn it. Must learn {3} other things first.", child.Name, memeToTeach.ActionDescription, memeToTeach.MemeId, unmetPrequisites.Count).AppendLine();
-                        }
+                        storyOfLife?.AppendFormat("Tried to teach child {0} {3} ({1}) and failed. Chances were {2:2}%.", child.Name, memeToTeach.SignatureString, teachingSuccessChance * 100d, memeToTeach.ActionDescription).AppendLine();
                     }
                 }
             }

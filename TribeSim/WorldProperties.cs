@@ -254,13 +254,6 @@ namespace TribeSim
         private static double memeCostComplexityPriceCoefficient;
         private static double memeComplexityToLearningChanceCoefficient;
 
-        private static double memePrequisitesChance;
-        private static double memePrequisiteBonusGainPedestal;
-        private static double memePrequisiteBonusGainMultiplier;
-        private static double memePrequisiteExtraPricePedestal;
-        private static double memePrequisiteExtraPriceMultiplier;
-        private static double memeSubsequentPrequisitesChance;
-
         private static double mutationChanceTrickLikelyhood;
         private static double mutationChanceTrickEfficiency;
         private static double mutationChanceTeachingLikelyhood;
@@ -567,20 +560,6 @@ namespace TribeSim
         public static double MemeCostComplexityPriceCoefficient { get => memeCostComplexityPriceCoefficient; set { memeCostComplexityPriceCoefficient = value; PersistChanges(); } }
         [DisplayableProperty("Complexity to learning chance coef.", group = "Memes\\Transition", description = "If set to 0 meme complexity won't affect the learning success chance. If set to 1 chance will be multiplied by CMPLX coefficient. General equation is LearningChance = UnaffectedLearningChance*(CMPLX ^ x) where is the current parameter.")]
         public static double MemeComplexityToLearningChanceCoefficient { get => memeComplexityToLearningChanceCoefficient; set { memeComplexityToLearningChanceCoefficient = value; PersistChanges(); } }
-        
-        [DisplayableProperty("Prequisite chance", group = "Memes\\Invention\\Complex culture", description = "A chance that an invented meme will have a prequisite from the list of the memes known by the inventor.")]
-        public static double MemePrequisitesChance { get => memePrequisitesChance; set { memePrequisitesChance = value; PersistChanges(); } }
-        [DisplayableProperty("Subsequent prequisite chance", group = "Memes\\Invention\\Complex culture", description = "A chance that a meme will have another prequisite if already has one.")]
-        public static double MemeSubsequentPrequisitesChance { get => memeSubsequentPrequisitesChance; set { memeSubsequentPrequisitesChance = value; PersistChanges(); } }
-        [DisplayableProperty("Complexity efficiency gain.", group = "Memes\\Invention\\Complex culture", description = "A static multiplier by which the meme's efficiency will get multiplied if a meme has a prequisite.")]
-        public static double MemePrequisiteBonusGainPedestal { get => memePrequisiteBonusGainPedestal; set { memePrequisiteBonusGainPedestal = value; PersistChanges(); } }
-        [DisplayableProperty("Prequisites' eff. multiplier", group = "Memes\\Invention\\Complex culture", description = "A portion of prequisites' efficiency to be added to the current meme efficiency")]
-        public static double MemePrequisiteBonusGainMultiplier { get => memePrequisiteBonusGainMultiplier; set { memePrequisiteBonusGainPedestal = value; PersistChanges(); } }
-        [DisplayableProperty("Complex meme price gain", group = "Memes\\Invention\\Complex culture", description = "A multiplier that will be applied to the price if the meme will have prequisites.")]
-        public static double MemePrequisiteExtraPricePedestal { get => memePrequisiteExtraPricePedestal; set { memePrequisiteExtraPricePedestal = value; PersistChanges(); } }
-        [DisplayableProperty("Prequisites price multiplier", group = "Memes\\Invention\\Complex culture", description = "A portion of the prequisites price to be added to the current meme price.")]
-        public static double MemePrequisiteExtraPriceMultiplier { get => memePrequisiteExtraPriceMultiplier; set { memePrequisiteExtraPriceMultiplier= value; PersistChanges(); } }
-
 
 
         [DisplayableProperty("Random part StdDev", group = "Memes\\Invention\\Costs\\Useless memes")]
