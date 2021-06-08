@@ -2075,7 +2075,7 @@ namespace TribeSim
                 MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioHuntingBEfficiency,
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageHuntingBEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevHuntingBEfficiency,
-                MemCanBeInvented = WorldProperties.NewMemeHuntingBEfficiencyMean != 0 || WorldProperties.NewMemeHuntingEfficiencyStdDev != 0,
+                MemCanBeInvented = WorldProperties.NewMemeHuntingBEfficiencyMean != 0 || WorldProperties.NewMemeHuntingBEfficiencyStdDev != 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.CooperationEfficiency] = new FeatureDescription() {
                 range = FeatureRange.Positive,

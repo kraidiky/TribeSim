@@ -733,7 +733,7 @@ namespace TribeSim
                         for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
                             individualSucess.genotype[i] = (float)genes[i];
                     }
-                    if (WorldProperties.CollectIndividualGenotypeValues > 0.5)
+                    if (WorldProperties.CollectIndividualPhenotypeValues > 0.5)
                     {
                         individualSucess.phenotype = FeaturesFloatArray.Get();
                         for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
