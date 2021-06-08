@@ -11,7 +11,7 @@ namespace TribeSim
 {
     class Tribesman
     {
-        private Random randomizer;
+        public Random randomizer;
         public void SetRandomizer(Random randomizer) {
             this.randomizer = randomizer;
         }
@@ -105,10 +105,10 @@ namespace TribeSim
             MemorySizeRemaining -= newMeme.Price;
             var oldByFeatures = memesByFeature[feature];
             var newByFeatures = new Meme[oldByFeatures.Length + 1];
-            memesByFeature[feature] = newByFeatures;
             newByFeatures[0] = newMeme;
             oldByFeatures.CopyTo(newByFeatures, 1);
 
+            memesByFeature[feature] = newByFeatures;
         }
         private void RemoveMeme(Meme meme) {
             int feature = (int)meme.AffectedFeature;
@@ -122,12 +122,13 @@ namespace TribeSim
                 memesByFeature[feature] = EmptyMemes;
             } else {
                 var newByFeatures = new Meme[oldByFeatures.Length - 1];
-                memesByFeature[feature] = newByFeatures;
                 for (int i = 0, j = 0; i < oldByFeatures.Length; i++)
-                    if (oldByFeatures[i] != meme) {
+                    if (oldByFeatures[i].MemeId != meme.MemeId)
+                    {
                         newByFeatures[j] = oldByFeatures[i];
                         j++;
                     }
+                memesByFeature[feature] = newByFeatures;
             }
         }
 
@@ -284,17 +285,20 @@ namespace TribeSim
 
         private bool InventNewMemeForAFeature(AvailableFeatures featureTheMemeWillAffect, out Meme createdMeme)
         {
-            Meme newMeme = Meme.InventNewMeme(randomizer, featureTheMemeWillAffect);
+            createdMeme = Meme.InventNewMeme(randomizer, featureTheMemeWillAffect);
             StatisticsCollector.ReportCountEvent(this.MyTribeName, "Meme Invented");
-            createdMeme = newMeme;
-            if (newMeme.Price < MemorySizeRemaining)
-            {
-                AddMeme(newMeme);
-                newMeme.ReportInvented(this);                
+            if (memes.Contains(createdMeme, Meme.equalityComparer)) {
+                // Tribesman already known meme with the same Id.
+                if (WorldProperties.CollectMemesSuccess > .5f && randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
+                    createdMeme.ReportDetaliedStatistic();
+                return false;
+            } else if (createdMeme.Price < MemorySizeRemaining) {
+                AddMeme(createdMeme);
+                createdMeme.ReportInvented(this);                
                 return true;
-            }
-            else
-            {                
+            } else {
+                if (WorldProperties.CollectMemesSuccess > .5f && randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
+                    createdMeme.ReportDetaliedStatistic();
                 return false;
             }
         }
@@ -337,7 +341,7 @@ namespace TribeSim
                 if (resource >= WorldProperties.TeachingCosts || randomizer.Chance(WorldProperties.ChanceToTeachIfUnsufficienResources))
                 {
                     resource -= WorldProperties.TeachingCosts;
-                    List<Meme> memeAssoc = memes.Where(meme => !student.knownMemes.Contains(meme)).ToList();
+                    List<Meme> memeAssoc = memes.Where(meme => !student.knownMemes.Contains(meme, Meme.equalityComparer)).ToList();
                     if (memeAssoc.Count == 0)
                     {
                         storyOfLife?.AppendFormat("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts,isCulturalExchange?"Cultural Exchange! ":"").AppendLine();
@@ -725,6 +729,7 @@ namespace TribeSim
                         children = childrenCount,
                         totalResourcesCollected = (float)totalResourcesCollected,
                         tribeName = $"{myTribe.TribeName}-{myTribe.id}",
+                        priceOfThisChild = (float)BasicPriceToGetThisChild,
                         deathCause = cause
                     };
                     if (WorldProperties.CollectIndividualGenotypeValues > 0.5)
@@ -746,15 +751,13 @@ namespace TribeSim
 
         public struct IndividualSucess : IDetaliedEvent
         {
-            public static string[] genotypeHeader;
-            public static string[] phenotypeHeader;
-
             public int birthYear;
             public int age;
             public int children;
             public float totalResourcesCollected;
             public string deathCause;
             public string tribeName;
+            public float priceOfThisChild;
             public float[] genotype;
             public float[] phenotype;
 
@@ -767,6 +770,7 @@ namespace TribeSim
                 sb.Append(',').Append("totalResourcesCollected");
                 sb.Append(',').Append("deathCause");
                 sb.Append(',').Append("tribeName");
+                sb.Append(',').Append("priceOfThisChild");
                 if (genotype != null)
                     for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
                         sb.Append(",gen.").Append(((AvailableFeatures)i).GetAcronym());
@@ -786,6 +790,7 @@ namespace TribeSim
                 sb.Append(',').Append(totalResourcesCollected.ToString("F3", CultureInfo.InvariantCulture));
                 sb.Append(',').Append(deathCause);
                 sb.Append(',').Append(tribeName);
+                sb.Append(',').Append(priceOfThisChild.ToString("F3", CultureInfo.InvariantCulture));
                 if (genotype != null) {
                     for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
                         sb.Append(',').Append(genotype[i].ToString("F3", CultureInfo.InvariantCulture));

@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.CustomProperties;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,13 +13,13 @@ namespace TribeSim
     {
         // Static members
         private static int numInstances = 0;
-        private static long maxMemeId = 0;
         private static Object staticLocker = new Object();
 
 
         private StringBuilder storyline = new StringBuilder();
         private int knownBy = 0;
 
+        private int totalKnowBy = 0;
         private int maxKnowBy = 0;
         private int maxKnownByYear = 0;
         private int yearInvented = 0;
@@ -34,14 +35,7 @@ namespace TribeSim
             get { return complexityCoefficient; }
         }
 
-
-        private long memeId = -1;
-
-
-        public long MemeId
-        {
-            get { if (memeId == -1) memeId = maxMemeId++; return memeId; }
-        }
+        public readonly int MemeId;
 
         public readonly AvailableFeatures AffectedFeature;
 
@@ -57,13 +51,37 @@ namespace TribeSim
 
         public string ActionDescription => actionDescription ?? (actionDescription = NamesGenerator.GenerateActionDescription(AffectedFeature, AffectedFeature == AvailableFeatures.AgeingRate ? efficiency > 0 : efficiency < 0));
 
-        private Meme(AvailableFeatures affectedFeature) {
-            this.AffectedFeature = affectedFeature;
+        // Заложимся что у нас будет не больше 64 фич. Если их когда-нибудь станет больше, значит мы уже получили нобелевскую премию. :))
+        public const int MEMES_TYPES_MAX_COUNT = int.MaxValue >> 6;
+
+        public static int CreateMemeId(AvailableFeatures affectedFeature, int seed) {
+            if (seed <= 0)
+                throw new Exception($"Incorrect seed = {seed} is to low.");
+            if (seed << 6 >> 6 != seed)
+                throw new Exception($"Incorrect seed = {seed} is to big.");
+            return (seed << 6) + (int) affectedFeature;
         }
 
-        public static Meme InventNewMeme(Random randomizer, AvailableFeatures memeAffectedFeature, List<Meme> memesAlreadyKnown = null)
-        {
-            Meme meme = new Meme(memeAffectedFeature);
+        public static void ParseMemeId(int memeId, out AvailableFeatures affectedFeature, out int seed) {
+            affectedFeature = (AvailableFeatures) (memeId & ((1 << 7) - 1));
+            seed = memeId >> 6;
+        } 
+
+
+        private Meme(AvailableFeatures affectedFeature, int memeId) {
+            this.AffectedFeature = affectedFeature;
+            MemeId = memeId;
+        }
+
+        public static Meme InventNewMeme(Random randomizer, AvailableFeatures memeAffectedFeature, List<Meme> memesAlreadyKnown = null) {
+            var memesTimesMaxCount = WorldProperties.MemesTimesMaxCount > 0 ? (int) WorldProperties.MemesTimesMaxCount : MEMES_TYPES_MAX_COUNT;
+            return InventNewMeme(randomizer.Next(memesTimesMaxCount), memeAffectedFeature, memesAlreadyKnown);
+        }
+
+
+        public static Meme InventNewMeme(int seed, AvailableFeatures memeAffectedFeature, List<Meme> memesAlreadyKnown = null) {
+            Meme meme = new Meme(memeAffectedFeature, CreateMemeId(memeAffectedFeature, seed));
+            var randomizer = new Random(meme.MemeId);
             meme.yearInvented = World.Year;
             FeatureDescription featureDescription = WorldProperties.FeatureDescriptions[(int)memeAffectedFeature];
 
@@ -77,6 +95,8 @@ namespace TribeSim
             } else
                 do {
                     meme.efficiency = randomizer.NormalRandom(featureDescription.MemeEfficiencyMean, featureDescription.MemeEfficiencyStdDev);
+                    if (meme.efficiency == 0)
+                        Console.WriteLine($"meme.efficiency == 0");
                 }
                 while (meme.efficiency < featureDescription.LowerRange || (meme.efficiency > featureDescription.UpperRange)); // А что, все мымы теперь 0-1? Может у нас специальный мем снижающий какое-то качество, почему бы и нет, собственно? Пусть отбор решает. Заодно посмотрим что он там нарешать сможет.
 
@@ -99,7 +119,6 @@ namespace TribeSim
         public static void ClearMemePool()
         {
             numInstances = 0;
-            maxMemeId = 0;
         }
 
         public static int CountLiveMemes()
@@ -120,10 +139,12 @@ namespace TribeSim
                 {
                     numInstances--;
                 }
+                if (WorldProperties.CollectMemesSuccess > .5f && tribesman.randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
+                    ReportDetaliedStatistic();
             }
             if (knownBy < 0)
             {
-                //throw new IndexOutOfRangeException("The meme is known by a negative amount of tribesmen.");
+                throw new IndexOutOfRangeException("The meme is known by a negative amount of tribesmen.");
             }
         }
 
@@ -135,8 +156,13 @@ namespace TribeSim
                 numInstances++;
                 knownBy = 1;
                 maxKnowBy = 1;
+                totalKnowBy = 1;
                 maxKnownByYear = World.Year;
             }
+        }
+
+        public void ReportDetaliedStatistic() {
+            StatisticsCollector.ReportEvent(new SucessStatistic(this, World.Year));
         }
 
         public void Report(string message)
@@ -177,7 +203,7 @@ namespace TribeSim
             {
                 string filename = Path.Combine(World.MemesLogFolder, this.MemeId + " meme.txt");
 
-                storyline.AppendLine(string.Format("Invented at {0}y. Maximum was known by {1} at {2}y." + Environment.NewLine, yearInvented, maxKnowBy, maxKnownByYear));
+                storyline.AppendLine(string.Format("Invented at {0}y. Maximum was known by {1} at {2}y. Totaly:{3}" + Environment.NewLine, yearInvented, maxKnowBy, maxKnownByYear, totalKnowBy));
                 if (storyline.Length > 170)
                 {
                     File.AppendAllText(filename, storyline.ToString());
@@ -198,6 +224,7 @@ namespace TribeSim
             lock (staticLocker)
             {
                 knownBy++;
+                totalKnowBy++;
             }
             if (knownBy > maxKnowBy)
             {
@@ -206,16 +233,78 @@ namespace TribeSim
             }
         }
 
-        public string SignatureString
-        {
-            get
-            {
-                if (AffectedFeature == AvailableFeatures.AgeingRate) {
-                    return $"#{MemeId} {AffectedFeature.GetAcronym()}:{Efficiency:f6}";
-                } else {
-                    return $"#{MemeId} {AffectedFeature.GetAcronym()}:{Efficiency:f2}";
-                }
+        public string SignatureString => $"{AffectedFeature.GetAcronym()}:{Efficiency.ToSignificantNumbers(2)}#{MemeId}/{price.ToSignificantNumbers(2)}";
+        public override string ToString() => SignatureString;
+
+        public struct SucessStatistic : IDetaliedEvent {
+            public int memeId;
+            public AvailableFeatures affectedFeature;
+            public double efficiency;
+            public double price;
+            public double complexityCoefficient;
+            public int yearInvented;
+            public int currentPopulation;
+            public int maxPopulation;
+            public int maxPopulationYear;
+            public int totalPopulation;
+            public int goesAwayYear;
+
+            public SucessStatistic(Meme meme, int goesAwayYear) {
+                memeId = meme.MemeId;
+                affectedFeature = meme.AffectedFeature;
+                efficiency = meme.efficiency;
+                price = meme.price;
+                complexityCoefficient = meme.complexityCoefficient;
+                yearInvented = meme.yearInvented;
+                currentPopulation = meme.knownBy;
+                maxPopulation = meme.maxKnowBy;
+                maxPopulationYear = meme.maxKnownByYear;
+                totalPopulation = meme.totalKnowBy;
+                this.goesAwayYear = goesAwayYear;
             }
+
+            public string Header() {
+                var sb = StringBuilderPool.Get();
+                sb.Append(nameof(memeId));
+                sb.Append(',').Append(nameof(affectedFeature));
+                sb.Append(',').Append(nameof(efficiency));
+                sb.Append(',').Append(nameof(price));
+                sb.Append(',').Append(nameof(complexityCoefficient));
+                sb.Append(',').Append(nameof(yearInvented));
+                sb.Append(',').Append(nameof(currentPopulation));
+                sb.Append(',').Append(nameof(maxPopulation));
+                sb.Append(',').Append(nameof(maxPopulationYear));
+                sb.Append(',').Append(nameof(totalPopulation));
+                sb.Append(',').Append(nameof(goesAwayYear));
+                sb.Append('\n');
+                return sb.Release();
+            }
+
+            public string Data() {
+                var sb = StringBuilderPool.Get();
+                sb.Append(memeId);
+                sb.Append(',').Append(affectedFeature.GetAcronym());
+                sb.Append(',').Append(efficiency.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',').Append(price.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',').Append(complexityCoefficient.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',').Append(yearInvented);
+                sb.Append(',').Append(currentPopulation);
+                sb.Append(',').Append(maxPopulation);
+                sb.Append(',').Append(maxPopulationYear);
+                sb.Append(',').Append(totalPopulation);
+                sb.Append(',').Append(goesAwayYear);
+                sb.Append('\n');
+                return sb.Release();
+            }
+
+            public void Clear() { }
+        }
+
+        private static EqualityComparer _equalityComparer;
+        public static EqualityComparer equalityComparer => _equalityComparer ?? (_equalityComparer = new EqualityComparer());
+        public class EqualityComparer : IEqualityComparer<Meme> {
+            public bool Equals(Meme x, Meme y) => (x == null && y == null) || (x != null && y != null && x.MemeId == y.MemeId);
+            public int GetHashCode(Meme obj) => obj.MemeId;
         }
     }
 }

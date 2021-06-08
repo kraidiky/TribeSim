@@ -194,6 +194,8 @@ namespace TribeSim
         private static double geneticFreeRiderDeterminationEfficiencytoMemoryRatio;
         private static double geneticFreeRiderPunishmentLikelyhoodToMemoryRatio;
 
+        private static double _memesTimesTypesMaxCount;
+
         private static double memeCostPedestalTrickEfficiency;
         private static double memeCostEfficiencyRatioTrickEfficiency;
         private static double memeCostRandomAverageTrickEfficiency;
@@ -310,6 +312,8 @@ namespace TribeSim
         private static double collectBrainUsagePercentages;
         private static double collectLiveMemes;
         private static double collectDetaliedMemesData;
+        private static double collectMemesSuccess;
+        private static double chanceToCollectMemesSuccess;
 
         private static double useGompertzAgeing;
         private static double gompertzAgeingAgeAtWhichAgeingStarts;
@@ -437,6 +441,9 @@ namespace TribeSim
         public static double MutationChanceTrickLikelyhood { get => mutationChanceTrickLikelyhood; set { mutationChanceTrickLikelyhood = value; PersistChanges(); } }
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Gompertz Ageing")]
         public static double MutationChanceAgeingRate { get => mutationChanceAgeingRate; set { mutationChanceAgeingRate = value; PersistChanges(); } }
+
+        [DisplayableProperty("Memes Types Max Count", group = "Memes", description = "Totaly Max count of memes types is limited. 0 - default value it is 33 millions per feature.")]
+        public static double MemesTimesMaxCount { get => _memesTimesTypesMaxCount; set { _memesTimesTypesMaxCount = value; PersistChanges(); } }
 
         [DisplayableProperty("Random part StdDev", group = "Memes\\Invention\\Costs\\Free rider punishment likelyhood")]
         public static double MemeCostRandomStdDevFreeRiderPunishmentLikelyhood { get => memeCostRandomStdDevFreeRiderPunishmentLikelyhood; set { memeCostRandomStdDevFreeRiderPunishmentLikelyhood = value; PersistChanges(); } }
@@ -1637,8 +1644,6 @@ namespace TribeSim
         public static double CollectBrainUsagePercentages { get => collectBrainUsagePercentages; set { collectBrainUsagePercentages = value; PersistChanges(); } }
         [DisplayableProperty("Collect number of live memes", group = "Program settings", description = "If set to 1, the number of live memes will be recorded.")]
         public static double CollectLiveMemes { get => collectLiveMemes; set { collectLiveMemes = value; PersistChanges(); } }
-        [DisplayableProperty("Collect detalied memes data", group = "Program settings", description = "If set to 1, memes data will detalied recorded.")]
-        public static double CollectDetaliedMemesData { get => collectDetaliedMemesData; set { collectDetaliedMemesData = value; PersistChanges(); } }
 
         [DisplayableProperty("Collect Individual Success", group = "Program settings\\Collect Individual Success", description = "[ATTENTION!!! Очень ресурсоёмко] If set to 1, мы записываем в момент смерти каждого tribesman, сколько детей он успел породить и (выжиывание не проверяем) и размеры всех его признаков, генетические и фенотипические, а также возраст и аккумулированный за жизнь ресурс. Очень подробная информация для анализа. Очень много места занимает.")]
         public static double CollectIndividualSuccess { get => collectIndividualSuccess; set { collectIndividualSuccess = value; PersistChanges(); } }
@@ -1649,6 +1654,10 @@ namespace TribeSim
         [DisplayableProperty("Collect Individual genotype", group = "Program settings\\Collect Individual Success", description = "1 - collect individual genetic values will be collected 0 - the model will run faster")]
         public static double CollectIndividualGenotypeValues { get { return WorldProperties.collectIndividualGenotypeValues; } set { WorldProperties.collectIndividualGenotypeValues = value; PersistChanges(); } }
 
+        [DisplayableProperty("Collect Memes Success", group = "Program settings\\Collect Memes Success", description = "If set to 1, we collect memes sucess on the end of his lives moment.")]
+        public static double CollectMemesSuccess { get => collectMemesSuccess; set { collectMemesSuccess = value; PersistChanges(); } }
+        [DisplayableProperty("Chance to Collect Memes Success", group = "Program settings\\Collect Memes Success", description = "Chance to collect memes sucess, If you want to collect the part of mems history only.")]
+        public static double ChanceToCollectMemesSuccess { get => chanceToCollectMemesSuccess; set { chanceToCollectMemesSuccess = value; PersistChanges(); } }
 
         [DisplayableProperty("Use Gompertz Ageing", group = "Lifestyle\\Death\\Gompertz Ageing", description = "If set to 0, the tribesmen will age according to the old method. Otherwise Gompertz law will be used. Until the age of (AR) the chances of dying will be equal to (BMR). After the age of (AR) chances of dying of natural causes will equal (BMR) *e^( (AR) * (Age - (AS) )). AR is determined from genes and memes. Chances of dying cannot go higher than plateau value if set.")]
         public static double UseGompertzAgeing { get => useGompertzAgeing; set {useGompertzAgeing = value; PersistChanges();}}
