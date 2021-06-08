@@ -95,28 +95,43 @@ namespace TribeSim
                 }
             }
 
-            if (dataSets.ContainsKey(typeof(Tribesman.IndividualSucess))) {
-                string filename = Path.Combine(World.TribesmanLogFolder, $"IndividualSucess.txt");
-                if (dataSets.TryRemove(typeof(Tribesman.IndividualSucess), out var queue))
+            SaveDetaliedStatistic();
+        }
+
+        public static void SaveDetaliedStatistic()
+        {
+            var types = new Type[] { typeof(Tribesman.IndividualSucess), typeof(Meme.SucessStatistic) };
+            var files = new string[] {
+                Path.Combine(World.TribesmanLogFolder, $"IndividualSucess.txt"),
+                Path.Combine(World.MemesLogFolder, $"MemesSucess.txt")
+            };
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                if (dataSets.ContainsKey(types[i]))
                 {
-                    Task.Run(() => {
-                        lock (_individualSucessLocker)
-                        {
-                            var fileExists = File.Exists(filename);
-                            while (queue.ReStore(out var data))
+                    string filename = files[i];
+                    if (dataSets.TryRemove(types[i], out var queue))
+                    {
+                        Task.Run(() => {
+                            lock (_individualSucessLocker)
                             {
-                                if (!fileExists)
+                                var fileExists = File.Exists(filename);
+                                while (queue.ReStore(out var data))
                                 {
-                                    fileExists = true;
-                                    File.AppendAllText(filename, data.Header());
+                                    if (!fileExists)
+                                    {
+                                        fileExists = true;
+                                        File.AppendAllText(filename, data.Header());
+                                    }
+
+                                    File.AppendAllText(filename, data.Data());
+                                    data.Clear();
                                 }
 
-                                File.AppendAllText(filename, data.Data());
-                                data.Clear();
                             }
-
-                        }
-                    });
+                        });
+                    }
                 }
             }
         }
@@ -200,7 +215,7 @@ namespace TribeSim
         private ConcurrentDictionary<string, float> unconsolidatedSumEvents = new ConcurrentDictionary<string, float>();
         private ConcurrentDictionary<string, float> unconsolidatedAvgEventsSum = new ConcurrentDictionary<string, float>();
         private ConcurrentDictionary<string, int> unconsolidatedAvgEventsCount = new ConcurrentDictionary<string, int>();
-        private static List<string> fileColumnNames;        
+        private static List<string> fileColumnNames;
 
         static TribeDataSet() {
             fileColumnNames = new List<string>();
@@ -228,12 +243,13 @@ namespace TribeSim
                     }
                     consolidatedData[kvp.Key].AddPoint(World.Year, kvp.Value);
                 }
-                if (shouldCollectFiles)
-                {
-                    if (!fileColumnNames.Contains(kvp.Key)) {
-                        columnsToAdd.Add(kvp.Key);
-                    }                    
-                    fileRow.Add(kvp.Key, kvp.Value.ToString());
+                if (shouldCollectFiles) {
+                    lock (fileColumnNames) {
+                        if (!fileColumnNames.Contains(kvp.Key)) {
+                            columnsToAdd.Add(kvp.Key);
+                        }
+                        fileRow.Add(kvp.Key, kvp.Value.ToString());
+                    }
                 }
                 unconsolidatedCountEvents[kvp.Key] = 0;
             }
@@ -248,12 +264,13 @@ namespace TribeSim
                     }
                     consolidatedData[kvp.Key].AddPoint(World.Year, kvp.Value);
                 }
-                if (shouldCollectFiles)
-                {
-                    if (!fileColumnNames.Contains(kvp.Key)) {
-                        columnsToAdd.Add(kvp.Key);
-                    }           
-                    fileRow.Add(kvp.Key, kvp.Value.ToString("F3", CultureInfo.InvariantCulture));                    
+                if (shouldCollectFiles) {
+                    lock (fileColumnNames) {
+                        if (!fileColumnNames.Contains(kvp.Key)) {
+                            columnsToAdd.Add(kvp.Key);
+                        }
+                        fileRow.Add(kvp.Key, kvp.Value.ToString("F3", CultureInfo.InvariantCulture));
+                    }
                 }
             }
             unconsolidatedSumEvents.Clear();
@@ -274,13 +291,13 @@ namespace TribeSim
                         consolidatedData[kvp.Key].AddPoint(World.Year, avgValue);
                     }
                 }
-                if (shouldCollectFiles)
-                {
-                    if (!fileColumnNames.Contains(kvp.Key))
-                    {                        
-                         columnsToAdd.Add(kvp.Key);
+                if (shouldCollectFiles) {
+                    lock (fileColumnNames) {
+                        if (!fileColumnNames.Contains(kvp.Key)) {
+                            columnsToAdd.Add(kvp.Key);
+                        }
+                        fileRow.Add(kvp.Key, avgValue.ToString("F3", CultureInfo.InvariantCulture));
                     }
-                    fileRow.Add(kvp.Key, avgValue.ToString("F3", CultureInfo.InvariantCulture));                    
                 }
             }
             unconsolidatedAvgEventsSum.Clear();
@@ -309,10 +326,10 @@ namespace TribeSim
         private void AddLineToFile(string filename, Dictionary<string, string> fileRow) {
             lock(this) {
                 StringBuilder outData = StringBuilderPool.Get();
-                foreach (string columnHeader in fileColumnNames)
-                {
-                    outData.AppendFormat("{0}, ", columnHeader);
-                }
+                lock (fileColumnNames)
+                    foreach (string columnHeader in fileColumnNames) {
+                        outData.AppendFormat("{0}, ", columnHeader);
+                    }
                 if (!File.Exists(filename)) {
                     outData.AppendLine();
                     File.AppendAllText(filename, outData.ToString());
@@ -339,14 +356,16 @@ namespace TribeSim
                 }               
 
                 outData.Clear();
-                foreach (string column in fileColumnNames) {
-                    if (fileRow.ContainsKey(column)) {
-                        outData.AppendFormat("{0}, ", fileRow[column]);
-                    } else {
-                        outData.Append("0, ");
+                lock(fileColumnNames) {
+                    foreach (string column in fileColumnNames) {
+                        if (fileRow.ContainsKey(column)) {
+                            outData.AppendFormat("{0}, ", fileRow[column]);
+                        } else {
+                            outData.Append("0, ");
+                        }
                     }
+                    outData.AppendLine();
                 }
-                outData.AppendLine();
                 File.AppendAllText(filename, outData.Release());
             }
         }

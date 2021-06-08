@@ -427,5 +427,7 @@ namespace TribeSim
                 logTribesmenList.Clear();
             }
         }
+
+        public IEnumerable<Meme> AllMemes() => members.SelectMany(member => member.knownMemes);
     }
 }

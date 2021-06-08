@@ -133,6 +133,14 @@ namespace TribeSim
             Tribesman.UseGompertzAgeing = WorldProperties.UseGompertzAgeing > 0.5;
         }
 
+        public static void CollectFinalState() {
+            if (WorldProperties.CollectMemesSuccess > .5f)
+                foreach (var liveMeme in new HashSet<Meme>(tribes.SelectMany(tribe => tribe.AllMemes())))
+                    if (randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
+                        liveMeme.ReportDetaliedStatistic();
+        }
+
+
         public static bool TribeExists(string key)
         {
             foreach (Tribe t in tribes)
@@ -418,7 +426,7 @@ namespace TribeSim
 
         private static void LifeSupport()
         {
-            World.tribes.Parallel((tribe) => { tribe.ConsumeLifeSupport(); });            
+            World.tribes.Parallel((tribe) => { tribe.ConsumeLifeSupport(); });
         }     
   
         

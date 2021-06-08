@@ -108,6 +108,8 @@ namespace TribeSim
                     int restartAfter = Convert.ToInt32(txtRestartSim.Text);
                     if (restartAfter > 0 && World.Year >= restartAfter)
                     {
+                        World.CollectFinalState();
+                        StatisticsCollector.SaveDetaliedStatistic();
                         World.InitializeNext(Dispatcher);
                     }
                     lblYear.Content = World.Year.ToString() + "  " + World.spendedTime;

@@ -320,10 +320,10 @@ namespace TribeSim
         {
             Random randomizer = new Random();
             StringBuilder sb = new StringBuilder();
-            for (int i=0; i<10000; i++)
+            for (int i=1; i<10000; i++)
             {
                 AvailableFeatures af = AvailableFeatures.HuntingEfficiency;
-                Meme newMeme = Meme.InventNewMeme(randomizer, af);
+                Meme newMeme = Meme.InventNewMeme(i, af);
                 sb.AppendFormat("{0}\t{1}\tHunting Efficiency\n", newMeme.Efficiency, newMeme.Price);
             }
             File.WriteAllText("c:\\temp\\memes.csv",sb.ToString());

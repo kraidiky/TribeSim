@@ -79,7 +79,7 @@ namespace TribeSim
             if (excludeList.Count > 0) {
                 for (int excludedIndex = 0; excludedIndex < excludeList.Count && sourceIndex < source.Count;) {
                     Meme sourceMeme = source[sourceIndex], excludedMeme = excludeList[excludedIndex];
-                    if (sourceMeme == excludedMeme) { // пропустить совпадающие элементы.
+                    if (sourceMeme.MemeId == excludedMeme.MemeId) { // пропустить совпадающие элементы.
                         sourceIndex++;
                         excludedIndex++;
                         continue;
@@ -96,7 +96,7 @@ namespace TribeSim
                             var nextExcluded = excludeList[nextIndex];
                             if (nextExcluded.Price > sourceMeme.Price) { // Если всё просмотрели и начались уже более дорогие мемы прекращаем просмотр. Не найденный мем добавится в список за пределами цикла
                                 break;
-                            } else if (sourceMeme == nextExcluded) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
+                            } else if (sourceMeme.MemeId == nextExcluded.MemeId) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
                                 finded = true;
                                 sourceIndex++;
                                 break;
