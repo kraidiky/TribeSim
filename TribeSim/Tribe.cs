@@ -341,7 +341,8 @@ namespace TribeSim
                 return null;
             }
             Tribe newTribe = new Tribe(randomizer.Next(int.MaxValue));
-            for (int i = 0; i < members.Count * WorldProperties.SplitTribeRatio; i++)
+            var newTribeMembersCount = members.Count * WorldProperties.SplitTribeRatio; 
+            for (int i = 0; i < newTribeMembersCount; i++)
             {
                 Tribesman member = members[randomizer.Next(members.Count)];
                 MemberLeaves(member);
