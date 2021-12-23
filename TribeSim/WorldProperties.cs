@@ -339,7 +339,7 @@ namespace TribeSim
 
         #region Modifiable propereties
 
-        [DisplayableProperty("Initial State Random Seed", group = "Initial state", description = "Initial State Random Seed")]
+        [DisplayableProperty("Initial State Random Seed.", group = "Initial state", description = "Initial state random seed.  Any values lesser or equal 0 - means full random simulations. Value greater then 0 - means every simulations will have random generator initialized by the same seed. It means all simulations with the same seed will be completely identical, except names in log files.")]
         public static double InitialStateRandomSeed { get => initialStateRandomSeed; set { initialStateRandomSeed = value; PersistChanges(); } }
 
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Useless Actions Likelihood")]
