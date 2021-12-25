@@ -269,7 +269,7 @@ namespace TribeSim
                         if (!fileColumnNames.Contains(kvp.Key)) {
                             columnsToAdd.Add(kvp.Key);
                         }
-                        fileRow.Add(kvp.Key, kvp.Value.ToString("F3", CultureInfo.InvariantCulture));
+                        fileRow.Add(kvp.Key, SignificantSigns(kvp.Value, 3));
                     }
                 }
             }
@@ -296,7 +296,7 @@ namespace TribeSim
                         if (!fileColumnNames.Contains(kvp.Key)) {
                             columnsToAdd.Add(kvp.Key);
                         }
-                        fileRow.Add(kvp.Key, avgValue.ToString("F3", CultureInfo.InvariantCulture));
+                        fileRow.Add(kvp.Key, SignificantSigns(avgValue, 3));
                     }
                 }
             }
@@ -321,6 +321,15 @@ namespace TribeSim
                 string filename = Path.Combine(World.SimDataFolder, $"{TribeFileName}.txt");
                 Task.Run(() => AddLineToFile(filename, fileRow));                
             }
+        }
+
+        private string[] formats = new[] {"F0","F1","F2","F3","F4","F5","F6","F7","F8","F9","F10"};
+        private string SignificantSigns(float value, int signs)
+        {
+            int significantSigns = value != 0 ? (int)Math.Ceiling(Math.Log10(Math.Abs(value))) : 3;
+            significantSigns = (significantSigns > 0 ? 0 : -significantSigns) + signs;
+            significantSigns = significantSigns < formats.Length ? significantSigns : formats.Length - 1;
+            return value.ToString(formats[significantSigns], CultureInfo.InvariantCulture);
         }
 
         private void AddLineToFile(string filename, Dictionary<string, string> fileRow) {
