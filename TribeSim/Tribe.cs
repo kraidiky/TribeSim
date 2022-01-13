@@ -74,7 +74,7 @@ namespace TribeSim
         public readonly int TribeId;
         public string TribeName = null;
         private int yearBorn = 0;
-        private HashSet<Meme> memesUsedThisYearHash = new HashSet<Meme>();
+        private HashSet<int> memesUsedThisYearHash = new HashSet<int>();
         private List<Meme> memesUsedThisYear = new List<Meme>();
 
         private int nextFreeMemberId = 0;
@@ -107,7 +107,7 @@ namespace TribeSim
 
         public void MemeUsed(Tribesman member, Meme e)
         {
-            if (memesUsedThisYearHash.Add(e))
+            if (memesUsedThisYearHash.Add(e.MemeId))
                 memesUsedThisYear.AddToSortedList(e);
         }
 
