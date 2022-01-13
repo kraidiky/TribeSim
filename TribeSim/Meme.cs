@@ -300,9 +300,14 @@ namespace TribeSim
             public void Clear() { }
         }
 
-        private static EqualityComparer _equalityComparer;
-        public static EqualityComparer equalityComparer => _equalityComparer ?? (_equalityComparer = new EqualityComparer());
-        public class EqualityComparer : IEqualityComparer<Meme> {
+        public class EqualityComparer : IEqualityComparer<Meme>
+        {
+            public static readonly EqualityComparer Singleton;
+            static EqualityComparer()
+            {
+                Singleton = new EqualityComparer();
+            }
+            
             public bool Equals(Meme x, Meme y) => (x == null && y == null) || (x != null && y != null && x.MemeId == y.MemeId);
             public int GetHashCode(Meme obj) => obj.MemeId;
         }

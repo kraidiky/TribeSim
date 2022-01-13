@@ -287,7 +287,7 @@ namespace TribeSim
         {
             createdMeme = Meme.InventNewMeme(randomizer, featureTheMemeWillAffect);
             StatisticsCollector.ReportCountEvent(this.MyTribeName, "Meme Invented");
-            if (memes.Contains(createdMeme, Meme.equalityComparer)) {
+            if (memes.Contains(createdMeme, Meme.EqualityComparer.Singleton)) {
                 // Tribesman already known meme with the same Id.
                 if (WorldProperties.CollectMemesSuccess > .5f && randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
                     createdMeme.ReportDetaliedStatistic();
@@ -341,7 +341,7 @@ namespace TribeSim
                 if (resource >= WorldProperties.TeachingCosts || randomizer.Chance(WorldProperties.ChanceToTeachIfUnsufficienResources))
                 {
                     resource -= WorldProperties.TeachingCosts;
-                    List<Meme> memeAssoc = memes.Where(meme => !student.knownMemes.Contains(meme, Meme.equalityComparer)).ToList();
+                    List<Meme> memeAssoc = memes.Where(meme => !student.knownMemes.Contains(meme, Meme.EqualityComparer.Singleton)).ToList();
                     if (memeAssoc.Count == 0)
                     {
                         storyOfLife?.AppendFormat("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts,isCulturalExchange?"Cultural Exchange! ":"").AppendLine();
