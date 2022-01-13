@@ -75,7 +75,7 @@ namespace TribeSim
 
         public static Meme InventNewMeme(Random randomizer, AvailableFeatures memeAffectedFeature, List<Meme> memesAlreadyKnown = null) {
             var memesTimesMaxCount = WorldProperties.MemesTimesMaxCount > 0 ? (int) WorldProperties.MemesTimesMaxCount : MEMES_TYPES_MAX_COUNT;
-            return InventNewMeme(randomizer.Next(memesTimesMaxCount), memeAffectedFeature, memesAlreadyKnown);
+            return InventNewMeme(randomizer.Next(WorldProperties.FEATURES_COUNT, memesTimesMaxCount), memeAffectedFeature, memesAlreadyKnown);
         }
 
 
