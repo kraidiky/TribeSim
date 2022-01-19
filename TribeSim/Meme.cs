@@ -104,12 +104,12 @@ namespace TribeSim
 
             while (meme.price < 0)
             {
-                var pedestalPrice = featureDescription.MemePricePedestal;
                 var efficiencyPrice = Math.Abs(meme.efficiency) * featureDescription.MemePriceEfficiencyRatio;
                 var randomPricePart = randomizer.NormalRandom(featureDescription.MemePriceRandomMean, featureDescription.MemePriceRandomStdDev);
                 var complexityMultiplier = Math.Pow(meme.ComplexityCoefficient, WorldProperties.MemeCostComplexityPriceCoefficient);
-                meme.price = (pedestalPrice + efficiencyPrice + randomPricePart) * complexityMultiplier;
+                meme.price = (efficiencyPrice + randomPricePart) * complexityMultiplier;
             }
+            meme.price += featureDescription.MemePricePedestal;
 
             meme.Report(string.Format("Meme teaches how {3}. It affects: {0}; Efficiency: {1:f5}; It takes {2:f2} memory.", memeAffectedFeature.GetDescription(), meme.Efficiency, meme.Price, meme.ActionDescription)); // Логер, конечно, можно не переделывать, потому что мемы создаются шибко редко.
 
