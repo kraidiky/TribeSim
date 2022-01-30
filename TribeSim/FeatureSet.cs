@@ -73,7 +73,9 @@ namespace TribeSim
         [Description("Useless actions likelihood|Usl")]
         UselessActionsLikelihood,
         [Description("Ageing rate|AR")]
-        AgeingRate
+        AgeingRate,
+        [Description("Sociability|Soc")]
+        Sociability
     }
 
     static class EnumExtender

@@ -85,7 +85,7 @@ namespace TribeSim
         private static Meme[] EmptyMemes = new Meme[0];
         private List<Meme> memes = new List<Meme>();
         private List<int> lastYearMemeWasUsed = new List<int>();
-        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
+        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         public static double[] reproductionCostIncrease;
@@ -943,7 +943,8 @@ namespace TribeSim
                     genes[AvailableFeatures.HuntingBEfficiency] * WorldProperties.BrainSizeToHuntingBEfficiencyCoefficient +
                     genes[AvailableFeatures.CooperationEfficiency] * WorldProperties.BrainSizeToCooperationEfficiencyCoefficient +
                     genes[AvailableFeatures.MemoryLimit] * WorldProperties.BrainSizeToMemorySizeCoefficient +
-                    genes[AvailableFeatures.Creativity] * WorldProperties.BrainSizeToCreativityCoefficient;
+                    genes[AvailableFeatures.Creativity] * WorldProperties.BrainSizeToCreativityCoefficient +
+                    genes[AvailableFeatures.Sociability] * WorldProperties.BrainSizeToSociabilityCoefficient;
             }
         }
 

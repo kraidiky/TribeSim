@@ -24,9 +24,9 @@
             <Button x:Name="btnGraph" Width="50" Height="50" Margin="5,5,5,5" Click="btnGraph_Clicked">
                 <Image Source="Resources/line-chart.png" />
             </Button>
-            <StackPanel Orientation="Horizontal" Width="303" HorizontalAlignment="Center" >
+            <StackPanel Orientation="Horizontal" Width="*" HorizontalAlignment="Center" >
                 <Label Content="Restart simulation after "/>
-                <TextBox x:Name="txtRestartSim" Height="18" TextWrapping="Wrap" Text="0" Width="50" Margin="0,2,0,0"/>
+                <TextBox x:Name="txtRestartSim" Height="18" TextWrapping="Wrap" Text="0" Width="90" Margin="0,2,0,0"/>
                 <Label Content="years."/>
 
             </StackPanel>

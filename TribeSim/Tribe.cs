@@ -336,10 +336,25 @@ namespace TribeSim
 
         public Tribe Split()
         {
-            if (members.Count <= WorldProperties.SplitTribeIfBiggerThen)
+            if (WorldProperties.SplitTribeIfBiggerThen > 0)
             {
-                return null;
+                if (members.Count <= WorldProperties.SplitTribeIfBiggerThen)
+                {
+                    return null;
+                }
             }
+            else
+            {
+                double sociability = 0;
+                foreach (var member in members)
+                    sociability += member.GetFeature(AvailableFeatures.Sociability);
+                if (members.Count * members.Count <= sociability)
+                {
+                    return null;
+                }
+                
+            }
+
             Tribe newTribe = new Tribe(randomizer.Next(int.MaxValue));
             var newTribeMembersCount = members.Count * WorldProperties.SplitTribeRatio; 
             for (int i = 0; i < newTribeMembersCount; i++)
