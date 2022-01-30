@@ -1436,7 +1436,7 @@ namespace TribeSim
             set { WorldProperties.initialStateGenesSociabilityMean= value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Sociability", description = "This feature affects the size of the group when it will breaks up. It is used only if "Lifestyle/Groups/Tree Split Threshold" is less than or equal to 0. [0, inf]")]
+        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Sociability", description = "This feature affects the size of the group when it will breaks up. It is used only if 'Lifestyle/Groups/Tree Split Threshold' is less than or equal to 0. [0, inf]")]
         public static double InitialStateGenesSociabilityStdDev
         {
             get { return WorldProperties.initialStateGenesSociabilityStdDev; }
