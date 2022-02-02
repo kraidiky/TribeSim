@@ -18,7 +18,7 @@
   <Genetics_Mutation_Tricklikelyhood_MutationstrengthStdDev>0</Genetics_Mutation_Tricklikelyhood_MutationstrengthStdDev>
   <Genetics_Mutation_GompertzAgeing_MutationstrengthStdDev>0</Genetics_Mutation_GompertzAgeing_MutationstrengthStdDev>
   <Genetics_Mutation_Sociability_MutationstrengthStdDev>1</Genetics_Mutation_Sociability_MutationstrengthStdDev>
-  <Genetics_Mutation_ForagingEfficiency_MutationstrengthStdDev>1</Genetics_Mutation_ForagingEfficiency_MutationstrengthStdDev>
+  <Genetics_Mutation_ForagingEfficiency_MutationstrengthStdDev>0</Genetics_Mutation_ForagingEfficiency_MutationstrengthStdDev>
   <Genetics_Mutation_UselessActionsLikelihood_MutationstrengthMean>0</Genetics_Mutation_UselessActionsLikelihood_MutationstrengthMean>
   <Genetics_Mutation_Creativity_MutationstrengthMean>0</Genetics_Mutation_Creativity_MutationstrengthMean>
   <Genetics_Mutation_Memorylimit_MutationstrengthMean>0</Genetics_Mutation_Memorylimit_MutationstrengthMean>
@@ -54,7 +54,7 @@
   <Genetics_Mutation_Tricklikelyhood_MutationChance>0</Genetics_Mutation_Tricklikelyhood_MutationChance>
   <Genetics_Mutation_GompertzAgeing_MutationChance>0</Genetics_Mutation_GompertzAgeing_MutationChance>
   <Genetics_Mutation_Sociability_MutationChance>0,04</Genetics_Mutation_Sociability_MutationChance>
-  <Genetics_Mutation_ForagingEfficiency_MutationChance>0,04</Genetics_Mutation_ForagingEfficiency_MutationChance>
+  <Genetics_Mutation_ForagingEfficiency_MutationChance>0</Genetics_Mutation_ForagingEfficiency_MutationChance>
   <Memes_MemesTypesMaxCount>0</Memes_MemesTypesMaxCount>
   <Memes_Invention_Costs_Freeriderpunishmentlikelyhood_RandompartStdDev>0</Memes_Invention_Costs_Freeriderpunishmentlikelyhood_RandompartStdDev>
   <Memes_Invention_Costs_Freeriderpunishmentlikelyhood_Randompartmean>0</Memes_Invention_Costs_Freeriderpunishmentlikelyhood_Randompartmean>
@@ -112,10 +112,10 @@
   <Memes_Invention_Costs_Sociability_Randompartmean>0</Memes_Invention_Costs_Sociability_Randompartmean>
   <Memes_Invention_Costs_Sociability_Correlationpartcoefficient_C_>0</Memes_Invention_Costs_Sociability_Correlationpartcoefficient_C_>
   <Memes_Invention_Costs_Sociability_Pedestalvalue_P_>0</Memes_Invention_Costs_Sociability_Pedestalvalue_P_>
-  <Memes_Invention_Costs_ForagingEfficiency_RandompartStdDev>0</Memes_Invention_Costs_ForagingEfficiency_RandompartStdDev>
+  <Memes_Invention_Costs_ForagingEfficiency_RandompartStdDev>2</Memes_Invention_Costs_ForagingEfficiency_RandompartStdDev>
   <Memes_Invention_Costs_ForagingEfficiency_Randompartmean>0</Memes_Invention_Costs_ForagingEfficiency_Randompartmean>
-  <Memes_Invention_Costs_ForagingEfficiency_Correlationpartcoefficient_C_>0</Memes_Invention_Costs_ForagingEfficiency_Correlationpartcoefficient_C_>
-  <Memes_Invention_Costs_ForagingEfficiency_Pedestalvalue_P_>0</Memes_Invention_Costs_ForagingEfficiency_Pedestalvalue_P_>
+  <Memes_Invention_Costs_ForagingEfficiency_Correlationpartcoefficient_C_>0,05</Memes_Invention_Costs_ForagingEfficiency_Correlationpartcoefficient_C_>
+  <Memes_Invention_Costs_ForagingEfficiency_Pedestalvalue_P_>0,01</Memes_Invention_Costs_ForagingEfficiency_Pedestalvalue_P_>
   <Memes_Invention_Costs_Memecostcomplexitypricecoef.>0</Memes_Invention_Costs_Memecostcomplexitypricecoef.>
   <Memes_Transition_Complexitytolearningchancecoef.>0</Memes_Transition_Complexitytolearningchancecoef.>
   <Memes_Invention_Costs_Uselessmemes_RandompartStdDev>2</Memes_Invention_Costs_Uselessmemes_RandompartStdDev>
@@ -142,6 +142,7 @@
   <Lifestyle_Steps_Skipfreeriderpunishment>1</Lifestyle_Steps_Skipfreeriderpunishment>
   <Lifestyle_Steps_Skiphunting>0</Lifestyle_Steps_Skiphunting>
   <Lifestyle_Steps_SkiphuntingB>1</Lifestyle_Steps_SkiphuntingB>
+  <Lifestyle_Steps_SkipForaging>0</Lifestyle_Steps_SkipForaging>
   <Lifestyle_Steps_Skipuselessactions>0</Lifestyle_Steps_Skipuselessactions>
   <Lifestyle_Steps_Skipstudy>0</Lifestyle_Steps_Skipstudy>
   <Lifestyle_Steps_Skipdeath>0</Lifestyle_Steps_Skipdeath>
@@ -180,7 +181,7 @@
   <Genetics_Brainsize_C8-CreativityC8->0</Genetics_Brainsize_C8-CreativityC8->
   <Genetics_Brainsize_C9-HuntingBEfficiencyC9->0</Genetics_Brainsize_C9-HuntingBEfficiencyC9->
   <Genetics_Brainsize_C10-SociabilityC10->0</Genetics_Brainsize_C10-SociabilityC10->
-  <Genetics_Brainsize_C11-ForagingEfficiencyC11->0</Genetics_Brainsize_C11-ForagingEfficiencyC11->
+  <Genetics_Brainsize_C11-ForagingEfficiencyC11->1</Genetics_Brainsize_C11-ForagingEfficiencyC11->
   <Lifestyle_Breeding_Brainsizebirthprice>2</Lifestyle_Breeding_Brainsizebirthprice>
   <Lifestyle_Breeding_Youthage>6</Lifestyle_Breeding_Youthage>
   <Lifestyle_Death_Youthage>1</Lifestyle_Death_Youthage>
@@ -199,7 +200,7 @@
   <Environment_EnvironmentBsupportstandarddeviation>0</Environment_EnvironmentBsupportstandarddeviation>
   <Environment_EnvironmentBsupportdeviationlimit>0</Environment_EnvironmentBsupportdeviationlimit>
   <Environment_ResourcesBMinimum>0</Environment_ResourcesBMinimum>
-  <Environment_EnvironmentForagingsupport>0</Environment_EnvironmentForagingsupport>
+  <Environment_EnvironmentForagingsupport>500</Environment_EnvironmentForagingsupport>
   <Lifestyle_Freeriders_Costtopunishafreerider>0</Lifestyle_Freeriders_Costtopunishafreerider>
   <Lifestyle_Freeriders_Freeriderpunishment>0</Lifestyle_Freeriders_Freeriderpunishment>
   <Memes_Invention_Usagecreativitymodifier>0</Memes_Invention_Usagecreativitymodifier>
@@ -244,7 +245,7 @@
   <Initialstate_Genes_Ageingrate_Standarddeviation>0</Initialstate_Genes_Ageingrate_Standarddeviation>
   <Initialstate_Genes_Sociability_Mean>40</Initialstate_Genes_Sociability_Mean>
   <Initialstate_Genes_Sociability_Standarddeviation>0</Initialstate_Genes_Sociability_Standarddeviation>
-  <Initialstate_Genes_ForagingEfficiency_Mean>40</Initialstate_Genes_ForagingEfficiency_Mean>
+  <Initialstate_Genes_ForagingEfficiency_Mean>0</Initialstate_Genes_ForagingEfficiency_Mean>
   <Initialstate_Genes_ForagingEfficiency_Standarddeviation>0</Initialstate_Genes_ForagingEfficiency_Standarddeviation>
   <Initialstate_Genes_UselessActionsLikelihood_Mean>0</Initialstate_Genes_UselessActionsLikelihood_Mean>
   <Initialstate_Genes_UselessActionsLikelihood_Standarddeviation>0</Initialstate_Genes_UselessActionsLikelihood_Standarddeviation>
@@ -277,8 +278,8 @@
   <Memes_Invention_Ageingrate_EfficiencyincreaseStdDev>0</Memes_Invention_Ageingrate_EfficiencyincreaseStdDev>
   <Memes_Invention_Sociability_Efficiencyincreasemean>0</Memes_Invention_Sociability_Efficiencyincreasemean>
   <Memes_Invention_Sociability_EfficiencyincreaseStdDev>0</Memes_Invention_Sociability_EfficiencyincreaseStdDev>
-  <Memes_Invention_ForagingEfficiency_Efficiencyincreasemean>0</Memes_Invention_ForagingEfficiency_Efficiencyincreasemean>
-  <Memes_Invention_ForagingEfficiency_EfficiencyincreaseStdDev>0</Memes_Invention_ForagingEfficiency_EfficiencyincreaseStdDev>
+  <Memes_Invention_ForagingEfficiency_Efficiencyincreasemean>6</Memes_Invention_ForagingEfficiency_Efficiencyincreasemean>
+  <Memes_Invention_ForagingEfficiency_EfficiencyincreaseStdDev>9</Memes_Invention_ForagingEfficiency_EfficiencyincreaseStdDev>
   <Memes_Invention_Uselessmemes_Averagecost>0,2</Memes_Invention_Uselessmemes_Averagecost>
   <Memes_Invention_Uselessmemes_CostStdDev>0,2</Memes_Invention_Uselessmemes_CostStdDev>
   <Initialstate_Tribes_TribeInitialPopulation_StandardDeviation>0</Initialstate_Tribes_TribeInitialPopulation_StandardDeviation>

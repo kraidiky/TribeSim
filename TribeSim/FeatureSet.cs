@@ -75,7 +75,9 @@ namespace TribeSim
         [Description("Ageing rate|AR")]
         AgeingRate,
         [Description("Sociability|Soc")]
-        Sociability
+        Sociability,
+        [Description("Foraging Efficiency|Frg")]
+        ForagingEfficiency
     }
 
     static class EnumExtender

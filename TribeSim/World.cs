@@ -178,6 +178,7 @@ namespace TribeSim
             if (WorldProperties.SkipFreeRiderPunishmentStep < 0.5) PunishFreeRiders();
             if (WorldProperties.SkipHuntingStep < 0.5) HuntAndShare(AvailableFeatures.HuntingEfficiency);
             if (WorldProperties.SkipHuntingBStep < 0.5) HuntAndShare(AvailableFeatures.HuntingBEfficiency);
+            if (WorldProperties.SkipForagingStep < 0.5) ForagingAndShare();
             if (WorldProperties.SkipUselessActionsStep < 0.5) UselessAction();
             if (WorldProperties.SkipStudyingStep < 0.5) Study();
             if (WorldProperties.SkipDeathStep < 0.5) Die();
@@ -402,6 +403,22 @@ namespace TribeSim
                 }
             }
             World.tribes.Parallel((tribe) => { tribe.ReceiveAndShareResource(resourcesRecievedByTribes[tribe]); });
+        }
+
+        private static void ForagingAndShare()
+        {
+            if (WorldProperties.ResourcesAvailableFromForagingOnEveryStep > 0)
+            {
+                World.tribes.Parallel(tribe => tribe.CalculateForagingEffort());
+                double totalEffort = 0;
+                foreach (var tribe in tribes)
+                    totalEffort += tribe.foragingEffort;
+                if (totalEffort > 0)
+                {
+                    var share = WorldProperties.ResourcesAvailableFromForagingOnEveryStep < totalEffort ? WorldProperties.ResourcesAvailableFromForagingOnEveryStep / totalEffort : 1;
+                    World.tribes.Parallel(tribe => tribe.ShareForagingResources(share));
+                }
+            }
         }
 
         private static void PunishFreeRiders()

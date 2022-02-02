@@ -85,7 +85,7 @@ namespace TribeSim
         private static Meme[] EmptyMemes = new Meme[0];
         private List<Meme> memes = new List<Meme>();
         private List<int> lastYearMemeWasUsed = new List<int>();
-        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
+        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         public static double[] reproductionCostIncrease;
@@ -944,7 +944,8 @@ namespace TribeSim
                     genes[AvailableFeatures.CooperationEfficiency] * WorldProperties.BrainSizeToCooperationEfficiencyCoefficient +
                     genes[AvailableFeatures.MemoryLimit] * WorldProperties.BrainSizeToMemorySizeCoefficient +
                     genes[AvailableFeatures.Creativity] * WorldProperties.BrainSizeToCreativityCoefficient +
-                    genes[AvailableFeatures.Sociability] * WorldProperties.BrainSizeToSociabilityCoefficient;
+                    genes[AvailableFeatures.Sociability] * WorldProperties.BrainSizeToSociabilityCoefficient +
+                    genes[AvailableFeatures.ForagingEfficiency] * WorldProperties.BrainSizeToForagingEfficiencyCoefficient;
             }
         }
 
@@ -991,20 +992,27 @@ namespace TribeSim
                 double totalBrainUsage = 0;
                 double totalBrainSize = 0;
                 var brainUsages = FeatureSet.Blank();
+                var memesCount = FeatureSet.Blank();
+                var memesEffect = FeatureSet.Blank();
                 for (int i = 0; i < memes.Count; i++) {
                     var meme = memes[i];
                     totalBrainUsage += meme.Price;
                     brainUsages[(int)meme.AffectedFeature] += meme.Price;
+                    memesCount[(int)meme.AffectedFeature]++;
+                    memesEffect[(int)meme.AffectedFeature] += meme.Efficiency;
                 }
                 totalBrainSize = totalBrainUsage + MemorySizeRemaining;
                 if (totalBrainSize > 0)
                 {
                     StatisticsCollector.ReportAverageEvent(MyTribeName, "% memory: unused", MemorySizeRemaining / totalBrainSize);
-                    for (int i = 0; i < brainUsages.Length; i++)
+                    for (int i = 0; i < brainUsages.Length; i++) {
                         // if (brainUsages[i] > 0)
                         // нехорошо, конечно, отчитываться по заведомо ненужным величинам, но и убирать из статистики тех, кто не знает ни одного мема из данной категории тоже не годится.
                         // видимо нужен статический фильтр
                         StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("% memory: {0}", ((AvailableFeatures)i).ToString()), brainUsages[i] / totalBrainSize);
+                        StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("avg. memes size: {0}", ((AvailableFeatures)i).ToString()), memesCount[i] != 0 ? brainUsages[i] / memesCount[i] : 0);
+                        StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("avg. memes relative effectiveness: {0}", ((AvailableFeatures)i).ToString()), memesCount[i] != 0 ? memesEffect[i]/brainUsages[i] : 0);
+                    }
                 }
             }
         }

@@ -232,6 +232,22 @@ namespace TribeSim
             
         }
 
+        public double foragingEffort = 0;
+        public void CalculateForagingEffort()
+        {
+            foragingEffort = 0;
+            foreach (var member in members)
+                foragingEffort += member.GetFeature(AvailableFeatures.ForagingEfficiency);
+        }
+
+        public void ShareForagingResources(double resourcesPerForagingEfficiency)
+        {
+            foreach (var member in members)
+                member.RecieveResourcesShare(resourcesPerForagingEfficiency * member.GetFeature(AvailableFeatures.ForagingEfficiency));
+        }
+        
+        
+
         private double[] takenShares = new double[0];
         public void ReceiveAndShareResource(double resourcesReceivedPerGroup)
         {
