@@ -1,7 +1,6 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -934,18 +933,10 @@ namespace TribeSim
         {
             get
             {
-                return WorldProperties.BrainSizePedestal +
-                    genes[AvailableFeatures.TrickEfficiency] * WorldProperties.BrainSizeToTrickEfficiencyCoefficient +
-                    genes[AvailableFeatures.TeachingEfficiency] * WorldProperties.BrainSizeToTeachingEfficiencyCoefficient +
-                    genes[AvailableFeatures.StudyEfficiency] * WorldProperties.BrainSizeToStudyEfficiencyCoefficient +
-                    genes[AvailableFeatures.FreeRiderDeterminationEfficiency] * WorldProperties.BrainSizeToFreeRiderDeterminationEfficiencyCoefficient +
-                    genes[AvailableFeatures.HuntingEfficiency] * WorldProperties.BrainSizeToHuntingEfficiencyCoefficient +
-                    genes[AvailableFeatures.HuntingBEfficiency] * WorldProperties.BrainSizeToHuntingBEfficiencyCoefficient +
-                    genes[AvailableFeatures.CooperationEfficiency] * WorldProperties.BrainSizeToCooperationEfficiencyCoefficient +
-                    genes[AvailableFeatures.MemoryLimit] * WorldProperties.BrainSizeToMemorySizeCoefficient +
-                    genes[AvailableFeatures.Creativity] * WorldProperties.BrainSizeToCreativityCoefficient +
-                    genes[AvailableFeatures.Sociability] * WorldProperties.BrainSizeToSociabilityCoefficient +
-                    genes[AvailableFeatures.ForagingEfficiency] * WorldProperties.BrainSizeToForagingEfficiencyCoefficient;
+                double brainSize = WorldProperties.BrainSizePedestal;
+                for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                    brainSize += WorldProperties.FeatureDescriptions[i].BrainSizeBoost * genes[i];
+                return brainSize;
             }
         }
 
