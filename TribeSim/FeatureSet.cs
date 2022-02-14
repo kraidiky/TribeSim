@@ -77,7 +77,9 @@ namespace TribeSim
         [Description("Sociability|Soc")]
         Sociability,
         [Description("Foraging Efficiency|Frg")]
-        ForagingEfficiency
+        ForagingEfficiency,
+        [Description("OrganizationAbility|Org")]
+        OrganizationAbility
     }
 
     static class EnumExtender
