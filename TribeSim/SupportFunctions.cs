@@ -56,14 +56,15 @@ namespace TribeSim
         }
 
         // Возвращаем позицию в которую вставлен элемент. Этот функционал нужен не везде, где применяется эта функция.
+        // Меняем принцип сортировки мемов, теперь они отсортированы по MemeId
         public static int AddToSortedList(this List<Meme> target, Meme meme) {
             int i = target.Count - 1;
-            if (i < 0 || meme.Price >= target[i].Price) {
+            if (i < 0 || meme.MemeId >= target[i].MemeId) {
                 target.Add(meme);
                 return target.Count - 1;
             } else {
                 for (--i; i >= 0; --i)
-                    if (meme.Price > target[i].Price) {
+                    if (meme.MemeId > target[i].MemeId) {
                         int position = i + 1;
                         target.Insert(position, meme);
                         return position;
@@ -83,30 +84,12 @@ namespace TribeSim
                         sourceIndex++;
                         excludedIndex++;
                         continue;
-                    }
-                    //if (used.Price > MemorySizeRemaining) break; // Может там и есть чё, но оно к нам не влезет. Эта реализация будет отличается отстарого кода тем, что слишком большие мемы не участвуют в попытках обучения.
-                    if (sourceMeme.Price > excludedMeme.Price) {
+                    } else if (sourceMeme.MemeId > excludedMeme.MemeId) {
                         excludedIndex++;
-                    } else if (sourceMeme.Price < excludedMeme.Price) {
+                    } else if (sourceMeme.MemeId < excludedMeme.MemeId) {
                         sourceIndex++;
                         target.Add(sourceMeme);
-                    } else { // Если Мемы разные но цена у них полностью одинаковая то в отсортированных массивах такие мемы могут идти в любом порядке. Так что текущий мем придётся сравнить со всеми имеющими строго такую же цену, после чего откатиться назад.
-                        bool finded = false;
-                        for (int nextIndex = excludedIndex + 1; nextIndex < excludeList.Count; nextIndex++) {
-                            var nextExcluded = excludeList[nextIndex];
-                            if (nextExcluded.Price > sourceMeme.Price) { // Если всё просмотрели и начались уже более дорогие мемы прекращаем просмотр. Не найденный мем добавится в список за пределами цикла
-                                break;
-                            } else if (sourceMeme.MemeId == nextExcluded.MemeId) { // Если позже по листу нашли совпадающий элемент, то поиск оканчиваем, и выкидываем из рассмотрения my
-                                finded = true;
-                                sourceIndex++;
-                                break;
-                            }
-                        }
-                        if (!finded) {
-                            sourceIndex++;
-                            target.Add(sourceMeme);
-                        }
-                    }
+                    } // Теперь, когда сортировка идёт по MemeId ситуация когда несколько мемов могут иметь одинаковый признак сортировки невозможна и особый сложный код для обработки этого случая уже не нужен
                 }
             }
             // Выход из цикла мог означать, что used ещё может и остались, а вот my точно кончились. Ну ил инаоборот, собственно
