@@ -83,8 +83,8 @@ namespace TribeSim
 
         private static Meme[] EmptyMemes = new Meme[0];
         private List<Meme> memes = new List<Meme>();
-        private List<int> lastYearMemeWasUsed = new List<int>();
-        private Meme[][] memesByFeature = new Meme[WorldProperties.FEATURES_COUNT][] { EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes, EmptyMemes };
+        private int[] lastYearMemeWasUsed = new int[WorldProperties.FEATURES_COUNT];
+        private int[] memesByFeature = new int[WorldProperties.FEATURES_COUNT];
         private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         public static double[] reproductionCostIncrease;
@@ -96,39 +96,20 @@ namespace TribeSim
 
         private void AddMeme(Meme newMeme) {
             // memes у нас теперь будет отсортирован по возрастанию прайса мемов
-            int index = memes.AddToSortedList(newMeme);
-            lastYearMemeWasUsed.Insert(index, World.Year);
+            memes.AddToSortedList(newMeme);
 
             int feature = (int)newMeme.AffectedFeature;
-            memesEffect[feature] = null;
             MemorySizeRemaining -= newMeme.Price;
-            var oldByFeatures = memesByFeature[feature];
-            var newByFeatures = new Meme[oldByFeatures.Length + 1];
-            newByFeatures[0] = newMeme;
-            oldByFeatures.CopyTo(newByFeatures, 1);
-
-            memesByFeature[feature] = newByFeatures;
+            memesEffect[feature] = null;
+            memesByFeature[feature]++;
         }
         private void RemoveMeme(Meme meme) {
             int feature = (int)meme.AffectedFeature;
             int index = memes.IndexOf(meme);
             memes.RemoveAt(index);
-            lastYearMemeWasUsed.RemoveAt(index);
             memesEffect[feature] = null;
+            memesByFeature[feature]--;
             MemorySizeRemaining += meme.Price;
-            var oldByFeatures = memesByFeature[feature];
-            if (oldByFeatures.Length == 1) {
-                memesByFeature[feature] = EmptyMemes;
-            } else {
-                var newByFeatures = new Meme[oldByFeatures.Length - 1];
-                for (int i = 0, j = 0; i < oldByFeatures.Length; i++)
-                    if (oldByFeatures[i].MemeId != meme.MemeId)
-                    {
-                        newByFeatures[j] = oldByFeatures[i];
-                        j++;
-                    }
-                memesByFeature[feature] = newByFeatures;
-            }
         }
 
         private Tribesman(Random randomizer)
@@ -199,8 +180,10 @@ namespace TribeSim
             var effect = memesEffect[(int)af];
             if (effect.HasValue) {
                 return effect.Value;
+            } else if (memesByFeature[(int)af] == 0) {
+                return genes[af];
             } else {
-                var relevantMemes = memesByFeature[(int)af];// .Where(assoc => assoc.Meme.AffectedFeature == af);
+                var relevantMemes = memes.Where(assoc => assoc.AffectedFeature == af);
                 var retval = genes[af];
                 var description = WorldProperties.FeatureDescriptions[(int)af];        
                 if (af == AvailableFeatures.AgeingRate) { 
@@ -305,17 +288,34 @@ namespace TribeSim
         public void ForgetUnusedMemes()
         {
             int year = World.Year;
-            for (int i = memes.Count - 1; i >= 0; i--) {
-                Meme meme = memes[i];
-                if (year - lastYearMemeWasUsed[i] > WorldProperties.DontForgetMemesThatWereUsedDuringThisPeriod)
+            for (int feature = 0; feature < memesByFeature.Length; feature++)
+            {
+                if (memesByFeature[feature] > 0 && year - lastYearMemeWasUsed[feature] > WorldProperties.DontForgetMemesThatWereUsedDuringThisPeriod)
                 {
-                    if (randomizer.Chance(WorldProperties.ChanceToForgetTheUnusedMeme))
-                    {
-                        meme.ReportForgotten(this);
-                        storyOfLife?.AppendFormat("Forgotten how {1} ({0})", meme.SignatureString, meme.ActionDescription).AppendLine();
-                        RemoveMeme(meme);
-                        ReportPhenotypeChange();                                                
-                    }
+                    for (int memeIndex = memesByFeature[feature] - 1; memeIndex >= 0; memeIndex--)
+                        if (randomizer.Chance(WorldProperties.ChanceToForgetTheUnusedMeme))
+                        {
+                            Meme meme = null;
+                            for (int i = 0, j = memeIndex; i < memes.Count; i++)
+                                if ((int)memes[i].AffectedFeature == feature) // Можно написать более кратко или вообще на линке, но мне же потом это читать при следующем рефакторинге...
+                                {
+                                    if (j == 0)
+                                    {
+                                        meme = memes[i];
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        --j;
+                                    }
+                                }
+
+                            meme.ReportForgotten(this);
+                            storyOfLife?.AppendFormat("Forgotten how {1} ({0})", meme.SignatureString,
+                                meme.ActionDescription).AppendLine();
+                            RemoveMeme(meme);
+                            ReportPhenotypeChange();
+                        }
                 }
             }
         }
@@ -412,11 +412,10 @@ namespace TribeSim
                     storyOfLife?.AppendFormat("While {3} invented the new meme but forgot it immediately. Too stupid to remember anything else. Memory size is {1:f2} and meme complexity is {2:f2}", Name, MemorySizeRemaining, inventedMeme.Price, activity).AppendLine();
                 }
             }
+            lastYearMemeWasUsed[(int)usedFeature] = World.Year; // Переделываем на группы чтобы 
             for (int i = 0; i < memes.Count; i++)
-                if (memes[i].AffectedFeature == usedFeature) { // Использую пока такую менее эффективную схему чтобы rnd-шники при рефакторинге не поплыли. В дальнейшем lastYearMemeWasUsed можно будет хранить сразу по группам.
-                    lastYearMemeWasUsed[i] = World.Year;
+                if (memes[i].AffectedFeature == usedFeature)
                     myTribe.MemeUsed(this, memes[i]); // Тот, кто не в племени не может пользовать мемы.
-                }
         }
 
         private void LearnNewMemeFrom(Meme meme, Tribesman teacher)
@@ -591,11 +590,13 @@ namespace TribeSim
             {
                 resource -= resourcesWasted;
 
-                Meme[] relevantMemes = memesByFeature[(int)AvailableFeatures.UselessActionsLikelihood];
-                if (relevantMemes.Length > 0) {
-                    Meme randomKnownUselessMeme = relevantMemes[randomizer.Next(relevantMemes.Length)];
-
-                    storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
+                
+                if (memesByFeature[(int)AvailableFeatures.UselessActionsLikelihood] > 0) {
+                    if (storyOfLife != null) {
+                        var relevantMemes = memes.Where(meme => (int)meme.AffectedFeature == (int)AvailableFeatures.UselessActionsLikelihood);
+                        Meme randomKnownUselessMeme = relevantMemes.Skip(randomizer.Next(relevantMemes.Count())).First(); // Всё это медленно и печально, но оно нужно только для логов, так что сойдёт. 
+                        storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
+                    }
                     UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
                 } else {
                     storyOfLife?.AppendFormat($"Geneticaly based useless actions. Chance: {chance}, but wasted {resourcesWasted:f2} resources on it. {resource:f2} remaining.").AppendLine();
