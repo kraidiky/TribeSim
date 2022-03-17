@@ -39,7 +39,7 @@ namespace TribeSim
                 return "0";
             var size = Math.Log10(Math.Abs(number));
             int format = Math.Max(0, digits - 1 - (int)Math.Floor(size));
-            if (format > significantNumbersFormat.Count)
+            if (format >= significantNumbersFormat.Count)
                 for (int i = significantNumbersFormat.Count; i <= format; i++)
                     significantNumbersFormat.Add($"f{i}");
             return number.ToString(significantNumbersFormat[format], CultureInfo.InvariantCulture);
