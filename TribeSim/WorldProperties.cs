@@ -2118,6 +2118,9 @@ namespace TribeSim
         public const int FEATURES_COUNT = 19;
         public static FeatureDescription[] FeatureDescriptions;
         public static int[] MemesWhichCanBeInvented;
+
+        public static double AggregateAsSum(double a, double b) => a + b;
+
         public static void ResetFeatureDescriptions() {
             // Проверяем, что константа количества фич выставлена правильно.
             int maxFeatureIndex = -1;
@@ -2143,6 +2146,8 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeTrickLikelyhoodMean != 0 || WorldProperties.NewMemeTrickLikelyhoodStdDev != 0,
                 
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TrickEfficiency] = new FeatureDescription() {
@@ -2160,7 +2165,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageTrickEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeTrickEfficiencyMean != 0 || WorldProperties.NewMemeTrickEfficiencyStdDev != 0,
-                
+
+                Aggregate = AggregateAsSum,
+
                 BrainSizeBoost = BrainSizeToTrickEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingLikelyhood] = new FeatureDescription() {
@@ -2178,7 +2185,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageTeachingLikelyhood,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeTeachingLikelyhoodMean != 0 || WorldProperties.NewMemeTeachingLikelyhoodStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.TeachingEfficiency] = new FeatureDescription() {
@@ -2196,7 +2205,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageTeachingEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeTeachingEfficiencyMean != 0 || WorldProperties.NewMemeTeachingEfficiencyStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = BrainSizeToTeachingEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyLikelyhood] = new FeatureDescription() {
@@ -2214,7 +2225,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageStudyLikelyhood,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeStudyLikelyhoodMean != 0 || WorldProperties.NewMemeStudyLikelyhoodStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.StudyEfficiency] = new FeatureDescription() {
@@ -2232,7 +2245,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageStudyEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeStudyEfficiencyMean != 0 || WorldProperties.NewMemeStudyEfficiencyStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = BrainSizeToStudyEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood] = new FeatureDescription() {
@@ -2250,7 +2265,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageFreeRiderPunishmentLikelyhood,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderPunishmentLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean != 0 || WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.FreeRiderDeterminationEfficiency] = new FeatureDescription() {
@@ -2268,7 +2285,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageFreeRiderDeterminationEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderDeterminationEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean != 0 || WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = BrainSizeToFreeRiderDeterminationEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider] = new FeatureDescription() {
@@ -2286,7 +2305,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageLikelyhoodOfNotBeingAFreeRider,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevLikelyhoodOfNotBeingAFreeRider,
                 MemCanBeInvented = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean != 0 || WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.HuntingEfficiency] = new FeatureDescription() {
@@ -2304,7 +2325,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageHuntingEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevHuntingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeHuntingEfficiencyMean != 0 || WorldProperties.NewMemeHuntingEfficiencyStdDev != 0,
-                
+
+                Aggregate = AggregateAsSum,
+
                 BrainSizeBoost = BrainSizeToHuntingEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.HuntingBEfficiency] = new FeatureDescription()
@@ -2323,7 +2346,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageHuntingBEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevHuntingBEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeHuntingBEfficiencyMean != 0 || WorldProperties.NewMemeHuntingBEfficiencyStdDev != 0,
-                
+
+                Aggregate = AggregateAsSum,
+
                 BrainSizeBoost = BrainSizeToHuntingBEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.CooperationEfficiency] = new FeatureDescription() {
@@ -2341,7 +2366,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageCooperationEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevCooperationEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeCooperationEfficiencyMean != 0 || WorldProperties.NewMemeCooperationEfficiencyStdDev != 0,
-                
+
+                Aggregate = AggregateAsSum,
+
                 BrainSizeBoost = BrainSizeToCooperationEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.MemoryLimit] = new FeatureDescription() {
@@ -2359,7 +2386,9 @@ namespace TribeSim
                 MemePriceRandomMean = 0,
                 MemePriceRandomStdDev = 0,
                 MemCanBeInvented = false,
-                
+
+                Aggregate = AggregateAsSum,
+
                 BrainSizeBoost = BrainSizeToMemorySizeCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.Creativity] = new FeatureDescription() {
@@ -2377,7 +2406,9 @@ namespace TribeSim
                 MemePriceRandomMean = 0,
                 MemePriceRandomStdDev = 0,
                 MemCanBeInvented = false,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = BrainSizeToCreativityCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.UselessActionsLikelihood] = new FeatureDescription() {
@@ -2395,7 +2426,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageUseless,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevUseless,
                 MemCanBeInvented = WorldProperties.NewMemeUselessEfficiencyMean != 0 || WorldProperties.NewMemeUselessEfficiencyStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = 0,
             };
             FeatureDescriptions[(int)AvailableFeatures.AgeingRate] = new FeatureDescription() {
@@ -2413,7 +2446,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageAgeingRate,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevAgeingRate,
                 MemCanBeInvented = WorldProperties.NewMemeAgeingRateMean != 0 || WorldProperties.NewMemeAgeingRateStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = BrainSizeToAgeingRateCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.Sociability] = new FeatureDescription() {
@@ -2431,7 +2466,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageSociability,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevSociability,
                 MemCanBeInvented = WorldProperties.NewMemeSociabilityMean != 0 || WorldProperties.NewMemeSociabilityStdDev != 0,
-                
+
+                Aggregate = AggregateAsSum,
+
                 BrainSizeBoost = BrainSizeToSociabilityCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.ForagingEfficiency] = new FeatureDescription() {
@@ -2449,7 +2486,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageForagingEfficiency,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevForagingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeForagingEfficiencyMean != 0 || WorldProperties.NewMemeForagingEfficiencyStdDev != 0,
-                
+
+                Aggregate = AggregateAsSum,
+
                 BrainSizeBoost = BrainSizeToForagingEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.OrganizationAbility] = new FeatureDescription() {
@@ -2467,7 +2506,9 @@ namespace TribeSim
                 MemePriceRandomMean = WorldProperties.MemeCostRandomAverageOrganizationAbility,
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevOrganizationAbility,
                 MemCanBeInvented = WorldProperties.NewMemeOrganizationAbilityMean != 0 || WorldProperties.NewMemeOrganizationAbilityStdDev != 0,
-                
+
+                Aggregate = SupportFunctions.SumProbabilities,
+
                 BrainSizeBoost = BrainSizeToOrganizationAbilityCoefficient,
             };
             // Заранее отсортировать те мемы, которые могут быть изобретены
@@ -2549,6 +2590,8 @@ namespace TribeSim
         public double MemePriceRandomMean;
         public double MemePriceRandomStdDev;
         public bool MemCanBeInvented;
+
+        public Func<double, double, double> Aggregate;
 
         public double MemoryBoost;
         public double BrainSizeBoost;

@@ -138,6 +138,7 @@
     <Compile Include="FeatureSet.cs" />
     <Compile Include="GeneCode.cs" />
     <Compile Include="Meme.cs" />
+    <Compile Include="MemesSet.cs" />
     <Compile Include="NamesGenerator.cs" />
     <Compile Include="PleaseWaitWindow.xaml.cs">
       <DependentUpon>PleaseWaitWindow.xaml</DependentUpon>

@@ -16,15 +16,7 @@ namespace TribeSim
             return randNormal;
         }
 
-        public static double SumProbabilities(params double[] args) {
-            if (args.Count() == 0) return 0;
-            double retval = args[0];
-            for (int i = 1; i < args.Count(); i++) {
-                if (args[i] >= 1) return 1;
-                retval = retval + args[i] - retval * args[i];
-            }
-            return retval;
-        }
+        public static double SumProbabilities(double a, double b) => a + b - a * b;
 
         public static double MultilpyProbabilities(double probability, double multiplier) {
             if (probability >= 1) return 1;
@@ -55,23 +47,31 @@ namespace TribeSim
                 action(item);
         }
 
-        // Возвращаем позицию в которую вставлен элемент. Этот функционал нужен не везде, где применяется эта функция.
-        // Меняем принцип сортировки мемов, теперь они отсортированы по MemeId
-        public static int AddToSortedList(this List<Meme> target, Meme meme) {
-            int i = target.Count - 1;
-            if (i < 0 || meme.MemeId >= target[i].MemeId) {
-                target.Add(meme);
-                return target.Count - 1;
-            } else {
-                for (--i; i >= 0; --i)
-                    if (meme.MemeId > target[i].MemeId) {
-                        int position = i + 1;
-                        target.Insert(position, meme);
-                        return position;
-                    }
-                target.Insert(0, meme);
-                return 0;
+        public static bool FindIndexIntoSortedList(this List<Meme> target, Meme meme, out int index)
+        {
+            int memeId = meme.MemeId;
+            if (target.Count == 0) { index = 0; return false; }
+            int left = 0;
+            int targetMemeId = target[left].MemeId;
+            if (memeId < targetMemeId) { index = 0; return false; }
+            if (memeId == targetMemeId) { index = 0; return true; }
+            int right = target.Count - 1;
+            targetMemeId = target[right].MemeId;
+            if (memeId > targetMemeId) { index = right + 1; return false; }
+            if (memeId == targetMemeId) { index = right; return true; }
+            while (right - left > 1)
+            {
+                int center = (left + right) / 2;
+                targetMemeId = target[center].MemeId;
+                if (memeId == targetMemeId) { index = center; return true; }
+                else if (memeId < targetMemeId) {
+                    right = center;
+                } else {
+                    left = center;
+                }
             }
+            index = left + 1;
+            return false;
         }
 
         public static void ExcludeFromSortedList(this List<Meme> source, List<Meme> excludeList, List<Meme> target) {
@@ -92,9 +92,37 @@ namespace TribeSim
                     } // Теперь, когда сортировка идёт по MemeId ситуация когда несколько мемов могут иметь одинаковый признак сортировки невозможна и особый сложный код для обработки этого случая уже не нужен
                 }
             }
-            // Выход из цикла мог означать, что used ещё может и остались, а вот my точно кончились. Ну ил инаоборот, собственно
+            // Выход из цикла мог означать, что used ещё может и остались, а вот my точно кончились. Ну или наоборот, собственно
             for (; sourceIndex < source.Count; sourceIndex++)
                 target.Add(source[sourceIndex]);
+        }
+        
+        public static void ExcludeFromSortedList(this IEnumerable<Meme> source, IEnumerable<Meme> excludeList, List<Meme> target)
+        {
+            target.Clear();
+            var sourceMemes = source.GetEnumerator();
+            var excludedMemes = excludeList.GetEnumerator();
+            if (!sourceMemes.MoveNext())
+                return;
+            while(excludedMemes.MoveNext()) {
+                do {
+                    if (sourceMemes.Current.MemeId == excludedMemes.Current.MemeId) { // пропустить совпадающие элементы.
+                        if (!sourceMemes.MoveNext())
+                            return;
+                        break;
+                    } else if (sourceMemes.Current.MemeId > excludedMemes.Current.MemeId) {
+                        break;
+                    } else { // if (sourceMemes.Current.MemeId < excludedMemes.Current.MemeId)
+                        target.Add(sourceMemes.Current);
+                        if (!sourceMemes.MoveNext())
+                            return;
+                    }
+                } while (true);
+
+            }
+            do {
+                target.Add(sourceMemes.Current);
+            } while (sourceMemes.MoveNext());
         }
     }
 

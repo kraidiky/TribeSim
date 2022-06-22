@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -81,11 +80,9 @@ namespace TribeSim
             }
         }
 
-        private static Meme[] EmptyMemes = new Meme[0];
-        private List<Meme> memes = new List<Meme>();
+        private MemesSet memesSet = new MemesSet();
+        public double[] Features = new double[WorldProperties.FEATURES_COUNT];
         private int[] lastYearMemeWasUsed = new int[WorldProperties.FEATURES_COUNT];
-        private int[] memesByFeature = new int[WorldProperties.FEATURES_COUNT];
-        private double?[] memesEffect = new double?[WorldProperties.FEATURES_COUNT];
 
         public static double[] reproductionCostIncrease;
 
@@ -95,21 +92,14 @@ namespace TribeSim
         private double totalResourcesCollected;
 
         private void AddMeme(Meme newMeme) {
-            // memes у нас теперь будет отсортирован по возрастанию прайса мемов
-            memes.AddToSortedList(newMeme);
-
-            int feature = (int)newMeme.AffectedFeature;
-            MemorySizeRemaining -= newMeme.Price;
-            memesEffect[feature] = null;
-            memesByFeature[feature]++;
+            memesSet.Add(newMeme);
+            MemorySizeRemaining = MemorySizeTotal - memesSet.MemoryPrice;
+            CalculateFeature((int)newMeme.AffectedFeature);
         }
         private void RemoveMeme(Meme meme) {
-            int feature = (int)meme.AffectedFeature;
-            int index = memes.IndexOf(meme);
-            memes.RemoveAt(index);
-            memesEffect[feature] = null;
-            memesByFeature[feature]--;
-            MemorySizeRemaining += meme.Price;
+            memesSet.Remove(meme);
+            MemorySizeRemaining = MemorySizeTotal - memesSet.MemoryPrice;
+            CalculateFeature((int)meme.AffectedFeature);
         }
 
         private Tribesman(Random randomizer)
@@ -130,27 +120,28 @@ namespace TribeSim
             retval.yearBorn = World.Year;
             retval.resource = WorldProperties.StatringAmountOfResources;
             retval.BasicPriceToGetThisChild = retval.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
-            retval.MemorySizeRemaining = retval.MemorySizeTotal = retval.GetFeature(AvailableFeatures.MemoryLimit) + retval.GetMemorySizeBoost();            
+            retval.CalculateMemorySizeTotal();
+            retval.MemorySizeRemaining = retval.MemorySizeTotal;
+            retval.CalculateFeatures();
             return retval;
         }
 
-        private double GetMemorySizeBoost()
+        private void CalculateMemorySizeTotal()
         {
-            double boost = 0;
-            boost += this.GetFeature(AvailableFeatures.CooperationEfficiency) * WorldProperties.GeneticCooperationEfficiancyToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.Creativity) * WorldProperties.GeneticCreativityToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.FreeRiderDeterminationEfficiency) * WorldProperties.GeneticFreeRiderDeterminationEfficiencytoMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood) * WorldProperties.GeneticFreeRiderPunishmentLikelyhoodToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.HuntingEfficiency) * WorldProperties.GeneticHuntingEfficiencyToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.HuntingBEfficiency) * WorldProperties.GeneticHuntingBEfficiencyToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider) * WorldProperties.GeneticLikelyhoodOfNotBeingAFreeRiderToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.StudyEfficiency) * WorldProperties.GeneticStudyEfficiencyToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.StudyLikelyhood) * WorldProperties.GeneticStudyLikelyhoodToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.TeachingEfficiency) * WorldProperties.GeneticTeachingEfficiencyToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.TeachingLikelyhood) * WorldProperties.GeneticTeachingLikelyhoodToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.TrickEfficiency) * WorldProperties.GeneticTrickEfficiencyToMemoryRatio;
-            boost += this.GetFeature(AvailableFeatures.TrickLikelyhood) * WorldProperties.GeneticTrickLikelyhoodToMemoryRatio;
-            return boost;
+            this.MemorySizeTotal = genes[(int)AvailableFeatures.MemoryLimit];
+            MemorySizeTotal += genes[(int)AvailableFeatures.CooperationEfficiency] * WorldProperties.GeneticCooperationEfficiancyToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.Creativity] * WorldProperties.GeneticCreativityToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.FreeRiderDeterminationEfficiency] * WorldProperties.GeneticFreeRiderDeterminationEfficiencytoMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood] * WorldProperties.GeneticFreeRiderPunishmentLikelyhoodToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.HuntingEfficiency] * WorldProperties.GeneticHuntingEfficiencyToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.HuntingBEfficiency] * WorldProperties.GeneticHuntingBEfficiencyToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider] * WorldProperties.GeneticLikelyhoodOfNotBeingAFreeRiderToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.StudyEfficiency] * WorldProperties.GeneticStudyEfficiencyToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.StudyLikelyhood] * WorldProperties.GeneticStudyLikelyhoodToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.TeachingEfficiency] * WorldProperties.GeneticTeachingEfficiencyToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.TeachingLikelyhood] * WorldProperties.GeneticTeachingLikelyhoodToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.TrickEfficiency] * WorldProperties.GeneticTrickEfficiencyToMemoryRatio;
+            MemorySizeTotal += genes[(int)AvailableFeatures.TrickLikelyhood] * WorldProperties.GeneticTrickLikelyhoodToMemoryRatio;
         }
 
         public string GetPhenotypeString()
@@ -158,7 +149,7 @@ namespace TribeSim
             StringBuilder sb = new StringBuilder();
             foreach (AvailableFeatures af in Enum.GetValues(typeof(AvailableFeatures)))
             {
-                sb.AppendFormat("{0:f5}; ", GetFeature(af));
+                sb.AppendFormat("{0:f5}; ", Features[(int)af]);
             }
             sb.AppendFormat("{0:f5} ", MemorySizeRemaining);
             return sb.ToString();
@@ -175,46 +166,25 @@ namespace TribeSim
             return sb.ToString();
         }
 
-        public double GetFeature(AvailableFeatures af)
-        {
-            var effect = memesEffect[(int)af];
-            if (effect.HasValue) {
-                return effect.Value;
-            } else if (memesByFeature[(int)af] == 0) {
-                return genes[af];
-            } else {
-                var relevantMemes = memes.Where(assoc => assoc.AffectedFeature == af);
-                var retval = genes[af];
-                var description = WorldProperties.FeatureDescriptions[(int)af];        
-                if (af == AvailableFeatures.AgeingRate) { 
-                    // AR надо считать вообще по-другому! тут вероятностная алгебра не работает, потому что этот показатель в принципе не вероятность!
-                    // Надо следить за коммутативностью, сохраняя при этом значение выше нуля.
-                    // Может ответ в логарифмической шкале? Надо думать. Пока не придумалось ничего лучше, чем обрезать после вычислений. 
-                    // Это должно углубить потенциальную яму нулевого AR, но придумать что-то более элегантное мозгов пока не хватило.
-                    foreach (Meme meme in relevantMemes) {
-                        retval += meme.Efficiency - meme.Efficiency * retval;                        
-                    }
-                    if (retval<0) {
-                        retval = 0;
-                    }
-                } else {
-                    if (description.range == FeatureRange.ZeroToOne) { // 0..1 features.
-                        foreach (Meme meme in relevantMemes)
-                                retval += meme.Efficiency - meme.Efficiency * retval;                        
-                    } else { //0..infinity features.
-                        foreach (Meme meme in relevantMemes)
-                            retval += meme.Efficiency;
-                    }
-                }
-                memesEffect[(int)af] = retval;
-                return retval;
-            }
+
+        private void CalculateFeatures() {
+            for (int i = WorldProperties.FEATURES_COUNT - 1; i >= 0; i--)
+                CalculateFeature(i);
+        }
+        private void CalculateFeature(int feature) {
+            Features[feature] = WorldProperties.FeatureDescriptions[feature].Aggregate(genes[feature], memesSet.memesEffect[feature]);
+            if (feature == (int)AvailableFeatures.AgeingRate && Features[feature] < 0)
+                // AR надо считать вообще по-другому! тут вероятностная алгебра не работает, потому что этот показатель в принципе не вероятность!
+                // Надо следить за коммутативностью, сохраняя при этом значение выше нуля.
+                // Может ответ в логарифмической шкале? Надо думать. Пока не придумалось ничего лучше, чем обрезать после вычислений. 
+                // Это должно углубить потенциальную яму нулевого AR, но придумать что-то более элегантное мозгов пока не хватило.
+                Features[feature] = 0;
         }
 
         public void ConsumeLifeSupport() {
             double lifeSupportCosts = WorldProperties.LifeSupportCosts;
             if (UseGompertzAgeing) {
-                double ARdifference = GetFeature(AvailableFeatures.AgeingRate) - WorldProperties.BaseGompertzAgeingRate;
+                double ARdifference = Features[(int)AvailableFeatures.AgeingRate] - WorldProperties.BaseGompertzAgeingRate;
                 if (ARdifference != 0) {
                     if (ARdifference < 0) {
                         if (WorldProperties.BaseGompertzAgeingRateLifeCostIncrease != 0) 
@@ -248,7 +218,7 @@ namespace TribeSim
             if (WorldProperties.MemesWhichCanBeInvented.Length == 0)
                 return;
 
-            double creativity = this.GetFeature(AvailableFeatures.Creativity);
+            double creativity = Features[(int)AvailableFeatures.Creativity];
             if (randomizer.Chance(creativity))
             {
                 AvailableFeatures af = (AvailableFeatures)(WorldProperties.MemesWhichCanBeInvented[randomizer.Next(WorldProperties.MemesWhichCanBeInvented.Length)]);
@@ -269,7 +239,7 @@ namespace TribeSim
         {
             createdMeme = Meme.InventNewMeme(randomizer, featureTheMemeWillAffect);
             StatisticsCollector.ReportCountEvent(this.MyTribeName, "Meme Invented");
-            if (memes.Contains(createdMeme, Meme.EqualityComparer.Singleton)) {
+            if (memesSet.memes.Contains(createdMeme, Meme.EqualityComparer.Singleton)) {
                 // Tribesman already known meme with the same Id.
                 if (WorldProperties.CollectMemesSuccess > .5f && randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
                     createdMeme.ReportDetaliedStatistic();
@@ -288,28 +258,15 @@ namespace TribeSim
         public void ForgetUnusedMemes()
         {
             int year = World.Year;
-            for (int feature = 0; feature < memesByFeature.Length; feature++)
+            for (int feature = 0; feature < memesSet.memesByFeature.Length; feature++) // Из коробки оптимизатор прохода по массиву жмёт хорошо
             {
-                if (memesByFeature[feature] > 0 && year - lastYearMemeWasUsed[feature] > WorldProperties.DontForgetMemesThatWereUsedDuringThisPeriod)
+                int memesCount = memesSet.memesByFeature[feature];
+                if (memesCount > 0 && year - lastYearMemeWasUsed[feature] > WorldProperties.DontForgetMemesThatWereUsedDuringThisPeriod)
                 {
-                    for (int memeIndex = memesByFeature[feature] - 1; memeIndex >= 0; memeIndex--)
+                    for (int memeIndex = memesCount - 1; memeIndex >= 0; memeIndex--)
                         if (randomizer.Chance(WorldProperties.ChanceToForgetTheUnusedMeme))
                         {
-                            Meme meme = null;
-                            for (int i = 0, j = memeIndex; i < memes.Count; i++)
-                                if ((int)memes[i].AffectedFeature == feature) // Можно написать более кратко или вообще на линке, но мне же потом это читать при следующем рефакторинге...
-                                {
-                                    if (j == 0)
-                                    {
-                                        meme = memes[i];
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        --j;
-                                    }
-                                }
-
+                            Meme meme = memesSet.GetMemeByFeature(feature, memeIndex);
                             meme.ReportForgotten(this);
                             storyOfLife?.AppendFormat("Forgotten how {1} ({0})", meme.SignatureString,
                                 meme.ActionDescription).AppendLine();
@@ -331,16 +288,16 @@ namespace TribeSim
             }
         }
 
-        public IReadOnlyList<Meme> knownMemes => memes;
+        public IReadOnlyList<Meme> knownMemes => memesSet.memes;
 
         public bool TryToTeach(Tribesman student, bool isCulturalExchange=false)
         {
-            if (memes.Count > 0 && randomizer.Chance(this.GetFeature(AvailableFeatures.TeachingLikelyhood)))
+            if (memesSet.memes.Count > 0 && randomizer.Chance(Features[(int)AvailableFeatures.TeachingLikelyhood]))
             {
                 if (resource >= WorldProperties.TeachingCosts || randomizer.Chance(WorldProperties.ChanceToTeachIfUnsufficienResources))
                 {
                     resource -= WorldProperties.TeachingCosts;
-                    List<Meme> memeAssoc = memes.Where(meme => !student.knownMemes.Contains(meme, Meme.EqualityComparer.Singleton)).ToList();
+                    List<Meme> memeAssoc = memesSet.memes.Where(meme => !student.knownMemes.Contains(meme, Meme.EqualityComparer.Singleton)).ToList();
                     if (memeAssoc.Count == 0)
                     {
                         storyOfLife?.AppendFormat("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts,isCulturalExchange?"Cultural Exchange! ":"").AppendLine();
@@ -349,8 +306,8 @@ namespace TribeSim
                     Meme memeToTeach = memeAssoc[randomizer.Next(memeAssoc.Count)];
                     double teachingSuccessChance = SupportFunctions.MultilpyProbabilities(
                         SupportFunctions.SumProbabilities(
-                            this.GetFeature(AvailableFeatures.TeachingEfficiency),
-                            student.GetFeature(AvailableFeatures.StudyEfficiency)),
+                            Features[(int)AvailableFeatures.TeachingEfficiency],
+                            student.Features[(int)AvailableFeatures.StudyEfficiency]),
                         Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
                     if (randomizer.Chance(teachingSuccessChance))
                     {
@@ -393,7 +350,7 @@ namespace TribeSim
             if (!description.MemCanBeInvented)
                 return;
 
-            double C = GetFeature(AvailableFeatures.Creativity);
+            double C = Features[(int)AvailableFeatures.Creativity];
             double M = WorldProperties.ChanceToInventNewMemeWhileUsingItModifier;
             double T = WorldProperties.ChanceToInventNewMemeWhileUsingItThreshold;
             double chanceToInventNewMeme = T + M * C - T * M * C;
@@ -413,9 +370,9 @@ namespace TribeSim
                 }
             }
             lastYearMemeWasUsed[(int)usedFeature] = World.Year; // Переделываем на группы чтобы 
-            for (int i = 0; i < memes.Count; i++)
-                if (memes[i].AffectedFeature == usedFeature)
-                    myTribe.MemeUsed(this, memes[i]); // Тот, кто не в племени не может пользовать мемы.
+            for (int i = 0; i < memesSet.memes.Count; i++)
+                if (memesSet.memes[i].AffectedFeature == usedFeature)
+                    myTribe.MemeUsed(this, memesSet.memes[i]); // Тот, кто не в племени не может пользовать мемы.
         }
 
         private void LearnNewMemeFrom(Meme meme, Tribesman teacher)
@@ -435,10 +392,10 @@ namespace TribeSim
 
         public void DetermineAndPunishAFreeRider(List<Tribesman> members, List<Tribesman> freeRidersList)
         {
-            if (randomizer.Chance(GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood)))
+            if (randomizer.Chance(Features[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood]))
             {
                 resource -= WorldProperties.FreeRiderPunishmentCosts;
-                if (randomizer.Chance(GetFeature(AvailableFeatures.FreeRiderDeterminationEfficiency)))
+                if (randomizer.Chance(Features[(int)AvailableFeatures.FreeRiderDeterminationEfficiency]))
                 {
                     // Punish a free rider
 
@@ -525,11 +482,11 @@ namespace TribeSim
                 return 0;
             }
             resource -= huntingCosts;
-            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", GetFeature(huntingEfficiencyFeature), GetFeature(AvailableFeatures.CooperationEfficiency), huntingCosts, resource).AppendLine();
+            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", Features[(int)huntingEfficiencyFeature], Features[(int)AvailableFeatures.CooperationEfficiency], huntingCosts, resource).AppendLine();
             UseMemeGroup(huntingEfficiencyFeature, "hunting");
             UseMemeGroup(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, "hunting");
-            UseMemeGroup(AvailableFeatures.CooperationEfficiency, "hunting");            
-            return GetFeature(huntingEfficiencyFeature);            
+            UseMemeGroup(AvailableFeatures.CooperationEfficiency, "hunting");
+            return Features[(int)huntingEfficiencyFeature];
         }
 
         public void SkipHunting()
@@ -540,9 +497,9 @@ namespace TribeSim
         public double TellHowMuchDoYouWant(double resourcesReceivedPerGroup)
         {
             double requestedShare = 1;
-            if (randomizer.Chance(GetFeature(AvailableFeatures.TrickLikelyhood)))
+            if (randomizer.Chance(Features[(int)AvailableFeatures.TrickLikelyhood]))
             {
-                requestedShare += GetFeature(AvailableFeatures.TrickEfficiency);
+                requestedShare += Features[(int)AvailableFeatures.TrickEfficiency];
                 storyOfLife?.AppendFormat("Group returned from the hunt with {0:f0} resources. He decided to play a trick and asked to get {1:f1}% more then the rest.", resourcesReceivedPerGroup, (requestedShare-1)*100).AppendLine();
                 UseMemeGroup(AvailableFeatures.TrickEfficiency, "sharing resources");
                 UseMemeGroup(AvailableFeatures.TrickLikelyhood, "sharing resources");
@@ -573,7 +530,7 @@ namespace TribeSim
         {
             int uselessActionsMade = 0;
             double resourcesWasted = 0;
-            var chance = GetFeature(AvailableFeatures.UselessActionsLikelihood);
+            var chance = Features[(int)AvailableFeatures.UselessActionsLikelihood];
             if (chance >= 0.999 && WorldProperties.AllowRepetitiveUselessActions>1)
             {
                 resource = 0;
@@ -590,10 +547,9 @@ namespace TribeSim
             {
                 resource -= resourcesWasted;
 
-                
-                if (memesByFeature[(int)AvailableFeatures.UselessActionsLikelihood] > 0) {
+                if (Features[(int)AvailableFeatures.UselessActionsLikelihood] > 0) {
                     if (storyOfLife != null) {
-                        var relevantMemes = memes.Where(meme => (int)meme.AffectedFeature == (int)AvailableFeatures.UselessActionsLikelihood);
+                        var relevantMemes = memesSet.memes.Where(meme => (int)meme.AffectedFeature == (int)AvailableFeatures.UselessActionsLikelihood);
                         Meme randomKnownUselessMeme = relevantMemes.Skip(randomizer.Next(relevantMemes.Count())).First(); // Всё это медленно и печально, но оно нужно только для логов, так что сойдёт. 
                         storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
                     }
@@ -616,10 +572,10 @@ namespace TribeSim
 
         public void StudyOneOrManyOfTheMemesUsedThisTurn(List<Meme> memesUsedThisYear, List<Meme> memesAvailableForStudy)
         {
-            memesUsedThisYear.ExcludeFromSortedList(memes, memesAvailableForStudy);
+            memesUsedThisYear.ExcludeFromSortedList(memesSet.memes, memesAvailableForStudy);
 
             /// Всё что может быть выучено отсортировали, можно начинать.
-            while (memesAvailableForStudy.Count > 0 && randomizer.Chance(GetFeature(AvailableFeatures.StudyLikelyhood))) // Первый шаг оптимизации: Простое изменение порядка следования проверок сокращает время с 24 до 17
+            while (memesAvailableForStudy.Count > 0 && randomizer.Chance(Features[(int)AvailableFeatures.StudyLikelyhood])) // Первый шаг оптимизации: Простое изменение порядка следования проверок сокращает время с 24 до 17
             {
                 if (resource <= WorldProperties.StudyCosts)
                 {
@@ -631,7 +587,7 @@ namespace TribeSim
                 resource -= WorldProperties.StudyCosts;
                 if (randomizer.Chance(
                     SupportFunctions.MultilpyProbabilities(
-                        GetFeature(AvailableFeatures.StudyEfficiency),
+                        Features[(int)AvailableFeatures.StudyEfficiency],
                         Math.Pow(1d / memeToStudy.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient))))
                 {
                     if (MemorySizeRemaining > memeToStudy.Price)
@@ -670,7 +626,7 @@ namespace TribeSim
                 if (age <= WorldProperties.GompertzAgeingAgeAtWhichAgeingStarts) {
                     chanceOfDeathOfOldAge = WorldProperties.GompertzAgeingBasicMortalityRate;
                 } else {
-                    chanceOfDeathOfOldAge = WorldProperties.GompertzAgeingBasicMortalityRate * Math.Exp(GetFeature(AvailableFeatures.AgeingRate)*(age - WorldProperties.GompertzAgeingAgeAtWhichAgeingStarts));
+                    chanceOfDeathOfOldAge = WorldProperties.GompertzAgeingBasicMortalityRate * Math.Exp(Features[(int)AvailableFeatures.AgeingRate]*(age - WorldProperties.GompertzAgeingAgeAtWhichAgeingStarts));
                     double mortalityPlateau = 1;
                     if (WorldProperties.GompertzAgeingMortalityPlateau < WorldProperties.GompertzAgeingBasicMortalityRate || WorldProperties.GompertzAgeingMortalityPlateau > 1 ) {
                         mortalityPlateau = 1;
@@ -711,8 +667,8 @@ namespace TribeSim
             StatisticsCollector.ReportAverageEvent(MyTribeName, "Longevity", age);
             double totalBrainUsage = 0;
             double totalBrainSize = 0;
-            for (int i = 0; i < memes.Count; i++) {
-                totalBrainUsage += memes[i].Price;
+            for (int i = 0; i < memesSet.memes.Count; i++) {
+                totalBrainUsage += memesSet.memes[i].Price;
             }
             totalBrainSize = totalBrainUsage + MemorySizeRemaining;
             if (totalBrainSize > 0)
@@ -742,7 +698,7 @@ namespace TribeSim
                     {
                         individualSucess.phenotype = FeaturesFloatArray.Get();
                         for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
-                            individualSucess.phenotype[i] = (float)GetFeature((AvailableFeatures)i);
+                            individualSucess.phenotype[i] = (float)Features[i];
                     }
                     StatisticsCollector.ReportEvent(individualSucess);
                 }
@@ -810,12 +766,9 @@ namespace TribeSim
             }
         }
 
-        private void ForgetAllMemes()
-        {
-            for (int i = memes.Count - 1; i >= 0; i--) {
-                memes[i].ReportForgotten(this);                
-                RemoveMeme(memes[i]);
-            }
+        private void ForgetAllMemes() {
+            for (int i = memesSet.memes.Count - 1; i >= 0; i--)
+                memesSet.memes[i].ReportForgotten(this);                
         }
 
         public void DieOfLonliness()
@@ -863,7 +816,9 @@ namespace TribeSim
                 child.ReportPhenotypeChange();
                 child.myTribe = PartnerA.myTribe;
                 child.storyOfLife?.AppendFormat("Was born from {0} and {1}. His brain size is {2:f1}. His parents spent {3:f1} resources to raise him.", PartnerA.Name, PartnerB.Name, child.BrainSize, priceToGetThisChildBrainSizePart).AppendLine();
-                child.MemorySizeRemaining = child.MemorySizeTotal = child.GetFeature(AvailableFeatures.MemoryLimit);
+                child.CalculateMemorySizeTotal();
+                child.MemorySizeRemaining = child.MemorySizeTotal;
+                child.CalculateFeatures();
                 totalParentsResource -= priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart + priceDueToAge;
                 child.resource =  WorldProperties.ChildStartingResourceSpendingsReceivedCoefficient * priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
                 child.storyOfLife?.AppendFormat("Parents have given {0:f1} resource as a birthday gift.", child.resource).AppendLine();   
@@ -883,9 +838,9 @@ namespace TribeSim
 
         private void TeachChild(Tribesman child, List<Meme> cachedListForTeaching)
         {
-            if (memes.Count > 0)
+            if (memesSet.memes.Count > 0)
             {
-                memes.ExcludeFromSortedList(child.memes, cachedListForTeaching);
+                memesSet.memes.ExcludeFromSortedList(child.memesSet.memes, cachedListForTeaching);
                 for (int i = 0; i < WorldProperties.FreeTeachingRoundsForParents; i++)
                 {
                     if (cachedListForTeaching.Count == 0)
@@ -898,8 +853,8 @@ namespace TribeSim
                     // А вот это вообще очень опасный копипейст, если я правильно понимаю.
                     double teachingSuccessChance = SupportFunctions.MultilpyProbabilities(
                         SupportFunctions.SumProbabilities(
-                            this.GetFeature(AvailableFeatures.TeachingEfficiency),
-                            child.GetFeature(AvailableFeatures.StudyEfficiency)),
+                            Features[(int)AvailableFeatures.TeachingEfficiency],
+                            child.Features[(int)AvailableFeatures.StudyEfficiency]),
                         Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
                     if (randomizer.Chance(teachingSuccessChance))
                     {
@@ -963,13 +918,13 @@ namespace TribeSim
 
         public void ReportEndOfYearStatistics()
         {
-            StatisticsCollector.ReportAverageEvent(MyTribeName, "Average memes known", memes.Count);
+            StatisticsCollector.ReportAverageEvent(MyTribeName, "Average memes known", memesSet.memes.Count);
             StatisticsCollector.ReportAverageEvent(MyTribeName, "Average resources posessed", resource);
             if (WorldProperties.CollectPhenotypeValues > 0.5)
             {
                 foreach (AvailableFeatures af in Enum.GetValues(typeof(AvailableFeatures)))
                 {
-                    StatisticsCollector.ReportAverageEvent(MyTribeName, string.Concat("Avg. phenotype value (", af.GetDescription(), ")"), GetFeature(af));
+                    StatisticsCollector.ReportAverageEvent(MyTribeName, string.Concat("Avg. phenotype value (", af.GetDescription(), ")"), Features[(int)af]);
                 }
             }
             if (WorldProperties.CollectGenotypeValues > 0.5)
@@ -986,8 +941,8 @@ namespace TribeSim
                 var brainUsages = FeatureSet.Blank();
                 var memesCount = FeatureSet.Blank();
                 var memesEffect = FeatureSet.Blank();
-                for (int i = 0; i < memes.Count; i++) {
-                    var meme = memes[i];
+                for (int i = 0; i < memesSet.memes.Count; i++) {
+                    var meme = memesSet.memes[i];
                     totalBrainUsage += meme.Price;
                     brainUsages[(int)meme.AffectedFeature] += meme.Price;
                     memesCount[(int)meme.AffectedFeature]++;
@@ -1010,3 +965,4 @@ namespace TribeSim
         }
     }
 }
+

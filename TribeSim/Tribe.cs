@@ -1,6 +1,4 @@
-﻿using Microsoft.Research.DynamicDataDisplay.Common;
-using System;
-using System.CodeDom;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -107,8 +105,10 @@ namespace TribeSim
 
         public void MemeUsed(Tribesman member, Meme e)
         {
-            if (memesUsedThisYearHash.Add(e.MemeId))
-                memesUsedThisYear.AddToSortedList(e);
+            if (memesUsedThisYearHash.Add(e.MemeId)) {
+                memesUsedThisYear.FindIndexIntoSortedList(e, out var index);
+                memesUsedThisYear.Insert(index, e);
+            }
         }
 
         public void ConsumeLifeSupport()
@@ -168,7 +168,7 @@ namespace TribeSim
             _punishers.Clear();
             for (int i = 0; i < members.Count; i++) {
                 var man = members[i];
-                var chance =  man.GetFeature(AvailableFeatures.FreeRiderPunishmentLikelyhood);
+                var chance =  man.Features[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood];
                 if (randomizer.Chance(chance))
                     _punishers.Add(man);
             }
@@ -176,7 +176,7 @@ namespace TribeSim
                 _freeraidersFeatures.Clear();
                 double min = double.MaxValue, max = double.MinValue;
                 for (int i = 0; i < members.Count; i++) {
-                    double feature = members[i].GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
+                    double feature = members[i].Features[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider];
                     min = Math.Min(min, feature);
                     max = Math.Max(max, feature);
                     _freeraidersFeatures.Add(feature);
@@ -200,14 +200,14 @@ namespace TribeSim
             int numHunters = 0;
             foreach (Tribesman man in members)
             {
-                var chance = man.GetFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider);
+                var chance = man.Features[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider];
                 if (randomizer.Chance(chance))
                 {
                     double huntingEfforts = man.GoHunting(huntingEfficiencyFeature);
                     if (huntingEfforts > 0)
                     {
                         sumHuntingPowers += huntingEfforts;
-                        cooperationCoefficient += man.GetFeature(AvailableFeatures.CooperationEfficiency);
+                        cooperationCoefficient += man.Features[(int)AvailableFeatures.CooperationEfficiency];
                         numHunters++;
                     }
                 }
@@ -237,16 +237,14 @@ namespace TribeSim
         {
             foragingEffort = 0;
             foreach (var member in members)
-                foragingEffort += member.GetFeature(AvailableFeatures.ForagingEfficiency);
+                foragingEffort += member.Features[(int)AvailableFeatures.ForagingEfficiency];
         }
 
         public void ShareForagingResources(double resourcesPerForagingEfficiency)
         {
             foreach (var member in members)
-                member.RecieveResourcesShare(resourcesPerForagingEfficiency * member.GetFeature(AvailableFeatures.ForagingEfficiency));
+                member.RecieveResourcesShare(resourcesPerForagingEfficiency * member.Features[(int)AvailableFeatures.ForagingEfficiency]);
         }
-        
-        
 
         private double[] takenShares = new double[0];
         public void ReceiveAndShareResource(double resourcesReceivedPerGroup)
@@ -363,7 +361,7 @@ namespace TribeSim
             {
                 double sociability = 0;
                 foreach (var member in members)
-                    sociability += member.GetFeature(AvailableFeatures.Sociability);
+                    sociability += member.Features[(int)AvailableFeatures.Sociability];
                 if (members.Count * members.Count <= sociability)
                 {
                     return null;
