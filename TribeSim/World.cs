@@ -158,6 +158,7 @@ namespace TribeSim
 
         private static Stopwatch stopwatch;
         public static TimeSpan spendedTime;
+        public const int MeasurementTime = 11000;
 
         public static void SimulateYear(Dispatcher d)
         {
@@ -165,7 +166,7 @@ namespace TribeSim
 
             if (Year == 1000) // Первые 1000 циклов пропускаем. Там всякое медленное делается.
                 stopwatch = Stopwatch.StartNew();
-            if (Year % 11000 == 0) {
+            if (Year % MeasurementTime == 0) {
                 stopwatch.Stop();
                 spendedTime = stopwatch.Elapsed;
             }
@@ -208,7 +209,7 @@ namespace TribeSim
                 }));
             }
 
-            if (Year % 11000 == 1) {
+            if (Year % MeasurementTime == 1) {
                 Console.WriteLine($"========== year:{Year} ==========");
                 for (int i = 0; i < tribes.Count; i++)
                     Console.WriteLine($"tribe[{tribes[i].seed}] rnd:{tribes[i].randomizer.Next(10000)}");

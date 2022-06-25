@@ -29,6 +29,7 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -135,6 +136,7 @@
       <DependentUpon>ConsolidateFiles.xaml</DependentUpon>
     </Compile>
     <Compile Include="Engine.cs" />
+    <Compile Include="Features.cs" />
     <Compile Include="FeatureSet.cs" />
     <Compile Include="GeneCode.cs" />
     <Compile Include="Meme.cs" />

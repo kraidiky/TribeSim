@@ -93,7 +93,6 @@ namespace TribeSim
 
         public void MemberDie(Tribesman member)
         {
-            member.Release();
             MemberLeaves(member);
         }
 
@@ -168,7 +167,7 @@ namespace TribeSim
             _punishers.Clear();
             for (int i = 0; i < members.Count; i++) {
                 var man = members[i];
-                var chance =  man.Features[(int)AvailableFeatures.FreeRiderPunishmentLikelyhood];
+                var chance =  man.Phenotype.FreeRiderPunishmentLikelyhood;
                 if (randomizer.Chance(chance))
                     _punishers.Add(man);
             }
@@ -176,7 +175,7 @@ namespace TribeSim
                 _freeraidersFeatures.Clear();
                 double min = double.MaxValue, max = double.MinValue;
                 for (int i = 0; i < members.Count; i++) {
-                    double feature = members[i].Features[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider];
+                    double feature = members[i].Phenotype.LikelyhoodOfNotBeingAFreeRider;
                     min = Math.Min(min, feature);
                     max = Math.Max(max, feature);
                     _freeraidersFeatures.Add(feature);
@@ -200,14 +199,14 @@ namespace TribeSim
             int numHunters = 0;
             foreach (Tribesman man in members)
             {
-                var chance = man.Features[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider];
+                var chance = man.Phenotype.LikelyhoodOfNotBeingAFreeRider;
                 if (randomizer.Chance(chance))
                 {
                     double huntingEfforts = man.GoHunting(huntingEfficiencyFeature);
                     if (huntingEfforts > 0)
                     {
                         sumHuntingPowers += huntingEfforts;
-                        cooperationCoefficient += man.Features[(int)AvailableFeatures.CooperationEfficiency];
+                        cooperationCoefficient += man.Phenotype.CooperationEfficiency;
                         numHunters++;
                     }
                 }
@@ -237,13 +236,13 @@ namespace TribeSim
         {
             foragingEffort = 0;
             foreach (var member in members)
-                foragingEffort += member.Features[(int)AvailableFeatures.ForagingEfficiency];
+                foragingEffort += member.Phenotype.ForagingEfficiency;
         }
 
         public void ShareForagingResources(double resourcesPerForagingEfficiency)
         {
             foreach (var member in members)
-                member.RecieveResourcesShare(resourcesPerForagingEfficiency * member.Features[(int)AvailableFeatures.ForagingEfficiency]);
+                member.RecieveResourcesShare(resourcesPerForagingEfficiency * member.Phenotype.ForagingEfficiency);
         }
 
         private double[] takenShares = new double[0];
@@ -361,7 +360,7 @@ namespace TribeSim
             {
                 double sociability = 0;
                 foreach (var member in members)
-                    sociability += member.Features[(int)AvailableFeatures.Sociability];
+                    sociability += member.Phenotype.Sociability;
                 if (members.Count * members.Count <= sociability)
                 {
                     return null;

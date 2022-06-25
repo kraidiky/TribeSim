@@ -8,7 +8,7 @@ namespace TribeSim
 
         public List<Meme> memes = new List<Meme>();
         public int[] memesByFeature = new int[WorldProperties.FEATURES_COUNT];
-        public double[] memesEffect = new double[WorldProperties.FEATURES_COUNT];
+        public Features memesEffect = default;
 
         public bool Add(Meme meme)
         {
