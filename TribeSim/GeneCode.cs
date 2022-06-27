@@ -23,8 +23,8 @@ namespace TribeSim
             Features mother = default;
             Features father = default;
 
-            int randomMother = randomizer.Next(1 << WorldProperties.FEATURES_COUNT); // Избавимся от Flip который пустая трата ресурсов в данном месте.
-            int randomFather = randomizer.Next(1 << WorldProperties.FEATURES_COUNT); // Рандомы по отдельности, потому что, внезапно, фич стало 16 и их количество перестало в int помещаться.
+            int randomMother = randomizer.Next(1 << Features.Length); // Избавимся от Flip который пустая трата ресурсов в данном месте.
+            int randomFather = randomizer.Next(1 << Features.Length); // Рандомы по отдельности, потому что, внезапно, фич стало 16 и их количество перестало в int помещаться.
 
             for (int feature = 0; feature < Features.Length; feature++)
             {

@@ -30,6 +30,7 @@
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -141,6 +142,7 @@
     <Compile Include="GeneCode.cs" />
     <Compile Include="Meme.cs" />
     <Compile Include="MemesSet.cs" />
+    <Compile Include="MemesSetWithCounting.cs" />
     <Compile Include="NamesGenerator.cs" />
     <Compile Include="PleaseWaitWindow.xaml.cs">
       <DependentUpon>PleaseWaitWindow.xaml</DependentUpon>

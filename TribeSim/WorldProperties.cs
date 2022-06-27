@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Office.Interop.Excel;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -180,6 +181,7 @@ namespace TribeSim
         private static double chancesToWriteALog;
         private static double chancesThatMemeWillWriteALog;
         private static double chancesThatTribeWillWriteALog;
+        private static double collectGlobalOnly;
         private static double collectPhenotypeValues;
         private static double collectGenotypeValues;
         private static double collectIndividualPhenotypeValues;
@@ -890,6 +892,13 @@ namespace TribeSim
         {
             get { return WorldProperties.chancesThatTribeWillWriteALog; }
             set { WorldProperties.chancesThatTribeWillWriteALog = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Collect Global Only", group = "Program settings", description = "Didn't collect Tribes statistic for al tribes except Global. [0, 1]")]
+        public static double CollectGlobalOnly
+        {
+            get { return WorldProperties.collectGlobalOnly; }
+            set { WorldProperties.collectGlobalOnly = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Tribesman diary chance", group = "Program settings", description = "Chances that a tribesman will keep the diary. 0 - no one will, 1 - everyone will. A tradeoff between speed and having a full picture. [0, 1]")]
@@ -2114,8 +2123,6 @@ namespace TribeSim
         #endregion
 
         #region Structured property description
-        /// <summary> Количество фич. Эту цифру можно рассчитывать, и это будет надёжнее, но чуть-чуть медленнее. Поэтому вместо того чтобы её вычислять мы будем её проверять. </summary>
-        public const int FEATURES_COUNT = 19;
         public static FeatureDescription[] FeatureDescriptions;
         public static int[] MemesWhichCanBeInvented;
 
@@ -2126,10 +2133,10 @@ namespace TribeSim
             int maxFeatureIndex = -1;
             foreach (AvailableFeatures feature in Enum.GetValues(typeof(AvailableFeatures)))
                 maxFeatureIndex = Math.Max(maxFeatureIndex, (int)feature);
-            if (maxFeatureIndex + 1 != WorldProperties.FEATURES_COUNT)
-                throw new Exception("Please fix WorldProperties.FEATURES_COUNT");
+            if (maxFeatureIndex + 1 != Features.Length)
+                throw new Exception("Please fix Features.Length");
 
-            FeatureDescriptions = new FeatureDescription[WorldProperties.FEATURES_COUNT];
+            FeatureDescriptions = new FeatureDescription[Features.Length];
             FeatureDescriptions[(int)AvailableFeatures.TrickLikelyhood] = new FeatureDescription() {
                 range = FeatureRange.ZeroToOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesTrickLikelyhoodMean,

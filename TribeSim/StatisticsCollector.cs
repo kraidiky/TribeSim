@@ -21,9 +21,12 @@ namespace TribeSim
 
         public static void ReportCountEvent(string tribeName, string eventName)
         {
-            if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
-                tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
-            dataset.ReportCountEvent(eventName);
+            if (WorldProperties.CollectGlobalOnly == 0)
+            {
+                if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
+                    tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
+                dataset.ReportCountEvent(eventName);
+            }
             ReportGlobalCountEvent(eventName);
         }
         public static void ReportGlobalCountEvent(string eventName) {
@@ -35,9 +38,12 @@ namespace TribeSim
         public static void ReportSumEvent(string tribeName, string eventName, double dValue)
         {
             float value = (float)dValue;
-            if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
-                tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
-            dataset.ReportSumEvent(eventName, value);
+            if (WorldProperties.CollectGlobalOnly == 0)
+            {
+                if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
+                    tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
+                dataset.ReportSumEvent(eventName, value);
+            }
             ReportGlobalSumEvent(eventName, value);
         }
         public static void ReportGlobalSumEvent(string eventName, double dValue) {
@@ -49,9 +55,12 @@ namespace TribeSim
         public static void ReportAverageEvent(string tribeName, string eventName, double dValue)
         {
             float value = (float)dValue;
-            if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
-                tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
-            dataset.ReportAverageEvent(eventName, value);
+            if (WorldProperties.CollectGlobalOnly == 0)
+            {
+                if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
+                    tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
+                dataset.ReportAverageEvent(eventName, value);
+            }
             ReportGlobalAverageEvent(eventName, value);
         }
         public static void ReportGlobalAverageEvent(string eventName, double dValue) {

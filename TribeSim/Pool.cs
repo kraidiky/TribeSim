@@ -91,14 +91,14 @@ namespace TribeSim
         static FeaturesFloatArray() {
             _pool.SetSettings(
                 20*1024,
-                arr => Array.Clear(arr, 0, WorldProperties.FEATURES_COUNT),
-                () => new float[WorldProperties.FEATURES_COUNT]);
+                arr => Array.Clear(arr, 0, Features.Length),
+                () => new float[Features.Length]);
         }
         public static float[] Get() => _pool.Get();
         public static void ReleaseFeatures(this float[] arr)
         {
-            if (arr.Length != WorldProperties.FEATURES_COUNT)
-                throw new ArgumentException($"Wrong Size! Must be {WorldProperties.FEATURES_COUNT}");
+            if (arr.Length != Features.Length)
+                throw new ArgumentException($"Wrong Size! Must be {Features.Length}");
             _pool.Release(arr);
         }
     }
@@ -110,14 +110,14 @@ namespace TribeSim
         {
             _pool.SetSettings(
                 20*1024,
-                arr => Array.Clear(arr, 0, WorldProperties.FEATURES_COUNT),
-                () => new double[WorldProperties.FEATURES_COUNT]);
+                arr => Array.Clear(arr, 0, Features.Length),
+                () => new double[Features.Length]);
         }
         public static double[] Get() => _pool.Get();
         public static void ReleaseFeatures(this double[] arr)
         {
-            if (arr.Length != WorldProperties.FEATURES_COUNT)
-                throw new ArgumentException($"Wrong Size! Must be {WorldProperties.FEATURES_COUNT}");
+            if (arr.Length != Features.Length)
+                throw new ArgumentException($"Wrong Size! Must be {Features.Length}");
             _pool.Release(arr);
         }
     }

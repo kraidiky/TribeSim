@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+п»їusing System.Collections.Generic;
 
 namespace TribeSim
 {
@@ -7,49 +7,50 @@ namespace TribeSim
         public double MemoryPrice{ get; private set; }
 
         public List<Meme> memes = new List<Meme>();
-        public int[] memesByFeature = new int[WorldProperties.FEATURES_COUNT];
-        public Features memesEffect = default;
+        public int[] memesByFeature = new int[Features.Length];
+        public Features MemesEffect = default;
 
-        public bool Add(Meme meme)
+        public bool Add(Meme meme, out int index)
         {
-            // memes у нас теперь будет отсортирован по возрастанию прайса мемов
-            if (memes.FindIndexIntoSortedList(meme, out var index))
+            // memes Сѓ РЅР°СЃ С‚РµРїРµСЂСЊ Р±СѓРґРµС‚ РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅ РїРѕ РІРѕР·СЂР°СЃС‚Р°РЅРёСЋ РїСЂР°Р№СЃР° РјРµРјРѕРІ
+            if (memes.FindIndexIntoSortedList(meme, out index))
                 return false;
             memes.Insert(index, meme);
             MemoryPrice += meme.Price;
             int feature = (int)meme.AffectedFeature;
             memesByFeature[feature]++;
-            CalculateEffect(feature);
             return true;
         }
-        public bool Remove(Meme meme)
+        public bool Remove(Meme meme, out int index)
         {
-            if (!memes.FindIndexIntoSortedList(meme, out var index))
+            if (!memes.FindIndexIntoSortedList(meme, out index))
                 return false;
             memes.RemoveAt(index);
             MemoryPrice -= meme.Price;
             int feature = (int)meme.AffectedFeature;
             memesByFeature[feature]--;
-            CalculateEffect(feature);
             return true;
         }
+
+        public bool FindIndexOf(Meme meme, out int index) => memes.FindIndexIntoSortedList(meme, out index);
+        
         public void Clear() {
             memes.Clear();
             MemoryPrice = 0;
             for (int i = 0; i < memesByFeature.Length; i++)
-                memesEffect[i] = memesByFeature[i] = 0;
+                MemesEffect[i] = memesByFeature[i] = 0;
         }
 
-        private void CalculateEffect(int feature)
+        public void CalculateEffect(int feature)
         {
             var description = WorldProperties.FeatureDescriptions[feature];
             double retval = 0;
             foreach (Meme meme in memes)
                 if ((int)meme.AffectedFeature == feature)
                     retval = description.Aggregate(retval, meme.Efficiency);
-            memesEffect[feature] = retval;
+            MemesEffect[feature] = retval;
         }
-        // Достать мем по указанному порядковому номеру с указанной фичей
+        // Р”РѕСЃС‚Р°С‚СЊ РјРµРј РїРѕ СѓРєР°Р·Р°РЅРЅРѕРјСѓ РїРѕСЂСЏРґРєРѕРІРѕРјСѓ РЅРѕРјРµСЂСѓ СЃ СѓРєР°Р·Р°РЅРЅРѕР№ С„РёС‡РµР№
         public Meme GetMemeByFeature(int feature, int index)
         {
             for (int i = 0; i < memes.Count; i++)

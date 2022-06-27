@@ -82,24 +82,30 @@ namespace TribeSim
 
         private MemesSet memesSet = new MemesSet();
         public Features Phenotype = default;
-        private int[] lastYearMemeWasUsed = new int[WorldProperties.FEATURES_COUNT];
+        private int[] lastYearMemeWasUsed = new int[Features.Length];
 
         public static double[] reproductionCostIncrease;
 
         private double BasicPriceToGetThisChild;
         private GeneCode genocode = null;
-        private Features genotype;
+        public Features Genotype;
         private double resource;
         private double totalResourcesCollected;
 
         private void AddMeme(Meme newMeme) {
-            memesSet.Add(newMeme);
+            if (!memesSet.Add(newMeme, out _))
+                throw new Exception("Something wrong with memes set");
+            myTribe?.MemeAdded(this, newMeme);
             MemorySizeRemaining = MemorySizeTotal - memesSet.MemoryPrice;
+            memesSet.CalculateEffect((int)newMeme.AffectedFeature);
             CalculatePhenotype((int)newMeme.AffectedFeature);
         }
         private void RemoveMeme(Meme meme) {
-            memesSet.Remove(meme);
+            if (!memesSet.Remove(meme, out _))
+                throw new Exception("Something wrong with memes set");
+            myTribe?.MemeRemoved(this, meme);
             MemorySizeRemaining = MemorySizeTotal - memesSet.MemoryPrice;
+            memesSet.CalculateEffect((int)meme.AffectedFeature);
             CalculatePhenotype((int)meme.AffectedFeature);
         }
 
@@ -116,7 +122,7 @@ namespace TribeSim
             if (randomizer.Chance(WorldProperties.ChancesToWriteALog))
                 retval.KeepsDiary();
             retval.genocode = GeneCode.GenerateInitial(randomizer);
-            retval.genotype = retval.genocode.Genotype();
+            retval.Genotype = retval.genocode.Genotype();
             retval.ReportPhenotypeChange();
             retval.storyOfLife?.Append(retval.Name).Append(" was created as a member of a statring set.").AppendLine();
             retval.yearBorn = World.Year;
@@ -130,20 +136,20 @@ namespace TribeSim
 
         private void CalculateMemorySizeTotal()
         {
-            this.MemorySizeTotal = genotype.MemoryLimit;
-            MemorySizeTotal += genotype.CooperationEfficiency * WorldProperties.GeneticCooperationEfficiancyToMemoryRatio;
-            MemorySizeTotal += genotype.Creativity * WorldProperties.GeneticCreativityToMemoryRatio;
-            MemorySizeTotal += genotype.FreeRiderDeterminationEfficiency * WorldProperties.GeneticFreeRiderDeterminationEfficiencytoMemoryRatio;
-            MemorySizeTotal += genotype.FreeRiderPunishmentLikelyhood * WorldProperties.GeneticFreeRiderPunishmentLikelyhoodToMemoryRatio;
-            MemorySizeTotal += genotype.HuntingEfficiency * WorldProperties.GeneticHuntingEfficiencyToMemoryRatio;
-            MemorySizeTotal += genotype.HuntingBEfficiency * WorldProperties.GeneticHuntingBEfficiencyToMemoryRatio;
-            MemorySizeTotal += genotype.LikelyhoodOfNotBeingAFreeRider * WorldProperties.GeneticLikelyhoodOfNotBeingAFreeRiderToMemoryRatio;
-            MemorySizeTotal += genotype.StudyEfficiency * WorldProperties.GeneticStudyEfficiencyToMemoryRatio;
-            MemorySizeTotal += genotype.StudyLikelyhood * WorldProperties.GeneticStudyLikelyhoodToMemoryRatio;
-            MemorySizeTotal += genotype.TeachingEfficiency * WorldProperties.GeneticTeachingEfficiencyToMemoryRatio;
-            MemorySizeTotal += genotype.TeachingLikelyhood * WorldProperties.GeneticTeachingLikelyhoodToMemoryRatio;
-            MemorySizeTotal += genotype.TrickEfficiency * WorldProperties.GeneticTrickEfficiencyToMemoryRatio;
-            MemorySizeTotal += genotype.TrickLikelyhood * WorldProperties.GeneticTrickLikelyhoodToMemoryRatio;
+            this.MemorySizeTotal = Genotype.MemoryLimit;
+            MemorySizeTotal += Genotype.CooperationEfficiency * WorldProperties.GeneticCooperationEfficiancyToMemoryRatio;
+            MemorySizeTotal += Genotype.Creativity * WorldProperties.GeneticCreativityToMemoryRatio;
+            MemorySizeTotal += Genotype.FreeRiderDeterminationEfficiency * WorldProperties.GeneticFreeRiderDeterminationEfficiencytoMemoryRatio;
+            MemorySizeTotal += Genotype.FreeRiderPunishmentLikelyhood * WorldProperties.GeneticFreeRiderPunishmentLikelyhoodToMemoryRatio;
+            MemorySizeTotal += Genotype.HuntingEfficiency * WorldProperties.GeneticHuntingEfficiencyToMemoryRatio;
+            MemorySizeTotal += Genotype.HuntingBEfficiency * WorldProperties.GeneticHuntingBEfficiencyToMemoryRatio;
+            MemorySizeTotal += Genotype.LikelyhoodOfNotBeingAFreeRider * WorldProperties.GeneticLikelyhoodOfNotBeingAFreeRiderToMemoryRatio;
+            MemorySizeTotal += Genotype.StudyEfficiency * WorldProperties.GeneticStudyEfficiencyToMemoryRatio;
+            MemorySizeTotal += Genotype.StudyLikelyhood * WorldProperties.GeneticStudyLikelyhoodToMemoryRatio;
+            MemorySizeTotal += Genotype.TeachingEfficiency * WorldProperties.GeneticTeachingEfficiencyToMemoryRatio;
+            MemorySizeTotal += Genotype.TeachingLikelyhood * WorldProperties.GeneticTeachingLikelyhoodToMemoryRatio;
+            MemorySizeTotal += Genotype.TrickEfficiency * WorldProperties.GeneticTrickEfficiencyToMemoryRatio;
+            MemorySizeTotal += Genotype.TrickLikelyhood * WorldProperties.GeneticTrickLikelyhoodToMemoryRatio;
         }
 
         public string GetPhenotypeString()
@@ -170,11 +176,11 @@ namespace TribeSim
 
 
         private void CalculatePhenotype() {
-            for (int i = WorldProperties.FEATURES_COUNT - 1; i >= 0; i--)
+            for (int i = Features.Length - 1; i >= 0; i--)
                 CalculatePhenotype(i);
         }
         private void CalculatePhenotype(int feature) {
-            Phenotype[feature] = WorldProperties.FeatureDescriptions[feature].Aggregate(genotype[feature], memesSet.memesEffect[feature]);
+            Phenotype[feature] = WorldProperties.FeatureDescriptions[feature].Aggregate(Genotype[feature], memesSet.MemesEffect[feature]);
             if (feature == (int)AvailableFeatures.AgeingRate && Phenotype[feature] < 0)
                 // AR надо считать вообще по-другому! тут вероятностная алгебра не работает, потому что этот показатель в принципе не вероятность!
                 // Надо следить за коммутативностью, сохраняя при этом значение выше нуля.
@@ -693,13 +699,13 @@ namespace TribeSim
                     if (WorldProperties.CollectIndividualGenotypeValues > 0.5)
                     {
                         individualSucess.genotype = FeaturesFloatArray.Get();
-                        for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
-                            individualSucess.genotype[i] = (float)genotype[i];
+                        for (int i = 0; i < Features.Length; i++)
+                            individualSucess.genotype[i] = (float)Genotype[i];
                     }
                     if (WorldProperties.CollectIndividualPhenotypeValues > 0.5)
                     {
                         individualSucess.phenotype = FeaturesFloatArray.Get();
-                        for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                        for (int i = 0; i < Features.Length; i++)
                             individualSucess.phenotype[i] = (float)Phenotype[i];
                     }
                     StatisticsCollector.ReportEvent(individualSucess);
@@ -730,10 +736,10 @@ namespace TribeSim
                 sb.Append(',').Append("tribeName");
                 sb.Append(',').Append("priceOfThisChild");
                 if (genotype != null)
-                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                    for (int i = 0; i < Features.Length; i++)
                         sb.Append(",gen.").Append(((AvailableFeatures)i).GetAcronym());
                 if (phenotype != null)
-                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                    for (int i = 0; i < Features.Length; i++)
                         sb.Append(",phen.").Append(((AvailableFeatures)i).GetAcronym());
                 sb.Append('\n');
                 return sb.Release();
@@ -750,11 +756,11 @@ namespace TribeSim
                 sb.Append(',').Append(tribeName);
                 sb.Append(',').Append(priceOfThisChild.ToString("F3", CultureInfo.InvariantCulture));
                 if (genotype != null) {
-                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                    for (int i = 0; i < Features.Length; i++)
                         sb.Append(',').Append(genotype[i].ToString("F3", CultureInfo.InvariantCulture));
                 }
                 if (phenotype != null) {
-                    for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
+                    for (int i = 0; i < Features.Length; i++)
                         sb.Append(',').Append(phenotype[i].ToString("F3", CultureInfo.InvariantCulture));
                 }
                 sb.Append('\n');
@@ -798,7 +804,7 @@ namespace TribeSim
 
             Tribesman child = new Tribesman(randomizer);
             child.genocode = GeneCode.GenerateFrom(randomizer, PartnerA.genocode, PartnerB.genocode);
-            child.genotype = child.genocode.Genotype();
+            child.Genotype = child.genocode.Genotype();
 
             double priceToGetThisChildBrainSizePart = child.BrainSize * WorldProperties.BrainSizeBirthPriceCoefficient;
             double priceToGetThisChildGiftPart = WorldProperties.ChildStartingResourcePedestal + WorldProperties.ChildStartingResourceParentsCoefficient * (totalParentsResource - priceToGetThisChildBrainSizePart);
@@ -891,8 +897,8 @@ namespace TribeSim
             get
             {
                 double brainSize = WorldProperties.BrainSizePedestal;
-                for (int i = 0; i < WorldProperties.FEATURES_COUNT; i++)
-                    brainSize += WorldProperties.FeatureDescriptions[i].BrainSizeBoost * genotype[i];
+                for (int i = 0; i < Features.Length; i++)
+                    brainSize += WorldProperties.FeatureDescriptions[i].BrainSizeBoost * Genotype[i];
                 return brainSize;
             }
         }
@@ -932,7 +938,7 @@ namespace TribeSim
             {
                 foreach (AvailableFeatures af in Enum.GetValues(typeof(AvailableFeatures)))
                 {
-                    StatisticsCollector.ReportAverageEvent(MyTribeName, string.Concat("Avg. genotype value (", af.GetDescription(), ")"), genotype[(int)af]);
+                    StatisticsCollector.ReportAverageEvent(MyTribeName, string.Concat("Avg. genotype value (", af.GetDescription(), ")"), Genotype[(int)af]);
                 }
             }
             if (WorldProperties.CollectBrainUsagePercentages >0.5)

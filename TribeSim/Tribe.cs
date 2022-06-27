@@ -16,6 +16,7 @@ namespace TribeSim
         public Random randomizer;
 
         private List<Tribesman> members = new List<Tribesman>();
+        private MemesSetWithCounting memesSet = new();
         private bool keepsLog = false;
         private string logFileName = "";
         private int yearBegun;
@@ -82,6 +83,7 @@ namespace TribeSim
             member.TribeMemberId = nextFreeMemberId++;
             member.SetRandomizer(randomizer);
             members.Add(member);
+            memesSet.Add(member.knownMemes);
             member.ReportJoiningTribe(this);
             if (keepsLog && !logTribesmenList.Contains(member))
             {
@@ -98,8 +100,16 @@ namespace TribeSim
 
         public void MemberLeaves(Tribesman member)
         {
+            memesSet.Remove(member.knownMemes);
             member.MyTribe  = null;
             members.Remove(member);
+        }
+
+        public void MemeAdded(Tribesman member, Meme meme) {
+            memesSet.Add(meme);
+        }
+        public void MemeRemoved(Tribesman member, Meme meme) {
+            memesSet.Remove(meme);
         }
 
         public void MemeUsed(Tribesman member, Meme e)
@@ -157,6 +167,14 @@ namespace TribeSim
                     }
                 } while (man.TryToTeach(student) && WorldProperties.AllowRepetitiveTeaching > 0.5);
             }
+            // Collect tribe memes info
+            StatisticsCollector.ReportSumEvent(TribeName, "Total mems types", memesSet.memesSet.memes.Count);
+            if (memesSet.counts.Count > 0)
+            {
+                int maxMemesCount = memesSet.counts.Max();
+                double memeticalEquality = ((double)memesSet.counts.Sum()) / maxMemesCount / memesSet.memesSet.memes.Count;
+                StatisticsCollector.ReportSumEvent(TribeName, "Memetical Equality", memesSet.memesSet.memes.Count);
+            }
         }
 
         private List<Tribesman> _punishers = new List<Tribesman>();
@@ -194,8 +212,18 @@ namespace TribeSim
 
         public double GoHunting(AvailableFeatures huntingEfficiencyFeature)
         {
+            double maxOrganizationAbility = 0;
+            foreach (Tribesman man in members)
+            {
+                var organizationAbility = man.Phenotype.OrganizationAbility;
+                if (maxOrganizationAbility < organizationAbility)
+                    maxOrganizationAbility = organizationAbility;
+            }
+                
+
             double sumHuntingPowers = 0;
             double cooperationCoefficient = 0;
+            double sumGenotypeHuntingPowers = 0;
             int numHunters = 0;
             foreach (Tribesman man in members)
             {
@@ -208,6 +236,8 @@ namespace TribeSim
                         sumHuntingPowers += huntingEfforts;
                         cooperationCoefficient += man.Phenotype.CooperationEfficiency;
                         numHunters++;
+                        if (maxOrganizationAbility != 0)
+                            sumGenotypeHuntingPowers += man.Genotype[(int)huntingEfficiencyFeature];
                     }
                 }
                 else
@@ -223,6 +253,15 @@ namespace TribeSim
             {
                 return 0;
             }
+            if (maxOrganizationAbility != 0)
+            {
+                if (memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature] != 0)
+                    Console.WriteLine(memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature]);
+                memesSet.memesSet.CalculateEffect((int)huntingEfficiencyFeature);
+                var maxHuntingEffort = sumGenotypeHuntingPowers + memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature] * numHunters;
+                sumHuntingPowers = sumHuntingPowers + (maxHuntingEffort - sumHuntingPowers) * maxOrganizationAbility;
+            }
+
             cooperationCoefficient /= numHunters;
             StatisticsCollector.ReportAverageEvent(TribeName, "Average hunting efforts", sumHuntingPowers * cooperationCoefficient);
             StatisticsCollector.ReportSumEvent(TribeName, "Total hunting efforts", sumHuntingPowers * cooperationCoefficient);

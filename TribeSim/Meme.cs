@@ -72,7 +72,7 @@ namespace TribeSim
 
         public static Meme InventNewMeme(Random randomizer, AvailableFeatures memeAffectedFeature, List<Meme> memesAlreadyKnown = null) {
             var memesTimesMaxCount = WorldProperties.MemesTimesMaxCount > 0 ? (int) WorldProperties.MemesTimesMaxCount : MEMES_TYPES_MAX_COUNT;
-            return InventNewMeme(randomizer.Next(WorldProperties.FEATURES_COUNT, memesTimesMaxCount), memeAffectedFeature, memesAlreadyKnown);
+            return InventNewMeme(randomizer.Next(Features.Length, memesTimesMaxCount), memeAffectedFeature, memesAlreadyKnown);
         }
 
 
@@ -125,7 +125,8 @@ namespace TribeSim
 
         public void ReportForgotten(Tribesman tribesman)
         {
-            Report("Was forgotten by " + tribesman.Name);
+            if (keepDiary)
+                Report("Was forgotten by " + tribesman.Name);
             lock (staticLocker)
             {
                 knownBy--;
