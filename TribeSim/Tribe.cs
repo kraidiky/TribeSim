@@ -168,12 +168,12 @@ namespace TribeSim
                 } while (man.TryToTeach(student) && WorldProperties.AllowRepetitiveTeaching > 0.5);
             }
             // Collect tribe memes info
-            StatisticsCollector.ReportSumEvent(TribeName, "Total mems types", memesSet.memesSet.memes.Count);
+            StatisticsCollector.ReportAverageEvent(TribeName, "Total memes types", memesSet.memesSet.memes.Count);
             if (memesSet.counts.Count > 0)
             {
                 int maxMemesCount = memesSet.counts.Max();
                 double memeticalEquality = ((double)memesSet.counts.Sum()) / maxMemesCount / memesSet.memesSet.memes.Count;
-                StatisticsCollector.ReportSumEvent(TribeName, "Memetical Equality", memesSet.memesSet.memes.Count);
+                StatisticsCollector.ReportAverageEvent(TribeName, "Memetical Equality", memeticalEquality);
             }
         }
 
