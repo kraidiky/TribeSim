@@ -257,6 +257,7 @@ namespace TribeSim
             dialog.Filter = "Tribe Sim Settings files|*.trsim";
             if (dialog.ShowDialog() == true)
             {
+                WorldProperties.ResetProperties();
                 WorldProperties.LoadPersistance(dialog.FileName);
 
                 currentOpenedFileName = dialog.SafeFileName;

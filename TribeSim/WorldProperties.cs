@@ -1,5 +1,4 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1956,6 +1955,16 @@ namespace TribeSim
         #endregion
 
         #region Persistance
+        public static void ResetProperties()
+        {
+            var properties = typeof(WorldProperties).GetProperties();
+            foreach (var property in properties)
+            if (property.PropertyType == typeof(double))
+                if (property.CustomAttributes.Any(attrib => attrib.AttributeType == typeof(DisplayableProperty))) {
+                    property.SetValue(null, 0d);
+            }
+        }
+        
         public static void LoadPersistance(string loadFilename = null)
         {
             Console.WriteLine($"WorldProperties.LoadPersistance({loadFilename})");
