@@ -99,6 +99,7 @@ namespace TribeSim
             MemorySizeRemaining = MemorySizeTotal - memesSet.MemoryPrice;
             memesSet.CalculateEffect((int)newMeme.AffectedFeature);
             CalculatePhenotype((int)newMeme.AffectedFeature);
+            ReportPhenotypeChange();
         }
         private void RemoveMeme(Meme meme) {
             if (!memesSet.Remove(meme, out _))
@@ -107,6 +108,7 @@ namespace TribeSim
             MemorySizeRemaining = MemorySizeTotal - memesSet.MemoryPrice;
             memesSet.CalculateEffect((int)meme.AffectedFeature);
             CalculatePhenotype((int)meme.AffectedFeature);
+            ReportPhenotypeChange();
         }
 
         private Tribesman(Random randomizer)
@@ -123,7 +125,6 @@ namespace TribeSim
                 retval.KeepsDiary();
             retval.genocode = GeneCode.GenerateInitial(randomizer);
             retval.Genotype = retval.genocode.Genotype();
-            retval.ReportPhenotypeChange();
             retval.storyOfLife?.Append(retval.Name).Append(" was created as a member of a statring set.").AppendLine();
             retval.yearBorn = World.Year;
             retval.resource = WorldProperties.StatringAmountOfResources;
@@ -131,6 +132,7 @@ namespace TribeSim
             retval.CalculateMemorySizeTotal();
             retval.MemorySizeRemaining = retval.MemorySizeTotal;
             retval.CalculatePhenotype();
+            retval.ReportPhenotypeChange();
             return retval;
         }
 
@@ -234,7 +236,6 @@ namespace TribeSim
                 if (InventNewMemeForAFeature(af, out Meme inventedMeme))
                 {
                     storyOfLife?.AppendFormat("Invented how {5}. ({0} meme with {1} effect). Complexity is {2:f2} and {3} now has {4:f2} memory left. (Meme#{5})", af.GetDescription(), inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.MemeId, inventedMeme.ActionDescription).AppendLine();
-                    ReportPhenotypeChange();
                 }
                 else
                 {
@@ -279,7 +280,6 @@ namespace TribeSim
                             storyOfLife?.AppendFormat("Forgotten how {1} ({0})", meme.SignatureString,
                                 meme.ActionDescription).AppendLine();
                             RemoveMeme(meme);
-                            ReportPhenotypeChange();
                         }
                 }
             }
@@ -370,7 +370,6 @@ namespace TribeSim
                 if (InventNewMemeForAFeature(usedFeature, out inventedMeme))
                 {
                     storyOfLife?.AppendFormat("While {6} invented how {7}. ({0} meme with {1} effect) The meme complexity is {2:f2} and {3} now has {4:f2} memory left. ({5})", usedFeature.GetDescription(), inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.SignatureString, activity, inventedMeme.ActionDescription).AppendLine();
-                    ReportPhenotypeChange();
                 }
                 else
                 {
@@ -395,7 +394,6 @@ namespace TribeSim
                 storyOfLife?.AppendFormat("Learned how {2} ({0}) from a tribesmate. {1:f2} memory remaining.", meme.SignatureString, MemorySizeRemaining, meme.ActionDescription).AppendLine();
             }
             meme.ReportTeaching(this, teacher);
-            ReportPhenotypeChange();
         }
 
         public void DetermineAndPunishAFreeRider(List<Tribesman> members, List<Tribesman> freeRidersList)
@@ -420,7 +418,6 @@ namespace TribeSim
                                 if (InventNewMemeForAFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, out inventedMeme2))
                                 {
                                     storyOfLife?.AppendFormat("Learned {1} ({0}) as a result of a guilty conscience.", inventedMeme2.SignatureString, inventedMeme2.ActionDescription).AppendLine();
-                                    ReportPhenotypeChange();
                                 }
                                 else
                                 {
@@ -444,7 +441,6 @@ namespace TribeSim
                     if (FreeRiderToBePunished.InventNewMemeForAFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, out inventedMeme))
                     {
                         FreeRiderToBePunished.storyOfLife?.AppendFormat("Learned {1} ({0}) as a result of punishment.", inventedMeme.SignatureString, inventedMeme.ActionDescription).AppendLine();
-                        FreeRiderToBePunished.ReportPhenotypeChange();
                     }
                     else
                     {
@@ -558,8 +554,8 @@ namespace TribeSim
                 if (Phenotype.UselessActionsLikelihood > 0) {
                     if (storyOfLife != null) {
                         var relevantMemes = memesSet.memes.Where(meme => (int)meme.AffectedFeature == (int)AvailableFeatures.UselessActionsLikelihood);
-                        Meme randomKnownUselessMeme = relevantMemes.Skip(randomizer.Next(relevantMemes.Count())).First(); // Всё это медленно и печально, но оно нужно только для логов, так что сойдёт. 
-                        storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme.ActionDescription, resourcesWasted, resource).AppendLine();
+                        Meme randomKnownUselessMeme = relevantMemes.Skip(randomizer.Next(relevantMemes.Count())).FirstOrDefault(); // Всё это медленно и печально, но оно нужно только для логов, так что сойдёт. 
+                        storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme?.ActionDescription ?? "by genetic predisposition", resourcesWasted, resource).AppendLine();
                     }
                     UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
                 } else {
@@ -821,12 +817,12 @@ namespace TribeSim
                 child.yearBorn = World.Year;
                 if (randomizer.Chance(WorldProperties.ChancesToWriteALog))
                     child.KeepsDiary();
-                child.ReportPhenotypeChange();
                 child.myTribe = PartnerA.myTribe;
                 child.storyOfLife?.AppendFormat("Was born from {0} and {1}. His brain size is {2:f1}. His parents spent {3:f1} resources to raise him.", PartnerA.Name, PartnerB.Name, child.BrainSize, priceToGetThisChildBrainSizePart).AppendLine();
                 child.CalculateMemorySizeTotal();
                 child.MemorySizeRemaining = child.MemorySizeTotal;
                 child.CalculatePhenotype();
+                child.ReportPhenotypeChange();
                 totalParentsResource -= priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart + priceDueToAge;
                 child.resource =  WorldProperties.ChildStartingResourceSpendingsReceivedCoefficient * priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart;
                 child.storyOfLife?.AppendFormat("Parents have given {0:f1} resource as a birthday gift.", child.resource).AppendLine();   

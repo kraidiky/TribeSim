@@ -25,7 +25,7 @@ namespace TribeSim
         private double complexityCoefficient;
         private bool keepDiary = false;
 
-        private string actionDescription = "";
+        private string actionDescription = null;
 
         public double ComplexityCoefficient
         {            
