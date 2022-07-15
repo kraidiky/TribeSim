@@ -12,7 +12,6 @@
         public double FreeRiderDeterminationEfficiency;
         public double LikelyhoodOfNotBeingAFreeRider;
         public double HuntingEfficiency;
-        public double HuntingBEfficiency;
         public double CooperationEfficiency;
         public double MemoryLimit;
         public double Creativity;
@@ -22,7 +21,7 @@
         public double ForagingEfficiency;
         public double OrganizationAbility;
 
-        public const int Length = 19;
+        public const int Length = 18;
 
         public double this[int index]
         {

@@ -137,10 +137,6 @@ namespace TribeSim
             openCharts.Add(cw);
         }
 
-        private string filenameToSave;
-        
-        PleaseWaitWindow pww;
-        
 
         private int PutTreeLevelToWorksheet(string branchName, PropertyTree tree, Worksheet ws, int curRow, int curCol, int level)
         {

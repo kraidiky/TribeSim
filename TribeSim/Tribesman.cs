@@ -145,7 +145,6 @@ namespace TribeSim
             MemorySizeTotal += Genotype.FreeRiderDeterminationEfficiency * WorldProperties.GeneticFreeRiderDeterminationEfficiencytoMemoryRatio;
             MemorySizeTotal += Genotype.FreeRiderPunishmentLikelyhood * WorldProperties.GeneticFreeRiderPunishmentLikelyhoodToMemoryRatio;
             MemorySizeTotal += Genotype.HuntingEfficiency * WorldProperties.GeneticHuntingEfficiencyToMemoryRatio;
-            MemorySizeTotal += Genotype.HuntingBEfficiency * WorldProperties.GeneticHuntingBEfficiencyToMemoryRatio;
             MemorySizeTotal += Genotype.LikelyhoodOfNotBeingAFreeRider * WorldProperties.GeneticLikelyhoodOfNotBeingAFreeRiderToMemoryRatio;
             MemorySizeTotal += Genotype.StudyEfficiency * WorldProperties.GeneticStudyEfficiencyToMemoryRatio;
             MemorySizeTotal += Genotype.StudyLikelyhood * WorldProperties.GeneticStudyLikelyhoodToMemoryRatio;
@@ -482,20 +481,19 @@ namespace TribeSim
             return Name;
         }
 
-        public double GoHunting(AvailableFeatures huntingEfficiencyFeature)
+        public double GoHunting()
         {
-            var huntingCosts = huntingEfficiencyFeature == AvailableFeatures.HuntingEfficiency ? WorldProperties.HuntingCosts : WorldProperties.HuntingBCosts;
-            if (resource <= huntingCosts)
+            if (resource <= WorldProperties.HuntingCosts)
             {
-                storyOfLife?.AppendFormat("Wanted to go hunting, but could not. Too hungry. Resources remaining - {0:f2}, needed for the hunt - {1}.", resource, huntingEfficiencyFeature).AppendLine();
+                storyOfLife?.AppendFormat("Wanted to go hunting, but could not. Too hungry. Resources remaining - {0:f2}, needed for the hunt - {1}.", resource, WorldProperties.HuntingCosts).AppendLine();
                 return 0;
             }
-            resource -= huntingCosts;
-            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", Phenotype[(int)huntingEfficiencyFeature], Phenotype[(int)AvailableFeatures.CooperationEfficiency], huntingCosts, resource).AppendLine();
-            UseMemeGroup(huntingEfficiencyFeature, "hunting");
+            resource -= WorldProperties.HuntingCosts;
+            storyOfLife?.AppendFormat("Went hunting with his friends. He hunted with {0:f1} efficiency and cooperated at {1:f2}. Spent {2} resource for the hunt, {3:f2} remaining.", Phenotype.HuntingEfficiency, Phenotype.CooperationEfficiency, WorldProperties.HuntingCosts, resource).AppendLine();
+            UseMemeGroup(AvailableFeatures.HuntingEfficiency, "hunting");
             UseMemeGroup(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, "hunting");
             UseMemeGroup(AvailableFeatures.CooperationEfficiency, "hunting");
-            return Phenotype[(int)huntingEfficiencyFeature];
+            return Phenotype.HuntingEfficiency;
         }
 
         public void SkipHunting()

@@ -50,8 +50,6 @@ namespace TribeSim
         private static double initialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev;
         private static double initialStateGenesHuntingEfficiencyMean;
         private static double initialStateGenesHuntingEfficiencyStdDev;
-        private static double initialStateGenesHuntingBEfficiencyMean;
-        private static double initialStateGenesHuntingBEfficiencyStdDev;
         private static double initialStateGenesCooperationEfficiencyMean;
         private static double initialStateGenesCooperationEfficiencyStdDev;
         private static double initialStateGenesMemorySizeMean;
@@ -89,8 +87,6 @@ namespace TribeSim
         private static double newMemeLikelyhoodOfNotBeingAFreeRiderStdDev;
         private static double newMemeHuntingEfficiencyMean;
         private static double newMemeHuntingEfficiencyStdDev;
-        private static double newMemeHuntingBEfficiencyMean;
-        private static double newMemeHuntingBEfficiencyStdDev;
         private static double newMemeCooperationEfficiencyMean;
         private static double newMemeCooperationEfficiencyStdDev;
         private static double newMemeUselessCostMean;
@@ -126,18 +122,9 @@ namespace TribeSim
         private static double resourcesAvailableFromEnvironmentOnEveryStepStdDev;
         private static double resourcesAvailableFromEnvironmentOnEveryStepDeviationLimit;
 
-        private static double resourcesABReplacementPeriod;
-        private static double resourcesAAvailableFromEnvironmentMinimum;
-
-        private static double resourcesBAvailableFromEnvironmentOnEveryStep;
-        private static double resourcesBAvailableFromEnvironmentOnEveryStepStdDev;
-        private static double resourcesBAvailableFromEnvironmentOnEveryStepDeviationLimit;
-        private static double resourcesBAvailableFromEnvironmentMinimum;
-
         private static double resourcesAvailableFromForagingOnEveryStep;
         
         private static double huntingCosts;
-        private static double huntingBCosts;
         private static double organizationAbilityCosts;
         private static double uselessActionCost;
         private static double allowRepetitiveUselessActions;
@@ -159,7 +146,6 @@ namespace TribeSim
         private static double brainSizeToStudyEfficiencyCoefficient;
         private static double brainSizeToFreeRiderDeterminationEfficiencyCoefficient;
         private static double brainSizeToHuntingEfficiencyCoefficient;
-        private static double brainSizeToHuntingBEfficiencyCoefficient;
         private static double brainSizeToCooperationEfficiencyCoefficient;
         private static double brainSizeToMemorySizeCoefficient;
         private static double brainSizeToCreativityCoefficient;
@@ -192,7 +178,6 @@ namespace TribeSim
         private static double skipTeachingStep;
         private static double skipFreeRiderPunishmentStep;
         private static double skipHuntingStep;
-        private static double skipHuntingBStep;
         private static double skipForagingStep;
         private static double skipUselessActionsStep;
         private static double skipStudyingStep;
@@ -210,7 +195,6 @@ namespace TribeSim
         private static double geneticTeachingEfficiencyToMemoryRatio;
         private static double geneticTeachingLikelyhoodToMemoryRatio;
         private static double geneticHuntingEfficiencyToMemoryRatio;
-        private static double geneticHuntingBEfficiencyToMemoryRatio;
         private static double geneticCooperationEfficiancyToMemoryRatio;
         private static double geneticCreativityToMemoryRatio;
         private static double geneticFreeRiderDeterminationEfficiencytoMemoryRatio;
@@ -246,10 +230,6 @@ namespace TribeSim
         private static double memeCostEfficiencyRatioHuntingEfficiency;
         private static double memeCostRandomAverageHuntingEfficiency;
         private static double memeCostRandomStdDevHuntingEfficiency;
-        private static double memeCostPedestalHuntingBEfficiency;
-        private static double memeCostEfficiencyRatioHuntingBEfficiency;
-        private static double memeCostRandomAverageHuntingBEfficiency;
-        private static double memeCostRandomStdDevHuntingBEfficiency;
         private static double memeCostPedestalCooperationEfficiency;
         private static double memeCostEfficiencyRatioCooperationEfficiency;
         private static double memeCostRandomAverageCooperationEfficiency;
@@ -300,7 +280,6 @@ namespace TribeSim
         private static double mutationChanceFreeRiderDeterminationEfficiency;
         private static double mutationChanceLikelyhoodOfNotBeingAFreeRider;
         private static double mutationChanceHuntingEfficiency;
-        private static double mutationChanceHuntingBEfficiency;
         private static double mutationChanceCooperationEfficiency;
         private static double mutationChanceMemoryLimit;
         private static double mutationChanceCreativity;
@@ -319,7 +298,6 @@ namespace TribeSim
         private static double mutationStrengthMeanFreeRiderDeterminationEfficiency;
         private static double mutationStrengthMeanLikelyhoodOfNotBeingAFreeRider;
         private static double mutationStrengthMeanHuntingEfficiency;
-        private static double mutationStrengthMeanHuntingBEfficiency;
         private static double mutationStrengthMeanCooperationEfficiency;
         private static double mutationStrengthMeanMemoryLimit;
         private static double mutationStrengthMeanCreativity;
@@ -338,7 +316,6 @@ namespace TribeSim
         private static double mutationStrengthStdDevFreeRiderDeterminationEfficiency;
         private static double mutationStrengthStdDevLikelyhoodOfNotBeingAFreeRider;
         private static double mutationStrengthStdDevHuntingEfficiency;
-        private static double mutationStrengthStdDevHuntingBEfficiency;
         private static double mutationStrengthStdDevCooperationEfficiency;
         private static double mutationStrengthStdDevMemoryLimit;
         private static double mutationStrengthStdDevCreativity;
@@ -354,7 +331,6 @@ namespace TribeSim
         private static double chanceToCollectIndividualSuccess;
         private static double collectBrainUsagePercentages;
         private static double collectLiveMemes;
-        private static double collectDetaliedMemesData;
         private static double collectMemesSuccess;
         private static double chanceToCollectMemesSuccess;
 
@@ -395,8 +371,6 @@ namespace TribeSim
         public static double MutationStrengthStdDevCooperationEfficiency { get => mutationStrengthStdDevCooperationEfficiency; set {  mutationStrengthStdDevCooperationEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Hunting efficiency")]
         public static double MutationStrengthStdDevHuntingEfficiency { get => mutationStrengthStdDevHuntingEfficiency; set {  mutationStrengthStdDevHuntingEfficiency = value; PersistChanges(); } }
-        [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Hunting B efficiency")]
-        public static double MutationStrengthStdDevHuntingBEfficiency { get => mutationStrengthStdDevHuntingBEfficiency; set { mutationStrengthStdDevHuntingBEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\Likelyhood of not being a f-r")]
         public static double MutationStrengthStdDevLikelyhoodOfNotBeingAFreeRider { get => mutationStrengthStdDevLikelyhoodOfNotBeingAFreeRider; set {  mutationStrengthStdDevLikelyhoodOfNotBeingAFreeRider = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength StdDev", group = "Genetics\\Mutation\\F-r determination efficiency")]
@@ -434,8 +408,6 @@ namespace TribeSim
         public static double MutationStrengthMeanCooperationEfficiency { get => mutationStrengthMeanCooperationEfficiency; set { mutationStrengthMeanCooperationEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Hunting efficiency")]
         public static double MutationStrengthMeanHuntingEfficiency { get => mutationStrengthMeanHuntingEfficiency; set { mutationStrengthMeanHuntingEfficiency = value; PersistChanges(); } }
-        [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Hunting B efficiency")]
-        public static double MutationStrengthMeanHuntingBEfficiency { get => mutationStrengthMeanHuntingBEfficiency; set { mutationStrengthMeanHuntingBEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\Likelyhood of not being a f-r")]
         public static double MutationStrengthMeanLikelyhoodOfNotBeingAFreeRider { get => mutationStrengthMeanLikelyhoodOfNotBeingAFreeRider; set { mutationStrengthMeanLikelyhoodOfNotBeingAFreeRider = value; PersistChanges(); } }
         [DisplayableProperty("Mutation strength Mean", group = "Genetics\\Mutation\\F-r determination efficiency")]
@@ -473,8 +445,6 @@ namespace TribeSim
         public static double MutationChanceCooperationEfficiency { get => mutationChanceCooperationEfficiency; set { mutationChanceCooperationEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Hunting efficiency")]
         public static double MutationChanceHuntingEfficiency { get => mutationChanceHuntingEfficiency; set { mutationChanceHuntingEfficiency = value; PersistChanges(); } }
-        [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Hunting B efficiency")]
-        public static double MutationChanceHuntingBEfficiency { get => mutationChanceHuntingBEfficiency; set { mutationChanceHuntingBEfficiency = value; PersistChanges(); } }
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\Likelyhood of not being a f-r")]
         public static double MutationChanceLikelyhoodOfNotBeingAFreeRider { get => mutationChanceLikelyhoodOfNotBeingAFreeRider; set { mutationChanceLikelyhoodOfNotBeingAFreeRider = value; PersistChanges(); } }
         [DisplayableProperty("Mutation Chance", group = "Genetics\\Mutation\\F-r determination efficiency")]
@@ -549,15 +519,6 @@ namespace TribeSim
         public static double MemeCostEfficiencyRatioHuntingEfficiency { get => memeCostEfficiencyRatioHuntingEfficiency; set { memeCostEfficiencyRatioHuntingEfficiency =value; PersistChanges(); }}
         [DisplayableProperty("Pedestal value (P)", group = "Memes\\Invention\\Costs\\Hunting efficiency", description = "The cost of the meme will be calculated using the following formula: Cost = P + C*Efficiency + Random, where random part is determined by its mean and standard deviation")]
         public static double MemeCostPedestalHuntingEfficiency { get => memeCostPedestalHuntingEfficiency; set { memeCostPedestalHuntingEfficiency =value; PersistChanges(); }}
-
-        [DisplayableProperty("Random part StdDev", group = "Memes\\Invention\\Costs\\Hunting B efficiency")]
-        public static double MemeCostRandomStdDevHuntingBEfficiency { get => memeCostRandomStdDevHuntingBEfficiency; set { memeCostRandomStdDevHuntingBEfficiency = value; PersistChanges(); } }
-        [DisplayableProperty("Random part mean", group = "Memes\\Invention\\Costs\\Hunting B efficiency")]
-        public static double MemeCostRandomAverageHuntingBEfficiency { get => memeCostRandomAverageHuntingBEfficiency; set { memeCostRandomAverageHuntingBEfficiency = value; PersistChanges(); } }
-        [DisplayableProperty("Correlation part coefficient (C)", group = "Memes\\Invention\\Costs\\Hunting B efficiency")]
-        public static double MemeCostEfficiencyRatioHuntingBEfficiency { get => memeCostEfficiencyRatioHuntingBEfficiency; set { memeCostEfficiencyRatioHuntingBEfficiency = value; PersistChanges(); } }
-        [DisplayableProperty("Pedestal value (P)", group = "Memes\\Invention\\Costs\\Hunting B efficiency", description = "The cost of the meme will be calculated using the following formula: Cost = P + C*Efficiency + Random, where random part is determined by its mean and standard deviation")]
-        public static double MemeCostPedestalHuntingBEfficiency { get => memeCostPedestalHuntingBEfficiency; set { memeCostPedestalHuntingBEfficiency = value; PersistChanges(); } }
 
         [DisplayableProperty("Random part StdDev", group = "Memes\\Invention\\Costs\\Teaching likelyhood")]
         public static double MemeCostRandomStdDevTeachingLikelyhood { get => memeCostRandomStdDevTeachingLikelyhood; set { memeCostRandomStdDevTeachingLikelyhood =value; PersistChanges(); }}
@@ -700,13 +661,6 @@ namespace TribeSim
             set { geneticHuntingEfficiencyToMemoryRatio = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Hunting B efiiciency", group = "Genetics\\Brain size\\Memory size boost")]
-        public static double GeneticHuntingBEfficiencyToMemoryRatio
-        {
-            get => geneticHuntingBEfficiencyToMemoryRatio;
-            set { geneticHuntingBEfficiencyToMemoryRatio = value; PersistChanges(); }
-        }
-
         [DisplayableProperty("Teachiung likelyhood", group = "Genetics\\Brain size\\Memory size boost")]
         public static double GeneticTeachingLikelyhoodToMemoryRatio
         {
@@ -797,13 +751,6 @@ namespace TribeSim
         {
             get { return WorldProperties.skipHuntingStep; }
             set { WorldProperties.skipHuntingStep = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Skip hunting B", group = "Lifestyle\\Steps", description = "Skip the step where tribes are hunting of B resource and sharing the loot. Disabling will likely cause extinction. 1 - Skip; 0 - Don't skip.")]
-        public static double SkipHuntingBStep
-        {
-            get { return WorldProperties.skipHuntingBStep; }
-            set { WorldProperties.skipHuntingBStep = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Skip Foraging", group = "Lifestyle\\Steps", description = "Skip the step where tribes are hunting of B resource and sharing the loot. Disabling will likely cause extinction. 1 - Skip; 0 - Don't skip.")]
@@ -1068,13 +1015,6 @@ namespace TribeSim
             set { WorldProperties.brainSizeToCreativityCoefficient = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("C9*HuntingBEfficiency C9=", group = "Genetics\\Brain size")]
-        public static double BrainSizeToHuntingBEfficiencyCoefficient
-        {
-            get { return WorldProperties.brainSizeToHuntingBEfficiencyCoefficient; }
-            set { WorldProperties.brainSizeToHuntingBEfficiencyCoefficient = value; PersistChanges(); }
-        }
-
         [DisplayableProperty("C10*Sociability C10=", group = "Genetics\\Brain size")]
         public static double BrainSizeToSociabilityCoefficient
         {
@@ -1160,13 +1100,6 @@ namespace TribeSim
             set { WorldProperties.huntingCosts = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Hunting B costs", group = "Lifestyle", description = "The amount of resources that will be deducted for hunting. [0, infinity) B resource")]
-        public static double HuntingBCosts
-        {
-            get { return WorldProperties.huntingBCosts; }
-            set { WorldProperties.huntingBCosts = value; PersistChanges(); }
-        }
-
         [DisplayableProperty("OrganizationAbility costs", group = "Lifestyle", description = "The amount of resources that will be spent if tribesman successful use their Organization Ability and share memes from one tribesman to all other and create cumulative multiculture. [0, infinity)")]
         public static double OrganizationAbilityCosts
         {
@@ -1193,48 +1126,6 @@ namespace TribeSim
         {
             get { return WorldProperties.resourcesAvailableFromEnvironmentOnEveryStepDeviationLimit; }
             set { WorldProperties.resourcesAvailableFromEnvironmentOnEveryStepDeviationLimit = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Resources A to B Replacement Period", group = "Environment", description = "Период полного переключения с основного ресурса на ресурс B и обратно по функции cos. 0 - означает отсутствие переключения.")]
-        public static double ResourcesABReplacementPeriod
-        {
-            get { return WorldProperties.resourcesABReplacementPeriod; }
-            set { WorldProperties.resourcesABReplacementPeriod = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Resources A Minimum", group = "Environment", description = "Минимальное значение до которого количество основного ресурса снижается в нижней точке цикла.")]
-        public static double ResourcesAAvailableFromEnvironmentMinimum
-        {
-            get { return WorldProperties.resourcesAAvailableFromEnvironmentMinimum; }
-            set { WorldProperties.resourcesAAvailableFromEnvironmentMinimum = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Resources B Available From Environment On Every Step", group = "Environment", description = "Максимальное количество ресурса B, которое буедет получаться когда периодическое изменение уменьшит ресурс A до минимума. Обычно такого же размера как и Environment support, чтобы перекладывание из одного в другое не меняло суммарный возможный ресурс. 0 - Означает, что фаза GoHuntingB вообще игнорируется.")]
-        public static double ResourcesBAvailableFromEnvironmentOnEveryStep
-        {
-            get { return WorldProperties.resourcesBAvailableFromEnvironmentOnEveryStep; }
-            set { WorldProperties.resourcesBAvailableFromEnvironmentOnEveryStep = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Environment B support standard deviation", group = "Environment", description = "Стандартное отклонение случайного изменения количества ресурсов B на каждый ход. Отсекаются варианты меньше 0")]
-        public static double ResourcesBAvailableFromEnvironmentOnEveryStepStdDev
-        {
-            get { return WorldProperties.resourcesBAvailableFromEnvironmentOnEveryStepStdDev; }
-            set { WorldProperties.resourcesBAvailableFromEnvironmentOnEveryStepStdDev = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Environment B support deviation limit", group = "Environment", description = "Ограничение выбросов в количестве ресурсов B, измеряется в сигмах. Значение 3 значит отсекаться будут попытки случайно сгенерировать количество ресурсов отличающееся от среднего больше чем 3 сигмы стандартного отклонения")]
-        public static double ResourcesBAvailableFromEnvironmentOnEveryStepDeviationLimit
-        {
-            get { return WorldProperties.resourcesBAvailableFromEnvironmentOnEveryStepDeviationLimit; }
-            set { WorldProperties.resourcesBAvailableFromEnvironmentOnEveryStepDeviationLimit = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Resources B Minimum", group = "Environment", description = "Минимальное значение до которого количество ресурса B снижается в нижней точке цикла.")]
-        public static double ResourcesBAvailableFromEnvironmentMinimum
-        {
-            get { return WorldProperties.resourcesBAvailableFromEnvironmentMinimum; }
-            set { WorldProperties.resourcesBAvailableFromEnvironmentMinimum = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Environment Foraging support", group = "Environment", description = "The amount of resources that environment can provide for Foragerd. If resources is not enough to match total foraging efforts of all tribesman will receive resources respective to their share in total foraging effort. [0, infinity) or -1 for unlimited")]
@@ -1467,20 +1358,6 @@ namespace TribeSim
         {
             get { return WorldProperties.initialStateGenesHuntingEfficiencyStdDev; }
             set { WorldProperties.initialStateGenesHuntingEfficiencyStdDev = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Mean", group = "Initial state\\Genes\\Hunting B efficiency")]
-        public static double InitialStateGenesHuntingBEfficiencyMean
-        {
-            get { return WorldProperties.initialStateGenesHuntingBEfficiencyMean; }
-            set { WorldProperties.initialStateGenesHuntingBEfficiencyMean = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Hunting B efficiency", description = "Genetically defined hunting B skill. [0, infinity)")]
-        public static double InitialStateGenesHuntingBEfficiencyStdDev
-        {
-            get { return WorldProperties.initialStateGenesHuntingBEfficiencyStdDev; }
-            set { WorldProperties.initialStateGenesHuntingBEfficiencyStdDev = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Mean", group = "Initial state\\Genes\\Cooperation efficiency")]
@@ -1740,20 +1617,6 @@ namespace TribeSim
         {
             get { return WorldProperties.newMemeHuntingEfficiencyStdDev; }
             set { WorldProperties.newMemeHuntingEfficiencyStdDev = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Efficiency increase mean", group = "Memes\\Invention\\Hunting B efficiency", description = "The mean of the efficiency of the newly invented meme that increases the bearer's hunting B efficiency. [0, infinity)")]
-        public static double NewMemeHuntingBEfficiencyMean
-        {
-            get { return WorldProperties.newMemeHuntingBEfficiencyMean; }
-            set { WorldProperties.newMemeHuntingBEfficiencyMean = value; PersistChanges(); }
-        }
-
-        [DisplayableProperty("Efficiency increase StdDev", group = "Memes\\Invention\\Hunting B efficiency")]
-        public static double NewMemeHuntingBEfficiencyStdDev
-        {
-            get { return WorldProperties.newMemeHuntingBEfficiencyStdDev; }
-            set { WorldProperties.newMemeHuntingBEfficiencyStdDev = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Efficiency increase mean", group = "Memes\\Invention\\Coopertaion efficiency", description = "The mean of the efficiency of the newly invented meme that increases the bearer's ability to cooperate with others while hunting. [0, infinity)")]
@@ -2345,27 +2208,6 @@ namespace TribeSim
                 Aggregate = AggregateAsSum,
 
                 BrainSizeBoost = BrainSizeToHuntingEfficiencyCoefficient,
-            };
-            FeatureDescriptions[(int)AvailableFeatures.HuntingBEfficiency] = new FeatureDescription()
-            {
-                range = FeatureRange.Positive,
-                InitialStateGenesMean = WorldProperties.InitialStateGenesHuntingBEfficiencyMean,
-                InitialStateGenesStdDev = WorldProperties.InitialStateGenesHuntingBEfficiencyStdDev,
-                ChancceOfMutation = WorldProperties.MutationChanceHuntingBEfficiency,
-                MutationStrengthMean = WorldProperties.MutationStrengthMeanHuntingBEfficiency,
-                MutationStrengthStdDev = WorldProperties.MutationStrengthStdDevHuntingBEfficiency,
-
-                MemeEfficiencyMean = WorldProperties.NewMemeHuntingBEfficiencyMean,
-                MemeEfficiencyStdDev = WorldProperties.NewMemeHuntingBEfficiencyStdDev,
-                MemePricePedestal = WorldProperties.MemeCostPedestalHuntingBEfficiency,
-                MemePriceEfficiencyRatio = WorldProperties.MemeCostEfficiencyRatioHuntingBEfficiency,
-                MemePriceRandomMean = WorldProperties.MemeCostRandomAverageHuntingBEfficiency,
-                MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevHuntingBEfficiency,
-                MemCanBeInvented = WorldProperties.NewMemeHuntingBEfficiencyMean != 0 || WorldProperties.NewMemeHuntingBEfficiencyStdDev != 0,
-
-                Aggregate = AggregateAsSum,
-
-                BrainSizeBoost = BrainSizeToHuntingBEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.CooperationEfficiency] = new FeatureDescription() {
                 range = FeatureRange.Positive,

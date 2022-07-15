@@ -16,7 +16,7 @@ namespace TribeSim
         public Random randomizer;
 
         private List<Tribesman> members = new List<Tribesman>();
-        private MemesSetWithCounting memesSet = new();
+        private MemesSetWithCounting totalMemesSet = new();
         private bool keepsLog = false;
         private string logFileName = "";
         private int yearBegun;
@@ -70,9 +70,7 @@ namespace TribeSim
         {
             get { return members.Count == 0; }
         }
-        public readonly int TribeId;
         public string TribeName = null;
-        private int yearBorn = 0;
         private HashSet<int> memesUsedThisYearHash = new HashSet<int>();
         private List<Meme> memesUsedThisYear = new List<Meme>();
 
@@ -83,7 +81,7 @@ namespace TribeSim
             member.TribeMemberId = nextFreeMemberId++;
             member.SetRandomizer(randomizer);
             members.Add(member);
-            memesSet.Add(member.knownMemes);
+            totalMemesSet.Add(member.knownMemes);
             member.ReportJoiningTribe(this);
             if (keepsLog && !logTribesmenList.Contains(member))
             {
@@ -100,16 +98,16 @@ namespace TribeSim
 
         public void MemberLeaves(Tribesman member)
         {
-            memesSet.Remove(member.knownMemes);
+            totalMemesSet.Remove(member.knownMemes);
             member.MyTribe  = null;
             members.Remove(member);
         }
 
         public void MemeAdded(Tribesman member, Meme meme) {
-            memesSet.Add(meme);
+            totalMemesSet.Add(meme);
         }
         public void MemeRemoved(Tribesman member, Meme meme) {
-            memesSet.Remove(meme);
+            totalMemesSet.Remove(meme);
         }
 
         public void MemeUsed(Tribesman member, Meme e)
@@ -168,11 +166,11 @@ namespace TribeSim
                 } while (man.TryToTeach(student) && WorldProperties.AllowRepetitiveTeaching > 0.5);
             }
             // Collect tribe memes info
-            StatisticsCollector.ReportAverageEvent(TribeName, "Total memes types", memesSet.memesSet.memes.Count);
-            if (memesSet.counts.Count > 0)
+            StatisticsCollector.ReportAverageEvent(TribeName, "Total memes types", totalMemesSet.memesSet.memes.Count);
+            if (totalMemesSet.counts.Count > 0)
             {
-                int maxMemesCount = memesSet.counts.Max();
-                double memeticalEquality = ((double)memesSet.counts.Sum()) / maxMemesCount / memesSet.memesSet.memes.Count;
+                int maxMemesCount = totalMemesSet.counts.Max();
+                double memeticalEquality = ((double)totalMemesSet.counts.Sum()) / maxMemesCount / totalMemesSet.memesSet.memes.Count;
                 StatisticsCollector.ReportAverageEvent(TribeName, "Memetical Equality", memeticalEquality);
             }
         }
@@ -210,7 +208,7 @@ namespace TribeSim
             }
         }
 
-        public double GoHunting(AvailableFeatures huntingEfficiencyFeature)
+        public double GoHunting()
         {
             double maxOrganizationAbility = 0;
             Tribesman organizator = null;
@@ -233,14 +231,14 @@ namespace TribeSim
                 var chance = man.Phenotype.LikelyhoodOfNotBeingAFreeRider;
                 if (randomizer.Chance(chance))
                 {
-                    double huntingEfforts = man.GoHunting(huntingEfficiencyFeature);
+                    double huntingEfforts = man.GoHunting();
                     if (huntingEfforts > 0)
                     {
                         sumHuntingPowers += huntingEfforts;
                         cooperationCoefficient += man.Phenotype.CooperationEfficiency;
                         numHunters++;
                         if (maxOrganizationAbility != 0)
-                            sumGenotypeHuntingPowers += man.Genotype[(int)huntingEfficiencyFeature];
+                            sumGenotypeHuntingPowers += man.Genotype.HuntingEfficiency;
                     }
                 }
                 else
@@ -258,8 +256,8 @@ namespace TribeSim
             }
             if (maxOrganizationAbility != 0)
             {
-                memesSet.memesSet.CalculateEffect((int)huntingEfficiencyFeature);
-                var maxHuntingEffort = sumGenotypeHuntingPowers + memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature] * numHunters;
+                totalMemesSet.memesSet.CalculateEffect((int)AvailableFeatures.HuntingEfficiency);
+                var maxHuntingEffort = sumGenotypeHuntingPowers + totalMemesSet.memesSet.MemesEffect.HuntingEfficiency * numHunters;
                 sumHuntingPowers = sumHuntingPowers + (maxHuntingEffort - sumHuntingPowers) * maxOrganizationAbility;
                 organizator.UseMemeGroup(AvailableFeatures.OrganizationAbility, "GoHunting");
             }
