@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -236,6 +237,8 @@ namespace TribeSim
                 if (InventNewMemeForAFeature(af, out Meme inventedMeme))
                 {
                     storyOfLife?.AppendFormat("Invented how {5}. ({0} meme with {1} effect). Complexity is {2:f2} and {3} now has {4:f2} memory left. (Meme#{5})", af.GetDescription(), inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.MemeId, inventedMeme.ActionDescription).AppendLine();
+                    UseMemeGroup(AvailableFeatures.Creativity, "InventMemeSpontaneously");
+                    UseMemeGroup(AvailableFeatures.MemoryLimit, "InventMemeSpontaneously");
                 }
                 else
                 {
@@ -352,7 +355,7 @@ namespace TribeSim
             }
         }
 
-        private void UseMemeGroup(AvailableFeatures usedFeature, string activity = "engaged in unknown activity")
+        public void UseMemeGroup(AvailableFeatures usedFeature, string activity = "engaged in unknown activity")
         {
             FeatureDescription description = WorldProperties.FeatureDescriptions[(int)usedFeature];
             if (!description.MemCanBeInvented)
@@ -370,6 +373,8 @@ namespace TribeSim
                 if (InventNewMemeForAFeature(usedFeature, out inventedMeme))
                 {
                     storyOfLife?.AppendFormat("While {6} invented how {7}. ({0} meme with {1} effect) The meme complexity is {2:f2} and {3} now has {4:f2} memory left. ({5})", usedFeature.GetDescription(), inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.SignatureString, activity, inventedMeme.ActionDescription).AppendLine();
+                    UseMemeGroup(AvailableFeatures.Creativity, "Invent Meme During ability use");
+                    UseMemeGroup(AvailableFeatures.MemoryLimit, "Invent Meme During ability use");
                 }
                 else
                 {
@@ -514,6 +519,13 @@ namespace TribeSim
             }
             return requestedShare;
         }
+        public double GetForagingEffort() {
+            if (Phenotype.ForagingEfficiency > 0) {
+                UseMemeGroup(AvailableFeatures.ForagingEfficiency, "foraging");
+                return Phenotype.ForagingEfficiency;
+            }
+            return 0;
+        }
 
         public void RecieveResourcesShare(double recievedShare)
         {
@@ -551,16 +563,16 @@ namespace TribeSim
             {
                 resource -= resourcesWasted;
 
-                if (Phenotype.UselessActionsLikelihood > 0) {
-                    if (storyOfLife != null) {
+                if (storyOfLife != null) {
+                    if (Phenotype.UselessActionsLikelihood > Genotype.UselessActionsLikelihood) {
                         var relevantMemes = memesSet.memes.Where(meme => (int)meme.AffectedFeature == (int)AvailableFeatures.UselessActionsLikelihood);
                         Meme randomKnownUselessMeme = relevantMemes.Skip(randomizer.Next(relevantMemes.Count())).FirstOrDefault(); // Всё это медленно и печально, но оно нужно только для логов, так что сойдёт. 
                         storyOfLife?.AppendFormat("Decided {0}. Didn't gain anything from it, but wasted {1:f2} resources on it. {2:f2} remaining.", randomKnownUselessMeme?.ActionDescription ?? "by genetic predisposition", resourcesWasted, resource).AppendLine();
+                    } else {
+                        storyOfLife?.AppendFormat($"Geneticaly based useless actions. Chance: {chance}, but wasted {resourcesWasted:f2} resources on it. {resource:f2} remaining.").AppendLine();
                     }
-                    UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
-                } else {
-                    storyOfLife?.AppendFormat($"Geneticaly based useless actions. Chance: {chance}, but wasted {resourcesWasted:f2} resources on it. {resource:f2} remaining.").AppendLine();
                 }
+                UseMemeGroup(AvailableFeatures.UselessActionsLikelihood, "performing useless actions");
             }
         }
 
@@ -589,10 +601,10 @@ namespace TribeSim
                 // Тут есть три возможные причины перехода к следующему элементу цикла - пререквизиты, шанс выучить и недостаток памяти. Наерняка можно сильно съэкономить если расположить их в правильном порядке.
                 Meme memeToStudy = memesAvailableForStudy[randomizer.Next(memesAvailableForStudy.Count)];
                 resource -= WorldProperties.StudyCosts;
-                if (randomizer.Chance(
-                    SupportFunctions.MultilpyProbabilities(
+                var chanceOfStudy = SupportFunctions.MultilpyProbabilities(
                         Phenotype.StudyEfficiency,
-                        Math.Pow(1d / memeToStudy.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient))))
+                        Math.Pow(1d / memeToStudy.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
+                if (randomizer.Chance(chanceOfStudy))
                 {
                     if (MemorySizeRemaining > memeToStudy.Price)
                     {

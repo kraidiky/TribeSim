@@ -213,11 +213,14 @@ namespace TribeSim
         public double GoHunting(AvailableFeatures huntingEfficiencyFeature)
         {
             double maxOrganizationAbility = 0;
+            Tribesman organizator = null;
             foreach (Tribesman man in members)
             {
                 var organizationAbility = man.Phenotype.OrganizationAbility;
-                if (maxOrganizationAbility < organizationAbility)
+                if (maxOrganizationAbility < organizationAbility) {
+                    organizator = man;
                     maxOrganizationAbility = organizationAbility;
+                }
             }
                 
 
@@ -260,6 +263,7 @@ namespace TribeSim
                 memesSet.memesSet.CalculateEffect((int)huntingEfficiencyFeature);
                 var maxHuntingEffort = sumGenotypeHuntingPowers + memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature] * numHunters;
                 sumHuntingPowers = sumHuntingPowers + (maxHuntingEffort - sumHuntingPowers) * maxOrganizationAbility;
+                organizator.UseMemeGroup(AvailableFeatures.OrganizationAbility, "GoHunting");
             }
 
             cooperationCoefficient /= numHunters;
@@ -275,7 +279,7 @@ namespace TribeSim
         {
             foragingEffort = 0;
             foreach (var member in members)
-                foragingEffort += member.Phenotype.ForagingEfficiency;
+                foragingEffort += member.GetForagingEffort();
         }
 
         public void ShareForagingResources(double resourcesPerForagingEfficiency)
@@ -402,6 +406,9 @@ namespace TribeSim
                     sociability += member.Phenotype.Sociability;
                 if (members.Count * members.Count <= sociability)
                 {
+                    if (members.Count * members.Count * 2 > sociability)
+                        foreach (var member in members)
+                            member.UseMemeGroup(AvailableFeatures.Sociability, "Tribe bigger than half of maximum size");
                     return null;
                 }
                 
