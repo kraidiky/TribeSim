@@ -258,8 +258,6 @@ namespace TribeSim
             }
             if (maxOrganizationAbility != 0)
             {
-                if (memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature] != 0)
-                    Console.WriteLine(memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature]);
                 memesSet.memesSet.CalculateEffect((int)huntingEfficiencyFeature);
                 var maxHuntingEffort = sumGenotypeHuntingPowers + memesSet.memesSet.MemesEffect[(int)huntingEfficiencyFeature] * numHunters;
                 sumHuntingPowers = sumHuntingPowers + (maxHuntingEffort - sumHuntingPowers) * maxOrganizationAbility;
