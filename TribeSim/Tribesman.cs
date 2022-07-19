@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -249,7 +248,7 @@ namespace TribeSim
         private bool InventNewMemeForAFeature(AvailableFeatures featureTheMemeWillAffect, out Meme createdMeme)
         {
             createdMeme = Meme.InventNewMeme(randomizer, featureTheMemeWillAffect);
-            StatisticsCollector.ReportCountEvent(this.MyTribeName, "Meme Invented");
+            myTribe.statistic.CollectThisYear?.ReportCountEvent(TribeStatistic.EventName.MemeInvented);
             if (memesSet.memes.Contains(createdMeme, Meme.EqualityComparer.Singleton)) {
                 // Tribesman already known meme with the same Id.
                 if (WorldProperties.CollectMemesSuccess > .5f && randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
@@ -662,7 +661,7 @@ namespace TribeSim
                 ForgetAllMemes();
                 storyOfLife?.AppendFormat("Died of natural causes at the age of {0}. Chances of dying were {1:f1}%.",
                     age, chanceOfDeathOfOldAge * 100).AppendLine();
-                StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of old age");
+                myTribe.statistic.CollectThisYear?.ReportCountEvent(TribeStatistic.EventName.DeathsOfOldAge);
                 return true;
             }
 
@@ -671,14 +670,14 @@ namespace TribeSim
                 ReportOnDeathStatistics(age,"hunger");
                 ForgetAllMemes();
                 storyOfLife?.AppendFormat("Died of hunger at the age of {0}.", age).AppendLine();
-                StatisticsCollector.ReportCountEvent(MyTribeName, "Deaths of hunger");                
+                myTribe.statistic.CollectThisYear?.ReportCountEvent(TribeStatistic.EventName.DeathsOfHunger);
                 return true;
             }
             return false;
         }
 
         private void ReportOnDeathStatistics(int age, string cause) {
-            StatisticsCollector.ReportAverageEvent(MyTribeName, "Longevity", age);
+            myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.Longevity, age);
             double totalBrainUsage = 0;
             double totalBrainSize = 0;
             for (int i = 0; i < memesSet.memes.Count; i++) {
@@ -687,7 +686,7 @@ namespace TribeSim
             totalBrainSize = totalBrainUsage + MemorySizeRemaining;
             if (totalBrainSize > 0)
             {
-                StatisticsCollector.ReportAverageEvent(MyTribeName, "% memory: unused when died", MemorySizeRemaining / totalBrainSize);
+                myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.MemoryUnusedWhenDied, MemorySizeRemaining / totalBrainSize);
             }
             // Подбиваем подробную статистику по репродуктивному успеху.
             if (WorldProperties.CollectIndividualSuccess > 0.5) {
@@ -822,8 +821,8 @@ namespace TribeSim
 
             if (totalParentsResource > priceToGetThisChildBrainSizePart + priceToGetThisChildGiftPart + priceDueToAge)
             {
-                StatisticsCollector.ReportCountEvent(PartnerA.MyTribeName, "Child births");
-                StatisticsCollector.ReportAverageEvent(PartnerA.MyTribeName, "Child average brain size", child.BrainSize);
+                PartnerA.myTribe.statistic.CollectThisYear?.ReportCountEvent(TribeStatistic.EventName.ChildBirths);
+                PartnerA.myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.ChildAverageBrainSize, child.BrainSize);
                 child.yearBorn = World.Year;
                 if (randomizer.Chance(WorldProperties.ChancesToWriteALog))
                     child.KeepsDiary();
@@ -931,20 +930,20 @@ namespace TribeSim
 
         public void ReportEndOfYearStatistics()
         {
-            StatisticsCollector.ReportAverageEvent(MyTribeName, "Average memes known", memesSet.memes.Count);
-            StatisticsCollector.ReportAverageEvent(MyTribeName, "Average resources posessed", resource);
+            myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.AverageMemesKnown, memesSet.memes.Count);
+            myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.AverageResourcesPosessed, resource);
             if (WorldProperties.CollectPhenotypeValues > 0.5)
             {
                 foreach (AvailableFeatures af in Enum.GetValues(typeof(AvailableFeatures)))
                 {
-                    StatisticsCollector.ReportAverageEvent(MyTribeName, string.Concat("Avg. phenotype value (", af.GetDescription(), ")"), Phenotype[(int)af]);
+                    myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.AveragePhenotypeValue, af, Phenotype[(int)af]);
                 }
             }
             if (WorldProperties.CollectGenotypeValues > 0.5)
             {
                 foreach (AvailableFeatures af in Enum.GetValues(typeof(AvailableFeatures)))
                 {
-                    StatisticsCollector.ReportAverageEvent(MyTribeName, string.Concat("Avg. genotype value (", af.GetDescription(), ")"), Genotype[(int)af]);
+                    myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.AverageGenotypeValue, af, Genotype[(int)af]);
                 }
             }
             if (WorldProperties.CollectBrainUsagePercentages >0.5)
@@ -964,14 +963,14 @@ namespace TribeSim
                 totalBrainSize = totalBrainUsage + MemorySizeRemaining;
                 if (totalBrainSize > 0)
                 {
-                    StatisticsCollector.ReportAverageEvent(MyTribeName, "% memory: unused", MemorySizeRemaining / totalBrainSize);
+                    myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.MemoryUnused, MemorySizeRemaining / totalBrainSize);
                     for (int i = 0; i < Features.Length; i++) {
                         // if (brainUsages[i] > 0)
                         // нехорошо, конечно, отчитываться по заведомо ненужным величинам, но и убирать из статистики тех, кто не знает ни одного мема из данной категории тоже не годится.
                         // видимо нужен статический фильтр
-                        StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("% memory: {0}", ((AvailableFeatures)i).ToString()), brainUsages[i] / totalBrainSize);
-                        StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("avg. memes size: {0}", ((AvailableFeatures)i).ToString()), memesCount[i] != 0 ? brainUsages[i] / memesCount[i] : 0);
-                        StatisticsCollector.ReportAverageEvent(MyTribeName, string.Format("avg. memes relative effectiveness: {0}", ((AvailableFeatures)i).ToString()), memesCount[i] != 0 ? memesEffect[i]/brainUsages[i] : 0);
+                        myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.MemoryPercentageUsage, ((AvailableFeatures)i), brainUsages[i] / totalBrainSize);
+                        myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.MemesSize, ((AvailableFeatures)i), memesCount[i] != 0 ? brainUsages[i] / memesCount[i] : 0);
+                        myTribe.statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.MemesRelativeEffectiveness, ((AvailableFeatures)i), memesCount[i] != 0 ? memesEffect[i] / brainUsages[i] : 0);
                     }
                 }
             }

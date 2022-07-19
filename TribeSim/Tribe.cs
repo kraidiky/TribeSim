@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TribeSim
 {
@@ -14,6 +13,7 @@ namespace TribeSim
         public int id;
         public int seed;
         public Random randomizer;
+        public TribeStatistic statistic = new TribeStatistic();
 
         private List<Tribesman> members = new List<Tribesman>();
         private MemesSetWithCounting totalMemesSet = new();
@@ -26,17 +26,6 @@ namespace TribeSim
         private List<Tribesman> logTribesmenList = new List<Tribesman>();
         private StringBuilder logMembers = new StringBuilder();
         private StringBuilder logMemes = new StringBuilder();
-        private StringBuilder logInventions = new StringBuilder();
-        private StringBuilder logForgettings = new StringBuilder();
-        private StringBuilder logTeachings = new StringBuilder();
-        private StringBuilder logPunishments = new StringBuilder();
-        private StringBuilder logHunt = new StringBuilder();
-        private StringBuilder logUselessActions = new StringBuilder();
-        private StringBuilder logStudies = new StringBuilder();
-        private StringBuilder logDeaths = new StringBuilder();
-        private StringBuilder logBirths = new StringBuilder();
-        private StringBuilder logImmigration = new StringBuilder();
-        private StringBuilder logCultuarlExchanges = new StringBuilder();
 
         public Tribe(int randomSeed)
         {
@@ -166,12 +155,11 @@ namespace TribeSim
                 } while (man.TryToTeach(student) && WorldProperties.AllowRepetitiveTeaching > 0.5);
             }
             // Collect tribe memes info
-            StatisticsCollector.ReportAverageEvent(TribeName, "Total memes types", totalMemesSet.memesSet.memes.Count);
-            if (totalMemesSet.counts.Count > 0)
-            {
+            statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.TotalMemesTypes, totalMemesSet.memesSet.memes.Count);
+            if (totalMemesSet.counts.Count > 0) {
                 int maxMemesCount = totalMemesSet.counts.Max();
                 double memeticalEquality = ((double)totalMemesSet.counts.Sum()) / maxMemesCount / totalMemesSet.memesSet.memes.Count;
-                StatisticsCollector.ReportAverageEvent(TribeName, "Memetical Equality", memeticalEquality);
+                statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.MemeticalEquality, memeticalEquality);
             }
         }
 
@@ -248,7 +236,7 @@ namespace TribeSim
             }
             if (members.Count > 0)
             {
-                StatisticsCollector.ReportAverageEvent(TribeName, "Percentage of hunters", (double)numHunters / members.Count);
+                statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.PercentageOfHunters, (double)numHunters / members.Count);
             }
             if (numHunters == 0)
             {
@@ -263,8 +251,8 @@ namespace TribeSim
             }
 
             cooperationCoefficient /= numHunters;
-            StatisticsCollector.ReportAverageEvent(TribeName, "Average hunting efforts", sumHuntingPowers * cooperationCoefficient);
-            StatisticsCollector.ReportSumEvent(TribeName, "Total hunting efforts", sumHuntingPowers * cooperationCoefficient);
+            statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.AverageHuntingEfforts, sumHuntingPowers * cooperationCoefficient);
+            statistic.CollectThisYear?.ReportSumEvent(TribeStatistic.EventName.TotalHuntingEfforts, sumHuntingPowers * cooperationCoefficient);
 
             return sumHuntingPowers * cooperationCoefficient;
             
@@ -326,9 +314,12 @@ namespace TribeSim
             }
         }
 
-        public void PrepareForANewYear()
+        public void PrepareForANewYear(bool shouldCollectThisYear)
         {
+            statistic.CollectThisYear = shouldCollectThisYear ? statistic : null;
+            statistic.Reset();
             memesUsedThisYearHash.Clear();
+
             memesUsedThisYear.Clear();
             foreach (Tribesman man in members)
             {
@@ -465,7 +456,9 @@ namespace TribeSim
         }
 
         public void ReportEndOfYearStatistics()
-        {            
+        {
+            statistic.CollectThisYear?.ReportSumEvent(TribeStatistic.EventName.Population, Population);
+
             int count = members.Count;
             for (int i=0; i<count; i++)
             {

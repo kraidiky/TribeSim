@@ -56,7 +56,7 @@ namespace TribeSim
             get { return World.simDataFolder; }
         }
         private static List<Tribe> tribes = new List<Tribe>();
-
+        private static TribeStatistic statistic = new TribeStatistic();
         public static int Year { get; private set; }
 
         public static void InitializeNext(Dispatcher d) {
@@ -104,6 +104,7 @@ namespace TribeSim
             for (i = 0; i < WorldProperties.StartingNumberOfTribes; i++ )
             {
                 Tribe t = new Tribe(randomizer.Next(int.MaxValue));
+                t.statistic.CollectThisYear = t.statistic;
                 int numberOfTribesmen = (int)Math.Round(randomizer.NormalRandom(WorldProperties.StartingTribePopulationMean, WorldProperties.StartingTribePopulationStdDev));
                 for (int ii = 0; ii < numberOfTribesmen; ii++)
                 {
@@ -125,11 +126,13 @@ namespace TribeSim
             }
 
             ReportEndOfYearStatistics();
+            CollectTribesStatistic();
 
-            d.Invoke(new Action(delegate ()
-            {
-                StatisticsCollector.ConsolidateNewYear();
-            }));
+            if (WorldProperties.CollectFilesData > 0.5)
+                ConsolidateFileStatistic();
+            if (WorldProperties.CollectGraphData > 0.5)
+                ConsolidateGraphStatistic(d);
+
             Tribesman.UseGompertzAgeing = WorldProperties.UseGompertzAgeing > 0.5;
         }
 
@@ -138,22 +141,6 @@ namespace TribeSim
                 foreach (var liveMeme in new HashSet<Meme>(tribes.SelectMany(tribe => tribe.AllMemes())))
                     if (randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
                         liveMeme.ReportDetaliedStatistic();
-        }
-
-
-        public static bool TribeExists(string key)
-        {
-            foreach (Tribe t in tribes)
-            {
-                if (t.TribeName == key) return true;
-            }
-            return false;
-        }
-        public static int GetTribeId(string key) {
-            foreach (Tribe t in tribes) {
-                if (t.TribeName == key) return t.id;
-            }
-            return -1;
         }
 
         private static Stopwatch stopwatch;
@@ -171,7 +158,10 @@ namespace TribeSim
                 spendedTime = stopwatch.Elapsed;
             }
 
-            PrepareForANewYear();
+            bool shouldCollectFilesStatistics = WorldProperties.CollectFilesData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectFilesData)) == 0;
+            bool shouldCollectGraphsStatistics = WorldProperties.CollectGraphData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectGraphData)) == 0;
+
+            PrepareForANewYear(shouldCollectFilesStatistics || shouldCollectGraphsStatistics);
             if (WorldProperties.SkipLifeSupportStep < 0.5) LifeSupport();
             if (WorldProperties.SkipSpontaneousMemeInventionStep < 0.5) InventMemes();
             if (WorldProperties.SkipForgettingMemesStep < 0.5) ForgetUnusedMemes();
@@ -183,11 +173,14 @@ namespace TribeSim
             if (WorldProperties.SkipStudyingStep < 0.5) Study();
             if (WorldProperties.SkipDeathStep < 0.5) Die();
 
+            var tribesRemoved = new List<Tribe>();
             foreach (Tribe t in tribes.ToArray())
             {
                 if (t.IsExtinct)
                 {
                     tribes.Remove(t);
+                    tribesRemoved.Add(t);
+                    StatisticsCollector.RemoveTribeDataSet(t.TribeName);
                 }
             }
 
@@ -198,15 +191,18 @@ namespace TribeSim
 
             OverpopulationPrevention();
 
-            if ((WorldProperties.CollectGraphData > 0.5 && (Year % (int)WorldProperties.CollectGraphData == 0)) || (WorldProperties.CollectFilesData > 0 && (Year % (int)WorldProperties.CollectFilesData == 0 || (Year + 1) % (int)WorldProperties.CollectFilesData == 0)))
-            {
+            if (statistic.CollectThisYear != null) {
                 ReportEndOfYearStatistics();
-
-                d.Invoke(new Action(delegate ()
-                {
-                    StatisticsCollector.ConsolidateNewYear();
-                }));
+                CollectTribesStatistic(tribesRemoved);
             }
+
+            if (shouldCollectFilesStatistics) {
+                ConsolidateFileStatistic();
+            }
+            if (shouldCollectGraphsStatistics)
+                ConsolidateGraphStatistic(d);
+
+            StatisticsCollector.SaveDetaliedStatistic();
 
             if (Year % MeasurementTime == 1) {
                 Console.WriteLine($"========== year:{Year} ==========");
@@ -216,18 +212,44 @@ namespace TribeSim
         }
 
         private static void ReportEndOfYearStatistics()
-        {   
-            foreach (Tribe t in tribes)
-            {
-                StatisticsCollector.ReportCountEvent(t.TribeName, "Tribes in the world.");                
-                StatisticsCollector.ReportSumEvent(t.TribeName, "Population", t.Population);
-            }
-            
+        {
+            statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.TribesInTheWorld, tribes.Count);
+
             World.tribes.Parallel((tribe) => { tribe.ReportEndOfYearStatistics(); });
             if (WorldProperties.CollectLiveMemes > 0.5)
             {
-                StatisticsCollector.ReportGlobalSumEvent("Live memes", Meme.CountLiveMemes());
+                statistic.CollectThisYear?.ReportSumEvent(TribeStatistic.EventName.LiveMemes, Meme.CountLiveMemes());
             }
+        }
+
+        private static void CollectTribesStatistic(IEnumerable<Tribe> tribesRemoved = null) {
+            foreach (Tribe t in tribes)
+                statistic.Include(t.statistic);
+            if (tribesRemoved != null)
+                foreach (Tribe t in tribesRemoved)
+                    statistic.Include(t.statistic);
+        }
+
+        public static void ConsolidateFileStatistic() {
+            StatisticsCollector.GetOrCreateTribeDataSet(StatisticsCollector.GLOBAL).SaveFileFrom(statistic, StatisticsCollector.GLOBAL);
+            if (WorldProperties.CollectGlobalOnly < .5)
+                World.tribes.Parallel(tribe => { StatisticsCollector.GetOrCreateTribeDataSet(tribe.TribeName).SaveFileFrom(statistic, $"{tribe.TribeName}-{tribe.id}"); });
+        }
+        private struct statisticDTO {
+            public string TribeName;
+            public TribeStatistic statistic;
+        }
+        public static void ConsolidateGraphStatistic(Dispatcher d) {
+            statisticDTO[] data = new statisticDTO[WorldProperties.CollectGlobalOnly > 0.5 ? tribes.Count + 1 : 1];
+            data[0] = new statisticDTO() { TribeName = StatisticsCollector.GLOBAL, statistic = new TribeStatistic().Include(statistic) };
+            if (WorldProperties.CollectGlobalOnly > 0.5)
+                for(int i = 0; i < tribes.Count; i++)
+                    data[i + 1] = new statisticDTO() { TribeName = tribes[i].TribeName, statistic = new TribeStatistic().Include(tribes[i].statistic) };
+
+            d.Invoke(new Action(delegate () {
+                foreach (var dto in data)
+                    StatisticsCollector.GetOrCreateTribeDataSet(dto.TribeName).AppendGraphStatistic(dto.statistic);
+            }));
         }
 
         private static void OverpopulationPrevention()
@@ -240,9 +262,11 @@ namespace TribeSim
             }
         }
 
-        private static void PrepareForANewYear()
+        private static void PrepareForANewYear(bool shouldCollectThisYear)
         {
-             World.tribes.Parallel((tribe) => { tribe.PrepareForANewYear(); });          
+            statistic.CollectThisYear = shouldCollectThisYear ? statistic : null;
+            statistic.Reset();
+            World.tribes.Parallel((tribe) => { tribe.PrepareForANewYear(shouldCollectThisYear); });          
         }
 
         private static void CulturalExchange()
@@ -301,6 +325,8 @@ namespace TribeSim
                 if (newTribe != null)
                 {
                     newTribes.TryAdd(tribe, newTribe);
+                    if (tribe.statistic.CollectThisYear != null)
+                        newTribe.statistic.CollectThisYear = newTribe.statistic;
                 }
             });
             if (newTribes.Count > 0) {

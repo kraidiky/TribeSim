@@ -153,6 +153,7 @@
     </Compile>
     <Compile Include="StaticExtentions.cs" />
     <Compile Include="StatisticsCollector.cs" />
+    <Compile Include="TribeStatistic.cs" />
     <Compile Include="UserPreferences.cs" />
     <Compile Include="VisualElementsCloner.cs" />
     <Compile Include="GraphWindow.xaml.cs">

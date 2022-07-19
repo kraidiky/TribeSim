@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 
 namespace TribeSim
@@ -123,6 +124,21 @@ namespace TribeSim
             do {
                 target.Add(sourceMemes.Current);
             } while (sourceMemes.MoveNext());
+        }
+
+        private static string[] formats = new[] { "F0", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9" };
+        private static int[] multiplier = new[] { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
+        public static string SignificantSigns(this float value, int signs) {
+            if (float.IsNaN(value))
+                return "NaN";
+            if (value == (int)value)
+                return ((int)value).ToString(CultureInfo.InvariantCulture);
+            int significantSigns = value != 0 ? (int)Math.Ceiling(Math.Log10(Math.Abs(value))) : 3;
+            significantSigns = (significantSigns > 0 ? 0 : -significantSigns) + signs;
+            significantSigns = significantSigns < formats.Length ? significantSigns : formats.Length - 1;
+            if (significantSigns < multiplier.Length && multiplier[significantSigns] * value == (int)Math.Ceiling(multiplier[significantSigns] * value))
+                return value.ToString(CultureInfo.InvariantCulture);
+            return value.ToString(formats[significantSigns], CultureInfo.InvariantCulture);
         }
     }
 

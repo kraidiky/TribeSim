@@ -2,14 +2,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace TribeSim
 {
@@ -19,56 +17,6 @@ namespace TribeSim
         private static ConcurrentDictionary<string, TribeDataSet> tribeDataSets = new ConcurrentDictionary<string, TribeDataSet>();
         private static ConcurrentDictionary<Type, IDetaliedData> dataSets = new ConcurrentDictionary<Type, IDetaliedData>();
 
-        public static void ReportCountEvent(string tribeName, string eventName)
-        {
-            if (WorldProperties.CollectGlobalOnly == 0)
-            {
-                if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
-                    tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
-                dataset.ReportCountEvent(eventName);
-            }
-            ReportGlobalCountEvent(eventName);
-        }
-        public static void ReportGlobalCountEvent(string eventName) {
-            if (!tribeDataSets.TryGetValue(GLOBAL, out var dataset))
-                tribeDataSets.TryAdd(GLOBAL, dataset = new TribeDataSet());
-            dataset.ReportCountEvent(eventName);
-        }
-
-        public static void ReportSumEvent(string tribeName, string eventName, double dValue)
-        {
-            float value = (float)dValue;
-            if (WorldProperties.CollectGlobalOnly == 0)
-            {
-                if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
-                    tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
-                dataset.ReportSumEvent(eventName, value);
-            }
-            ReportGlobalSumEvent(eventName, value);
-        }
-        public static void ReportGlobalSumEvent(string eventName, double dValue) {
-            if (!tribeDataSets.TryGetValue(GLOBAL, out var dataset))
-                tribeDataSets.TryAdd(GLOBAL, dataset = new TribeDataSet());
-            dataset.ReportSumEvent(eventName, (float)dValue);
-        }
-
-        public static void ReportAverageEvent(string tribeName, string eventName, double dValue)
-        {
-            float value = (float)dValue;
-            if (WorldProperties.CollectGlobalOnly == 0)
-            {
-                if (!tribeDataSets.TryGetValue(tribeName, out var dataset))
-                    tribeDataSets.TryAdd(tribeName, dataset = new TribeDataSet());
-                dataset.ReportAverageEvent(eventName, value);
-            }
-            ReportGlobalAverageEvent(eventName, value);
-        }
-        public static void ReportGlobalAverageEvent(string eventName, double dValue) {
-            float value = (float)dValue;
-            if (!tribeDataSets.TryGetValue(GLOBAL, out var dataset))
-                tribeDataSets.TryAdd(GLOBAL, dataset = new TribeDataSet());
-            dataset.ReportAverageEvent(eventName, value);
-        }
 
         public static void ReportEvent<T>(T dValue) where T : struct, IDetaliedEvent
         {
@@ -78,49 +26,21 @@ namespace TribeSim
         }
 
         private static object _individualSucessLocker = new object();
-        public static void ConsolidateNewYear()
-        {
-            List<string> toRemove = new List<string>();
-            foreach (KeyValuePair<string, TribeDataSet> kvp in tribeDataSets)
-            {
-                if (kvp.Key == StatisticsCollector.GLOBAL) {
-                    kvp.Value.ConsolidateNewYear(kvp.Key);
-                }
-                if (World.TribeExists(kvp.Key))
-                {
-                    kvp.Value.ConsolidateNewYear(kvp.Key + '-' + World.GetTribeId(kvp.Key));
-                }
-                else if (kvp.Key != StatisticsCollector.GLOBAL && WorldProperties.CollectFilesData>0.5)
-                {
-                    toRemove.Add(kvp.Key);
-                }
-            }
-            if (WorldProperties.CollectFilesData > 0.5)
-            {
-                foreach (string extinctTribe in toRemove)
-                {
-                    TribeDataSet tds;
-                    tribeDataSets.TryRemove(extinctTribe, out tds);
-                }
-            }
 
-            SaveDetaliedStatistic();
-        }
+        public static Type[] detaliedStatisticTypes = new Type[] { typeof(Tribesman.IndividualSucess), typeof(Meme.SucessStatistic) };
+        public static Func<string>[] detaliedStatisticFiles = new Func<string>[] {
+            () => Path.Combine(World.TribesmanLogFolder, $"IndividualSucess.txt"),
+            () => Path.Combine(World.MemesLogFolder, $"MemesSucess.txt"),
+        };
 
         public static void SaveDetaliedStatistic()
         {
-            var types = new Type[] { typeof(Tribesman.IndividualSucess), typeof(Meme.SucessStatistic) };
-            var files = new string[] {
-                Path.Combine(World.TribesmanLogFolder, $"IndividualSucess.txt"),
-                Path.Combine(World.MemesLogFolder, $"MemesSucess.txt")
-            };
-
-            for (int i = 0; i < types.Length; i++)
+            for (int i = 0; i < detaliedStatisticTypes.Length; i++)
             {
-                if (dataSets.ContainsKey(types[i]))
+                if (dataSets.ContainsKey(detaliedStatisticTypes[i]))
                 {
-                    string filename = files[i];
-                    if (dataSets.TryRemove(types[i], out var queue))
+                    string filename = detaliedStatisticFiles[i]();
+                    if (dataSets.TryRemove(detaliedStatisticTypes[i], out var queue))
                     {
                         Task.Run(() => {
                             lock (_individualSucessLocker)
@@ -133,11 +53,9 @@ namespace TribeSim
                                         fileExists = true;
                                         File.AppendAllText(filename, data.Header());
                                     }
-
                                     File.AppendAllText(filename, data.Data());
                                     data.Clear();
                                 }
-
                             }
                         });
                     }
@@ -145,6 +63,19 @@ namespace TribeSim
             }
         }
 
+        public static TribeDataSet GetOrCreateTribeDataSet(string tribeName){
+            if (tribeDataSets.TryGetValue(tribeName, out var tribeDataSet))
+                return tribeDataSet;
+            if (tribeDataSets.TryAdd(tribeName, tribeDataSet = new TribeDataSet()))
+                return tribeDataSet;
+            return tribeDataSets[tribeName];
+        }
+        
+        public static void RemoveTribeDataSet(string tribeName)
+        {
+            tribeDataSets.TryRemove(tribeName, out _);
+        }
+        
         public static DataSet GetDataSet(string tribeName, string eventName)
         {
             if (tribeDataSets.ContainsKey(tribeName))
@@ -177,11 +108,6 @@ namespace TribeSim
         {
             tribeDataSets.Clear();
             dataSets.Clear();
-        }
-
-        public static void ConsolidateAllRuns()
-        {
-           
         }
     }
 
@@ -220,10 +146,6 @@ namespace TribeSim
     class TribeDataSet
     {
         private ConcurrentDictionary<string, DataSet> consolidatedData = new ConcurrentDictionary<string, DataSet>();
-        private ConcurrentDictionary<string, int> unconsolidatedCountEvents = new ConcurrentDictionary<string, int>();
-        private ConcurrentDictionary<string, float> unconsolidatedSumEvents = new ConcurrentDictionary<string, float>();
-        private ConcurrentDictionary<string, float> unconsolidatedAvgEventsSum = new ConcurrentDictionary<string, float>();
-        private ConcurrentDictionary<string, int> unconsolidatedAvgEventsCount = new ConcurrentDictionary<string, int>();
         private static List<string> fileColumnNames;
 
         static TribeDataSet() {
@@ -231,104 +153,33 @@ namespace TribeSim
             fileColumnNames.Add("Year");
         }
 
-        public void ConsolidateNewYear(string TribeFileName)
+        public void SaveFileFrom(TribeStatistic statistics, string TribeFileName)
         {
             Dictionary<string, string> fileRow = new Dictionary<string, string>();
-            List<string> columnsToAdd = new List<string>();            
-            bool shouldCollectFiles = WorldProperties.CollectFilesData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectFilesData)) == 0;
-            bool shouldCollectGraphs = WorldProperties.CollectGraphData > 0.5 && World.Year % ((int)Math.Round(WorldProperties.CollectGraphData)) == 0;
-
-            if (shouldCollectFiles)
-            {
-                fileRow.Add("Year", World.Year.ToString());             
-            }
-            foreach (KeyValuePair<string, int> kvp in unconsolidatedCountEvents)
-            {
-                if (shouldCollectGraphs)
+            fileRow.Add("Year", World.Year.ToString());
+            for (int i = 0; i < statistics.elements.Length; i++)
+                if (statistics.elements[i] != null)
                 {
-                    if (!consolidatedData.ContainsKey(kvp.Key))
+                    lock (fileColumnNames)
                     {
-                        consolidatedData.TryAdd(kvp.Key, new DataSet(kvp.Key));
+                        if (!fileColumnNames.Contains(TribeStatistic.eventFullNames[i]))
+                            fileColumnNames.Add(TribeStatistic.eventFullNames[i]);
                     }
-                    consolidatedData[kvp.Key].AddPoint(World.Year, kvp.Value);
+                    fileRow.Add(TribeStatistic.eventFullNames[i], statistics.elements[i].ValueString);
                 }
-                if (shouldCollectFiles) {
-                    lock (fileColumnNames) {
-                        if (!fileColumnNames.Contains(kvp.Key)) {
-                            columnsToAdd.Add(kvp.Key);
-                        }
-                        fileRow.Add(kvp.Key, kvp.Value.ToString());
-                    }
-                }
-                unconsolidatedCountEvents[kvp.Key] = 0;
-            }
+            string filename = Path.Combine(World.SimDataFolder, $"{TribeFileName}.txt");
+            Task.Run(() => AddLineToFile(filename, fileRow));
+        }
 
-            foreach (KeyValuePair<string, float> kvp in unconsolidatedSumEvents)
-            {
-                if (shouldCollectGraphs)
-                {
-                    if (!consolidatedData.ContainsKey(kvp.Key))
-                    {
-                        consolidatedData.TryAdd(kvp.Key, new DataSet(kvp.Key));
-                    }
-                    consolidatedData[kvp.Key].AddPoint(World.Year, kvp.Value);
+        public void AppendGraphStatistic(TribeStatistic statistic) {
+            for (int i = 0; i < statistic.elements.Length; i++) {
+                var element = statistic.elements[i];
+                var eventName = TribeStatistic.eventFullNames[i];
+                if (element != null) {
+                    if (!consolidatedData.ContainsKey(eventName))
+                        consolidatedData.TryAdd(eventName, new DataSet(eventName));
+                    consolidatedData[eventName].AddPoint(World.Year, element.ValueFloat);
                 }
-                if (shouldCollectFiles) {
-                    lock (fileColumnNames) {
-                        if (!fileColumnNames.Contains(kvp.Key)) {
-                            columnsToAdd.Add(kvp.Key);
-                        }
-                        fileRow.Add(kvp.Key, SignificantSigns(kvp.Value, 3));
-                    }
-                }
-            }
-            unconsolidatedSumEvents.Clear();
-            foreach (KeyValuePair<string, float> kvp in unconsolidatedAvgEventsSum)
-            {
-                float avgValue = 0;
-                if (unconsolidatedAvgEventsCount[kvp.Key] != 0) {
-                    avgValue = kvp.Value / unconsolidatedAvgEventsCount[kvp.Key];
-                }
-                if (shouldCollectGraphs)
-                {
-                    if (!consolidatedData.ContainsKey(kvp.Key))
-                    {
-                        consolidatedData.TryAdd(kvp.Key, new DataSet(kvp.Key));
-                    }
-                    if (unconsolidatedAvgEventsCount[kvp.Key] != 0)
-                    {
-                        consolidatedData[kvp.Key].AddPoint(World.Year, avgValue);
-                    }
-                }
-                if (shouldCollectFiles) {
-                    lock (fileColumnNames) {
-                        if (!fileColumnNames.Contains(kvp.Key)) {
-                            columnsToAdd.Add(kvp.Key);
-                        }
-                        fileRow.Add(kvp.Key, SignificantSigns(avgValue, 3));
-                    }
-                }
-            }
-            unconsolidatedAvgEventsSum.Clear();
-            unconsolidatedAvgEventsCount.Clear();
-
-            if (shouldCollectFiles)
-            {
-                // по идее должно быть быстрее чем Count считать
-                if (columnsToAdd.Any()) {
-                    lock(fileColumnNames) {
-                        // увеличиваем шанс повторяемости
-                        columnsToAdd.Sort(); 
-                        foreach (string newColumn in columnsToAdd) {
-                            // тут нужна повторная проверка потому что список мог измениться в другом потоке
-                            if (!fileColumnNames.Contains(newColumn)) {
-                                fileColumnNames.Add(newColumn);
-                            }
-                        }
-                    }
-                }
-                string filename = Path.Combine(World.SimDataFolder, $"{TribeFileName}.txt");
-                Task.Run(() => AddLineToFile(filename, fileRow));                
             }
         }
 
@@ -385,51 +236,6 @@ namespace TribeSim
                     outData.AppendLine();
                 }
                 File.AppendAllText(filename, outData.Release());
-            }
-        }
-
-        public void ReportCountEvent(string eventName)
-        {
-            lock (unconsolidatedCountEvents)
-            {
-                if (!unconsolidatedCountEvents.ContainsKey(eventName))
-                {
-                    unconsolidatedCountEvents.TryAdd(eventName, 1);
-                }
-                else
-                {
-                    unconsolidatedCountEvents[eventName]++;
-                }
-            }
-        }
-        public void ReportSumEvent(string eventName, float value)
-        {
-            lock (unconsolidatedSumEvents)
-            {
-                if (!unconsolidatedSumEvents.ContainsKey(eventName))
-                {
-                    unconsolidatedSumEvents.TryAdd(eventName, value);
-                }
-                else
-                {
-                    unconsolidatedSumEvents[eventName] += value;
-                }
-            }
-        }
-        public void ReportAverageEvent(string eventName, float value)
-        {
-            lock (unconsolidatedAvgEventsSum)
-            {
-                if (!unconsolidatedAvgEventsSum.ContainsKey(eventName) || !unconsolidatedAvgEventsCount.ContainsKey(eventName))
-                {
-                    unconsolidatedAvgEventsSum.TryAdd(eventName, value);
-                    unconsolidatedAvgEventsCount.TryAdd(eventName, 1);
-                }
-                else
-                {
-                    unconsolidatedAvgEventsSum[eventName] += value;
-                    unconsolidatedAvgEventsCount[eventName]++;
-                }
             }
         }
         public DataSet GetDataSet(string eventName)
