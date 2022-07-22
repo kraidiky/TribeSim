@@ -202,14 +202,14 @@ namespace TribeSim
             Tribesman organizator = null;
             foreach (Tribesman man in members)
             {
-                var organizationAbility = man.Phenotype.OrganizationAbility;
+                var organizationAbility = man.CanBeOrganizator();
                 if (maxOrganizationAbility < organizationAbility) {
                     organizator = man;
                     maxOrganizationAbility = organizationAbility;
                 }
             }
+            organizator?.ToBeOrganizator();
                 
-
             double sumHuntingPowers = 0;
             double cooperationCoefficient = 0;
             double sumGenotypeHuntingPowers = 0;
@@ -246,6 +246,7 @@ namespace TribeSim
             {
                 totalMemesSet.memesSet.CalculateEffect((int)AvailableFeatures.HuntingEfficiency);
                 var maxHuntingEffort = sumGenotypeHuntingPowers + totalMemesSet.memesSet.MemesEffect.HuntingEfficiency * numHunters;
+                logMembers?.AppendFormat("Best organizator {0} with ability {1} increase sum of hunting efforts {2:f2} closer to maximum {3:f2}", organizator, maxOrganizationAbility.ToSignificantNumbers(2), sumHuntingPowers, maxHuntingEffort).AppendLine();
                 sumHuntingPowers = sumHuntingPowers + (maxHuntingEffort - sumHuntingPowers) * maxOrganizationAbility;
                 organizator.UseMemeGroup(AvailableFeatures.OrganizationAbility, "GoHunting");
             }
@@ -293,7 +294,7 @@ namespace TribeSim
             double resourcesPerRequest = resourcesReceivedPerGroup / totalShare; // Деление вообще довольно медленная операция, не надо ей злоупотреблять
             for (int i = 0; i < takenShares.Length; i++)
             {
-                members[i].RecieveResourcesShare(resourcesPerRequest * takenShares[i]);
+                members[i].ReceiveForagedResources(resourcesPerRequest * takenShares[i]);
             }
         }
 

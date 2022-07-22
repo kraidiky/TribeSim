@@ -524,6 +524,13 @@ namespace TribeSim
             return 0;
         }
 
+        public double CanBeOrganizator() => resource >= WorldProperties.OrganizationAbilityCosts ? Phenotype.OrganizationAbility : 0;
+        public void ToBeOrganizator()
+        {
+            resource -= WorldProperties.OrganizationAbilityCosts;
+            storyOfLife?.AppendLine($"Has Organization Ability:{Phenotype.OrganizationAbility} and win Organizator role, with spending {WorldProperties.OrganizationAbilityCosts.ToSignificantNumbers(2)} resources, {resource.ToSignificantNumbers(2)} lefts.");
+        }
+
         public void RecieveResourcesShare(double recievedShare)
         {
             resource += recievedShare;
@@ -537,6 +544,13 @@ namespace TribeSim
                 {
                     storyOfLife.AppendFormat("After {3} debate and a broken {0} received {1:f0} resources from the common loot and now has {2:f0}", NamesGenerator.GenerateBodypart(), recievedShare, resource, NamesGenerator.Flip() ? "continuous" : "short").AppendLine(); // Тут рандомизация только для логов, так что воспроизводить ничего не нужно.
                 }
+        }
+
+        public void ReceiveForagedResources(double recievedShare)
+        {
+            resource += recievedShare;
+            totalResourcesCollected += recievedShare;
+            storyOfLife?.AppendFormat("Went foraging, found {0} resources and now has {1}.", recievedShare, resource).AppendLine();
         }
 
         public void PerformUselessActions()
@@ -619,6 +633,7 @@ namespace TribeSim
                 if (WorldProperties.AllowRepetitiveStudying < 0.5) break;
             }
         }
+
         public static Boolean? useGompertzAgeing = null;
         public static Boolean UseGompertzAgeing {
             get {
