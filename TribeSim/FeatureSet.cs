@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace TribeSim
 {
-    /// <summary> Этот класс теперь используем только для статической проверки типов и место хранения статических функций, больше он ни для чего не нужен, со всеми функциями массив отлично справляется. </summary>
+    /// <summary> Этот класс теперь используем только для статической проверки типов и место хранения статических функций, больше он ни для чего не нужен, со всеми функциями структура отлично справляется. </summary>
     public static class FeatureSet
     {
 
@@ -58,11 +58,17 @@ namespace TribeSim
         Sociability,
         [Description("Foraging Efficiency|Frg")]
         ForagingEfficiency,
-        [Description("OrganizationAbility|Org")]
-        OrganizationAbility
-    }
+        [Description("Organization Ability|Org")]
+        OrganizationAbility,
+        [Description("Phenotypically Assortative Mating Likelihood|PamL")]
+        PhenotypicallyAssortativeMatingLikelihood,
+        [Description("Phenotypically Assortative Mating Determination|PamD")]
+        PhenotypicallyAssortativeMatingDetermination,
+        [Description("Phenotypically Assortative Mating Refusal Likelihood|PamRL")]
+        PhenotypicallyAssortativeMatingRefusalLikelihood,
+}
 
-    static class EnumExtender
+static class EnumExtender
     {
         public static string GetDescription(this Enum value)
         {

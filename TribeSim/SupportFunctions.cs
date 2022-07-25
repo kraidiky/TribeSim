@@ -22,7 +22,7 @@ namespace TribeSim
         public static double MultilpyProbabilities(double probability, double multiplier) {
             if (probability >= 1) return 1;
             if (probability <= 0) return 0;
-            return 1 - ((1 - probability) / multiplier);
+            return 1 - Math.Pow(1 - probability, multiplier);
         }
 
         public static bool Flip(this Random randomizer) {
