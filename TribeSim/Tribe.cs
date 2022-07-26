@@ -248,7 +248,6 @@ namespace TribeSim
                 var maxHuntingEffort = sumGenotypeHuntingPowers + totalMemesSet.memesSet.MemesEffect.HuntingEfficiency * numHunters;
                 logMembers?.AppendFormat("Best organizator {0} with ability {1} increase sum of hunting efforts {2:f2} closer to maximum {3:f2}", organizator, maxOrganizationAbility.ToSignificantNumbers(2), sumHuntingPowers, maxHuntingEffort).AppendLine();
                 sumHuntingPowers = sumHuntingPowers + (maxHuntingEffort - sumHuntingPowers) * maxOrganizationAbility;
-                organizator.UseMemeGroup(AvailableFeatures.OrganizationAbility, "GoHunting");
             }
 
             cooperationCoefficient /= numHunters;

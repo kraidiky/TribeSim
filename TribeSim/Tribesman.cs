@@ -25,7 +25,7 @@ namespace TribeSim
 
         public int YearBorn
         {
-            get { return yearBorn; }            
+            get { return yearBorn; }
         }
 
         public void KeepsDiary() {
@@ -38,7 +38,7 @@ namespace TribeSim
         /// {"name":"Tikh-Ro", "memes": [1, 3]}
         /// </summary>
         /// <returns>Ex: {"name":"Tikh-Ro", "memes": [1, 3]}</returns>
-        public string GetJSONString ()
+        public string GetJSONString()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("{\"name\":\"").Append(Name).Append("\", \"memes\": [");
@@ -57,9 +57,9 @@ namespace TribeSim
         {
             get
             {
-                if (name == null) { name = NamesGenerator.GenerateName(); } 
+                if (name == null) { name = NamesGenerator.GenerateName(); }
                 return name;
-            }            
+            }
         }
 
         public string GetLifeStory()
@@ -115,11 +115,11 @@ namespace TribeSim
         {
             this.randomizer = randomizer;
             if (randomizer.Chance(WorldProperties.ChancesToWriteALog))
-                KeepsDiary();            
+                KeepsDiary();
         }
 
         public static Tribesman GenerateTribesmanFromAStartingSet(Random randomizer)
-        {            
+        {
             Tribesman retval = new Tribesman(randomizer);
             if (randomizer.Chance(WorldProperties.ChancesToWriteALog))
                 retval.KeepsDiary();
@@ -196,7 +196,7 @@ namespace TribeSim
                 double ARdifference = Phenotype.AgeingRate - WorldProperties.BaseGompertzAgeingRate;
                 if (ARdifference != 0) {
                     if (ARdifference < 0) {
-                        if (WorldProperties.BaseGompertzAgeingRateLifeCostIncrease != 0) 
+                        if (WorldProperties.BaseGompertzAgeingRateLifeCostIncrease != 0)
                             lifeSupportCosts -= ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostIncrease; // ARDifference отрицательная, то есть цена жизнеобеспечения возрастёт.
                         if (WorldProperties.BaseGompertzAgeingRateLifeCostQuadraticIncrease != 0)
                             lifeSupportCosts += ARdifference * ARdifference * WorldProperties.BaseGompertzAgeingRateLifeCostQuadraticIncrease;
@@ -215,8 +215,8 @@ namespace TribeSim
                     }
                 }
             }
-        
-            
+
+
             resource -= lifeSupportCosts;
             storyOfLife?.Append("Eaten ").Append(lifeSupportCosts.ToString("f2", CultureInfo.InvariantCulture)).Append(" resources. ").Append(resource.ToString("f2", CultureInfo.InvariantCulture)).Append(" left.").AppendLine();
         }
@@ -256,7 +256,7 @@ namespace TribeSim
                 return false;
             } else if (createdMeme.Price < MemorySizeRemaining) {
                 AddMeme(createdMeme);
-                createdMeme.ReportInvented(this);                
+                createdMeme.ReportInvented(this);
                 return true;
             } else {
                 if (WorldProperties.CollectMemesSuccess > .5f && randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
@@ -299,7 +299,7 @@ namespace TribeSim
 
         public IReadOnlyList<Meme> knownMemes => memesSet.memes;
 
-        public bool TryToTeach(Tribesman student, bool isCulturalExchange=false)
+        public bool TryToTeach(Tribesman student, bool isCulturalExchange = false)
         {
             if (memesSet.memes.Count > 0 && randomizer.Chance(Phenotype.TeachingLikelyhood))
             {
@@ -309,7 +309,7 @@ namespace TribeSim
                     List<Meme> memeAssoc = memesSet.memes.Where(meme => !student.knownMemes.Contains(meme, Meme.EqualityComparer.Singleton)).ToList();
                     if (memeAssoc.Count == 0)
                     {
-                        storyOfLife?.AppendFormat("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts,isCulturalExchange?"Cultural Exchange! ":"").AppendLine();
+                        storyOfLife?.AppendFormat("{3}Tried to teach {0} something, but he already knows everything {1} can teach him. {2} resources wasted.", student.Name, Name, WorldProperties.TeachingCosts, isCulturalExchange ? "Cultural Exchange! " : "").AppendLine();
                         return false;
                     }
                     Meme memeToTeach = memeAssoc[randomizer.Next(memeAssoc.Count)];
@@ -363,11 +363,11 @@ namespace TribeSim
             double M = WorldProperties.ChanceToInventNewMemeWhileUsingItModifier;
             double T = WorldProperties.ChanceToInventNewMemeWhileUsingItThreshold;
             double chanceToInventNewMeme = T + M * C - T * M * C;
-            
+
             if (randomizer.Chance(chanceToInventNewMeme))
             {
                 Meme inventedMeme;
-                
+
                 if (InventNewMemeForAFeature(usedFeature, out inventedMeme))
                 {
                     storyOfLife?.AppendFormat("While {6} invented how {7}. ({0} meme with {1} effect) The meme complexity is {2:f2} and {3} now has {4:f2} memory left. ({5})", usedFeature.GetDescription(), inventedMeme.Efficiency, inventedMeme.Price, Name, MemorySizeRemaining, inventedMeme.SignatureString, activity, inventedMeme.ActionDescription).AppendLine();
@@ -506,7 +506,7 @@ namespace TribeSim
             if (randomizer.Chance(Phenotype.TrickLikelyhood))
             {
                 requestedShare += Phenotype.TrickEfficiency;
-                storyOfLife?.AppendFormat("Group returned from the hunt with {0:f0} resources. He decided to play a trick and asked to get {1:f1}% more then the rest.", resourcesReceivedPerGroup, (requestedShare-1)*100).AppendLine();
+                storyOfLife?.AppendFormat("Group returned from the hunt with {0:f0} resources. He decided to play a trick and asked to get {1:f1}% more then the rest.", resourcesReceivedPerGroup, (requestedShare - 1) * 100).AppendLine();
                 UseMemeGroup(AvailableFeatures.TrickEfficiency, "sharing resources");
                 UseMemeGroup(AvailableFeatures.TrickLikelyhood, "sharing resources");
             }
@@ -524,10 +524,19 @@ namespace TribeSim
             return 0;
         }
 
-        public double CanBeOrganizator() => resource >= WorldProperties.OrganizationAbilityCosts ? Phenotype.OrganizationAbility : 0;
+        public double CanBeOrganizator()  {
+            if (Phenotype.OrganizationAbility > 0 && resource >= WorldProperties.OrganizationAbilityCosts) {
+                if (WorldProperties.OrganizationAbilityMemesUsedByWinnerOnly < 0.5)
+                    UseMemeGroup(AvailableFeatures.OrganizationAbility, "GoHunting");
+                return Phenotype.OrganizationAbility;
+            }
+            return 0;
+        }
         public void ToBeOrganizator()
         {
             resource -= WorldProperties.OrganizationAbilityCosts;
+            if (WorldProperties.OrganizationAbilityMemesUsedByWinnerOnly > 0.5)
+                UseMemeGroup(AvailableFeatures.OrganizationAbility, "GoHunting");
             storyOfLife?.AppendLine($"Has Organization Ability:{Phenotype.OrganizationAbility} and win Organizator role, with spending {WorldProperties.OrganizationAbilityCosts.ToSignificantNumbers(2)} resources, {resource.ToSignificantNumbers(2)} lefts.");
         }
 

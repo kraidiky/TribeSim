@@ -126,6 +126,7 @@ namespace TribeSim
         
         private static double huntingCosts;
         private static double organizationAbilityCosts;
+        private static double organizationAbilityMemesUsedByWinnerOnly;
         private static double uselessActionCost;
         private static double allowRepetitiveUselessActions;
 
@@ -1105,6 +1106,13 @@ namespace TribeSim
         {
             get { return WorldProperties.organizationAbilityCosts; }
             set { WorldProperties.organizationAbilityCosts = value; PersistChanges(); }
+        }
+
+        [DisplayableProperty("Organization Ability Memes Used By Winner Only", group = "Lifestyle", description = "1 - means only winner of OrganizationAbility contest into the tribe Use Org memes. 0 - All Tribemans who has OrganizationAbility more than 0. [0, 1]")]
+        public static double OrganizationAbilityMemesUsedByWinnerOnly
+        {
+            get { return WorldProperties.organizationAbilityMemesUsedByWinnerOnly; }
+            set { WorldProperties.organizationAbilityMemesUsedByWinnerOnly = value; PersistChanges(); }
         }
 
         [DisplayableProperty("Environment support", group = "Environment", description = "The amount of resources that environment can provide for the hunters. If resources is not enough to match total hunting efforts of all tribes the tribes will receive resources respective to their share in total hunting effort. [0, infinity) or -1 for unlimited")]

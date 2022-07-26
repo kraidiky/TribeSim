@@ -167,14 +167,15 @@ namespace TribeSim
         {
             TreeViewItem newItem = new TreeViewItem();
             WrapPanel stack = new WrapPanel();
-            stack.MaxWidth = 400;
+            stack.MaxWidth = 500;
             stack.Orientation = Orientation.Horizontal;
+
 
             DisplayableProperty propertyData = propertyInfo.GetCustomAttribute<DisplayableProperty>();
 
             Label propertyLabel = new Label();
             propertyLabel.Content = propertyData.name;
-            propertyLabel.Width = 200;
+            propertyLabel.Width = 300;
             propertyLabel.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Right;
             propertyLabel.Margin = new Thickness(0, 0, 5, 0);
 
@@ -189,7 +190,7 @@ namespace TribeSim
 
             TextBlock descriptionLabel = new TextBlock();            
             descriptionLabel.Text = propertyData.description;            
-            descriptionLabel.Width = 300;
+            descriptionLabel.Width = 400;
             descriptionLabel.TextAlignment = TextAlignment.Justify;
             descriptionLabel.Margin = new Thickness(0, 0, 5, 0);
             descriptionLabel.FontSize = 10;
