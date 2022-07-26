@@ -20,11 +20,8 @@
         public double Sociability;
         public double ForagingEfficiency;
         public double OrganizationAbility;
-        public double PhenotypicallyAssortativeMatingLikelihood;
-        public double PhenotypicallyAssortativeMatingDetermination;
-        public double PhenotypicallyAssortativeMatingRefusalLikelihood;
 
-        public const int Length = 21;
+        public const int Length = 18;
 
         public double this[int index]
         {
