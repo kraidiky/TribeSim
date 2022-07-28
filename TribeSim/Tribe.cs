@@ -62,6 +62,7 @@ namespace TribeSim
         public string TribeName = null;
         private HashSet<int> memesUsedThisYearHash = new HashSet<int>();
         private List<Meme> memesUsedThisYear = new List<Meme>();
+        private List<Meme> memesUsedPreviouseYear = new List<Meme>();
 
         private int nextFreeMemberId = 0;
         public void AcceptMember(Tribesman member)
@@ -308,19 +309,19 @@ namespace TribeSim
         private List<Meme> _memesCache = new List<Meme>(); // Достаточно одного кэшированного листа, потому что массивы никогда не обрабатываются одновременно. 
         public void Study()
         {
+            var memesUsed = memesUsedThisYear;
+            memesUsedThisYear = memesUsedPreviouseYear;
+            memesUsedPreviouseYear = memesUsed;
+            memesUsedThisYear.Clear();
+            memesUsedThisYearHash.Clear();
             foreach (Tribesman man in members)
-            {
-                man.StudyOneOrManyOfTheMemesUsedThisTurn(memesUsedThisYear, _memesCache);
-            }
+                man.StudyOneOrManyOfTheMemesUsedThisTurn(memesUsed, _memesCache);
         }
 
         public void PrepareForANewYear(bool shouldCollectThisYear)
         {
             statistic.CollectThisYear = shouldCollectThisYear ? statistic : null;
             statistic.Reset();
-            memesUsedThisYearHash.Clear();
-
-            memesUsedThisYear.Clear();
             foreach (Tribesman man in members)
             {
                 man.PrepareForANewYear();
