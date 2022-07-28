@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace TribeSim
 {
     class Meme
     {
         // Static members
-        private static int numInstances = 0;
-        private static Object staticLocker = new Object();
+        private volatile static int numInstances = 0;
 
 
         private StringBuilder storyline = new StringBuilder();
-        private int knownBy = 0;
+        private volatile int knownBy = 0;
 
-        private int totalKnowBy = 0;
+        private volatile int totalKnowBy = 0;
         private int maxKnowBy = 0;
         private int maxKnownByYear = 0;
         private int yearInvented = 0;
@@ -127,20 +127,14 @@ namespace TribeSim
         {
             if (keepDiary)
                 Report("Was forgotten by " + tribesman.Name);
-            lock (staticLocker)
+           var stillThoseWhoKnow = Interlocked.Decrement(ref knownBy);
+            if (stillThoseWhoKnow == 0)
             {
-                knownBy--;
-            }
-            if (knownBy == 0)
-            {
-                lock (staticLocker)
-                {
-                    numInstances--;
-                }
+                Interlocked.Decrement(ref numInstances);
                 if (WorldProperties.CollectMemesSuccess > .5f && tribesman.randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
                     ReportDetaliedStatistic();
             }
-            if (knownBy < 0)
+            if (stillThoseWhoKnow < 0)
             {
                 throw new IndexOutOfRangeException("The meme is known by a negative amount of tribesmen.");
             }
@@ -148,15 +142,14 @@ namespace TribeSim
 
         public void ReportInvented(Tribesman tribesman)
         {
-            Report("Was invented by " + tribesman.Name);
-            lock (staticLocker)
-            {
-                numInstances++;
-                knownBy = 1;
-                maxKnowBy = 1;
-                totalKnowBy = 1;
-                maxKnownByYear = World.Year;
-            }
+            if (keepDiary)
+                Report("Was invented by " + tribesman.Name);
+            Interlocked.Increment(ref numInstances);
+            // Всё равно до выхода отсюда мем никому передаваться не будет.
+            knownBy = 1;
+            maxKnowBy = 1;
+            totalKnowBy = 1;
+            maxKnownByYear = World.Year;
         }
 
         public void ReportDetaliedStatistic() {
@@ -213,20 +206,21 @@ namespace TribeSim
         {
             if (teacher != null)
             {
-                Report(string.Format("Was transferred from {0} to {1}.", teacher.Name, student.Name));
+                if (keepDiary)
+                    Report(string.Format("Was transferred from {0} to {1}.", teacher.Name, student.Name));
             }
             else
             {
-                Report(string.Format("Was learnt by {0} by watching others use it.", student.Name));
+                if (keepDiary)
+                    Report(string.Format("Was learnt by {0} by watching others use it.", student.Name));
             }
-            lock (staticLocker)
+            var stillThoseWhoKnow = Interlocked.Increment(ref knownBy);
+            Interlocked.Increment(ref totalKnowBy);
+            if (stillThoseWhoKnow == 1) // Это на тот экзотический случай если последний носитель мема умер, но позже этому мему кто-то научился взяв его из списка использованных.
+                Interlocked.Increment(ref numInstances);
+            if (stillThoseWhoKnow > maxKnowBy)
             {
-                knownBy++;
-                totalKnowBy++;
-            }
-            if (knownBy > maxKnowBy)
-            {
-                maxKnowBy = knownBy;
+                maxKnowBy = stillThoseWhoKnow;
                 maxKnownByYear = World.Year;
             }
         }
