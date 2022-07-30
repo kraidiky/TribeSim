@@ -390,15 +390,12 @@ namespace TribeSim
             else
             {
                 double sociability = 0;
-                foreach (var member in members)
+                foreach (var member in members) {
                     sociability += member.Phenotype.Sociability;
-                if (members.Count * members.Count <= sociability)
-                {
-                    if (members.Count * members.Count * 2 > sociability)
-                        foreach (var member in members)
-                            member.UseMemeGroup(AvailableFeatures.Sociability, "Tribe bigger than half of maximum size");
-                    return null;
+                    member.UseMemeGroup(AvailableFeatures.Sociability, "Try to split tribe");
                 }
+                if (members.Count * members.Count <= sociability)
+                    return null;
                 
             }
 

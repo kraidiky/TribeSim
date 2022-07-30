@@ -2318,7 +2318,7 @@ namespace TribeSim
                 BrainSizeBoost = BrainSizeToAgeingRateCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.Sociability] = new FeatureDescription() {
-                range = FeatureRange.Positive,
+                range = FeatureRange.MinusToPlusInfinity,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesSociabilityMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesSociabilityStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceSociability,
@@ -2469,6 +2469,7 @@ namespace TribeSim
                     case FeatureRange.ZeroToOne:
                         return 1;
                     case FeatureRange.Positive:
+                    case FeatureRange.MinusToPlusInfinity:
                         return Double.PositiveInfinity;                        
                 }
                 throw new NotImplementedException("The range " + range.ToString() + " is not implemented.");
@@ -2483,6 +2484,8 @@ namespace TribeSim
                     case FeatureRange.ZeroToOne:                        
                     case FeatureRange.Positive:
                         return 0;
+                    case FeatureRange.MinusToPlusInfinity:
+                        return Double.NegativeInfinity;
                 }
                 throw new NotImplementedException("The range " + range.ToString() + " is not implemented.");
             }
@@ -2492,6 +2495,7 @@ namespace TribeSim
     public enum FeatureRange {
         Positive,
         ZeroToOne,
-        MinusOneToPlusOne
+        MinusOneToPlusOne,
+        MinusToPlusInfinity
     }
 }
