@@ -69,6 +69,7 @@ namespace TribeSim
             StatisticsCollector.Reset();
             Meme.ClearMemePool();
             tribes.Clear();
+            statistic.Clear();
             GC.Collect();
             GC.WaitForPendingFinalizers();
             if (!string.IsNullOrWhiteSpace(baseFolder))

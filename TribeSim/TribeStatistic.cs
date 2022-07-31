@@ -152,6 +152,13 @@ namespace TribeSim {
             return this;
         }
 
+        public TribeStatistic Clear()
+        {
+            for (int i = 0; i < elements.Length; i++)
+                elements[i] = null;
+            return this;
+        }
+
         public TribeStatistic Reset() {
             for (int i = 0; i < elements.Length; i++)
                 if (elements[i] != null)
