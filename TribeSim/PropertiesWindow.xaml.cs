@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.IO;
 using Path = System.IO.Path;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 
 namespace TribeSim
 {
@@ -24,16 +26,78 @@ namespace TribeSim
     /// </summary>
     public partial class MainWindow : Window
     {
+        private class TreeViewModel {
+            public TreeViewModel parent;
+            public PropertyTree properties;
+            public ItemsControl nest;
+            public TreeViewItem view;
+            public List<TreeViewModel> branches = new List<TreeViewModel>();
+            public List<LeafViewModel> leafs = new List<LeafViewModel>();
+            public Label background;
+            public int changed;
+
+            public void RefreshChildren() {
+                branches.ForEach(branch => branch.RefreshChildren());
+                leafs.ForEach(leaf => leaf.RefreshChanges());
+                RefreshChanges();
+                RefreshBackground();
+            }
+            public void RefreshParent() {
+                RefreshChanges();
+                RefreshBackground();
+                parent?.RefreshParent();
+            }
+            public void RefreshChanges() {
+                changed = branches.Sum(branch => branch.changed) + leafs.Count(leaf => leaf.changed);
+            }
+
+            public static SolidColorBrush[] palette = new[] {
+                new SolidColorBrush(Color.FromRgb(240, 240, 240)),
+                new SolidColorBrush(Color.FromRgb(230, 255, 255)),
+            };
+            public void RefreshBackground() {
+                if (background != null)
+                    background.Background = palette[Math.Min(changed, palette.Length - 1)];
+            }
+        }
+        private class LeafViewModel {
+            public TreeViewModel parent;
+            public PropertyInfo propertyInfo;
+            public Panel background;
+            public bool changed;
+
+            public void TextChanged(object sender, TextChangedEventArgs e) {
+                try {
+                    var value = ((TextBox)sender).Text.ConvertToDouble();
+                    propertyInfo.SetValue(null, value);
+                    ((TextBox)sender).Background = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                    changed = value != 0;
+                    RefreshBackground();
+                    parent.RefreshParent();
+                } catch (Exception) {
+                    ((TextBox)sender).Background = new SolidColorBrush(Color.FromRgb(255, 200, 200));
+                }
+            }
+
+            public void RefreshChanges() {
+                changed = 0 != (double)propertyInfo.GetValue(null);
+                RefreshBackground();
+            }
+            private void RefreshBackground() {
+                if (changed)
+                    background.Background = new SolidColorBrush(Color.FromRgb(210, 255, 210));
+                else
+                    background.Background = new SolidColorBrush(Color.FromRgb(220, 220, 220));
+            }
+        }
+
         private int tabStopIndex = 10;
         public MainWindow()
         {
             InitializeComponent();
-            PropertyTree properties = WorldProperties.PropertyTree;
-            foreach (string name in properties.treeBranches.Keys)
-            {
-                PropertiesTree.Items.Add(CreateTreeViewItemFor(properties.treeBranches[name], name));                
-            }
+            FillPropertyWindow();
             ReadPersistedExpandedItems();
+            rootModel.RefreshChildren();
 
             var userPrefs = new UserPreferences();
 
@@ -46,6 +110,16 @@ namespace TribeSim
             SetTitle();
         }
 
+        private TreeViewModel rootModel;
+        private void FillPropertyWindow() {
+            PropertiesTree.Items.Clear();
+            rootModel = new TreeViewModel() {
+                properties = WorldProperties.PropertyTree,
+                nest = PropertiesTree
+            };
+            CreateTreeViewItemChildren(rootModel);
+        }
+
         private void SetTitle() {
             if (!string.IsNullOrEmpty(currentSavedFileName)) {
                 this.Title = "saved: " + Path.GetFileName(currentSavedFileName) + " - Simulation Properties";
@@ -56,31 +130,47 @@ namespace TribeSim
             }
         }
 
-        private TreeViewItem CreateTreeViewItemFor(PropertyTree properties, string header)
-        {            
-            TreeViewItem newItem = new TreeViewItem();
+        private TreeViewItem CreateTreeViewItem(TreeViewModel model, string header) {
+            var view = new TreeViewItem();
             Label headerLabel = new Label();
-            headerLabel.Content = header;            
+            headerLabel.Content = header;
             headerLabel.Margin = new Thickness(0);
             headerLabel.Padding = new Thickness(0, 5, 0, 0);
             headerLabel.MinWidth = 300;
-            headerLabel.Background = new SolidColorBrush(Color.FromRgb(240, 240, 240));
-            
-            
-            newItem.Header = headerLabel;
-            newItem.Tag = header;
-            foreach (string name in properties.treeLeafs.Keys)
-            {
-                newItem.Items.Add(CreateTreeViewItemForProperty(properties.treeLeafs[name], name));
+            model.background = headerLabel;
+            model.RefreshBackground();
+
+            view.Header = headerLabel;
+            view.Tag = header;
+            view.Expanded += TreeItem_Expanded;
+            view.Collapsed += TreeItem_Collapsed;
+            KeyboardNavigation.SetTabNavigation(view, KeyboardNavigationMode.Continue);
+
+            model.view = view;
+            model.nest = view;
+            return view;
+        }
+
+        private void CreateTreeViewItemChildren(TreeViewModel model)
+        {
+            foreach (var leaf in model.properties.treeLeafs) {
+                var child = new LeafViewModel() {
+                    parent = model,
+                    propertyInfo = leaf.Value
+                };
+                model.leafs.Add(child);
+                model.view.Items.Add(CreateTreeViewItemForProperty(child));
             }
-            foreach (string name in properties.treeBranches.Keys)
-            {
-                newItem.Items.Add(CreateTreeViewItemFor(properties.treeBranches[name], name));                
+
+            foreach (var branch in model.properties.treeBranches) {
+                var child = new TreeViewModel() {
+                    parent = model,
+                    properties = branch.Value
+                };
+                model.branches.Add(child);
+                model.nest.Items.Add(CreateTreeViewItem(child, branch.Key));
+                CreateTreeViewItemChildren(child);
             }            
-            KeyboardNavigation.SetTabNavigation(newItem, KeyboardNavigationMode.Continue);
-            newItem.Expanded += TreeItem_Expanded;
-            newItem.Collapsed += TreeItem_Collapsed;
-            return newItem;
         }
 
         private List<string> expandedItems = new List<string>();
@@ -163,7 +253,7 @@ namespace TribeSim
             }
         }
 
-        private object CreateTreeViewItemForProperty(PropertyInfo propertyInfo, string name)
+        private object CreateTreeViewItemForProperty(LeafViewModel model)
         {
             TreeViewItem newItem = new TreeViewItem();
             WrapPanel stack = new WrapPanel();
@@ -171,7 +261,7 @@ namespace TribeSim
             stack.Orientation = Orientation.Horizontal;
 
 
-            DisplayableProperty propertyData = propertyInfo.GetCustomAttribute<DisplayableProperty>();
+            DisplayableProperty propertyData = model.propertyInfo.GetCustomAttribute<DisplayableProperty>();
 
             Label propertyLabel = new Label();
             propertyLabel.Content = propertyData.name;
@@ -180,11 +270,11 @@ namespace TribeSim
             propertyLabel.Margin = new Thickness(0, 0, 5, 0);
 
             TextBox propertyText = new TextBox();
-            propertyText.Text = propertyInfo.GetValue(null).ToString();
-            propertyText.Tag = propertyInfo;
+            propertyText.Text = model.propertyInfo.GetValue(null).ToString();
+            propertyText.Tag = model.propertyInfo;
             propertyText.Width = 100;
             propertyText.Margin = new Thickness(2);
-            propertyText.TextChanged += propertyText_TextChanged;
+            propertyText.TextChanged += model.TextChanged;
             propertyText.IsTabStop = true;
             propertyText.TabIndex = tabStopIndex++;
 
@@ -204,28 +294,12 @@ namespace TribeSim
             {
                 stack.Children.Add(descriptionLabel);
             }
-            stack.Background = new SolidColorBrush(Color.FromRgb(220, 220, 220));
+            model.background = stack;
             stack.Margin = new Thickness(0);
             newItem.Header = stack;
             KeyboardNavigation.SetTabNavigation(newItem, KeyboardNavigationMode.Continue);
             return newItem;
-        }      
-
-        void propertyText_TextChanged(object sender, TextChangedEventArgs e)
-        {            
-            PropertyInfo property = (PropertyInfo)(((TextBox)sender).Tag);
-            try
-            {
-                property.SetValue(null, ((TextBox)sender).Text.ConvertToDouble());
-                ((TextBox)sender).Background = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-            }
-            catch (Exception)
-            {
-                ((TextBox)sender).Background = new SolidColorBrush(Color.FromRgb(255, 200, 200));
-            }
         }
-
-        
 
         private void Window_Loaded_1(object sender, RoutedEventArgs e)
         {
@@ -268,15 +342,11 @@ namespace TribeSim
 
                 Properties.Settings.Default.UsualFolder = System.IO.Path.GetDirectoryName(dialog.FileName);
 
-                PropertyTree properties = WorldProperties.PropertyTree;
                 suppressExpansionEvents = true;
-                PropertiesTree.Items.Clear();
-                foreach (string name in properties.treeBranches.Keys)
-                {
-                    PropertiesTree.Items.Add(CreateTreeViewItemFor(properties.treeBranches[name], name));
-                }
+                FillPropertyWindow();
                 ExpandAsPerList();
                 suppressExpansionEvents = false;
+                rootModel.RefreshChildren();
             }
         }
 
