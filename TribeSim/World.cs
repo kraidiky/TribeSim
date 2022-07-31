@@ -234,7 +234,7 @@ namespace TribeSim
         public static void ConsolidateFileStatistic() {
             StatisticsCollector.GetOrCreateTribeDataSet(StatisticsCollector.GLOBAL).SaveFileFrom(statistic, StatisticsCollector.GLOBAL);
             if (WorldProperties.CollectGlobalOnly < .5)
-                World.tribes.Parallel(tribe => { StatisticsCollector.GetOrCreateTribeDataSet(tribe.TribeName).SaveFileFrom(statistic, $"{tribe.TribeName}-{tribe.id}"); });
+                World.tribes.Parallel(tribe => { StatisticsCollector.GetOrCreateTribeDataSet(tribe.TribeName).SaveFileFrom(tribe.statistic, $"{tribe.TribeName}-{tribe.id}"); });
         }
         private struct statisticDTO {
             public string TribeName;
