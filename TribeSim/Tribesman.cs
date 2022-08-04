@@ -810,6 +810,7 @@ namespace TribeSim
 
         public void DieOfLonliness()
         {
+            myTribe.statistic.CollectThisYear?.ReportCountEvent(TribeStatistic.EventName.DeathsOfLonliness);
             int age = World.Year - yearBorn;
             ReportOnDeathStatistics(age, "lonliness");
             ForgetAllMemes();            

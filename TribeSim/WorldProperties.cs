@@ -135,6 +135,8 @@ namespace TribeSim
         private static double deathAgeDependantChance;
 
         private static double dontBreedIfYoungerThan;
+        private static double oddPartnerDoesNotMissBreeding;
+        private static double lastTribesmanWillMigrate;
         private static double brainSizeBirthPriceCoefficient;
         private static double freeTeachingRoundsForParents;
         private static double childStartingResourcePedestal;
@@ -1057,7 +1059,18 @@ namespace TribeSim
             get { return WorldProperties.dontBreedIfYoungerThan; }
             set { WorldProperties.dontBreedIfYoungerThan = value; PersistChanges(); }
         }
-
+        [DisplayableProperty("TheOddPartnerDoesNotMissBreeding", group = "Lifestyle\\Breeding", description = "The Odd Partner Does Not Miss Breeding.They are trying to mate with a random partner, giving him a second chance this year.[0, 1]")]
+        public static double OddPartnerDoesNotMissBreeding
+        {
+            get { return WorldProperties.oddPartnerDoesNotMissBreeding; }
+            set { WorldProperties.oddPartnerDoesNotMissBreeding = value; PersistChanges(); }
+        }
+        [DisplayableProperty("LastTribesmanWillMigrate", group = "Lifestyle\\Death", description = "The last Tribesman migrates to a random tribe instead of dying of loneliness. It is necessary to turn off another factor pushing sociality. [0, 1]")]
+        public static double LastTribesmanWillMigrate
+        {
+            get { return WorldProperties.lastTribesmanWillMigrate; }
+            set { WorldProperties.lastTribesmanWillMigrate = value; PersistChanges(); }
+        }
         [DisplayableProperty("Youth age", group = "Lifestyle\\Death", description = "A tribesman doesn't die if younger than this value.")]
         public static double DontDieIfYoungerThan
         {

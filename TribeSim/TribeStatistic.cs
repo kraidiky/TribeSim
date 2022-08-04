@@ -26,6 +26,8 @@ namespace TribeSim {
             DeathsOfHunger,
             [StatisticEventName("Deaths of old age")]
             DeathsOfOldAge,
+            [StatisticEventName("Deaths of lonliness")]
+            DeathsOfLonliness,
             [StatisticEventName("% memory: unused when died")]
             MemoryUnusedWhenDied,
             [StatisticEventName("Longevity")]

@@ -173,6 +173,7 @@ namespace TribeSim
             if (WorldProperties.SkipUselessActionsStep < 0.5) UselessAction();
             if (WorldProperties.SkipStudyingStep < 0.5) Study();
             if (WorldProperties.SkipDeathStep < 0.5) Die();
+            if (WorldProperties.SkipMigrationStep < 0.5) Migrate();
 
             var tribesRemoved = new List<Tribe>();
             foreach (Tribe t in tribes.ToArray())
@@ -186,7 +187,6 @@ namespace TribeSim
             }
 
             if (WorldProperties.SkipBreedingStep < 0.5) Breed();
-            if (WorldProperties.SkipMigrationStep < 0.5) Migrate();
             if (WorldProperties.SkipGroupSplittingStep < 0.5) SplitGroups();
             if (WorldProperties.SkipCulturalExchangeStep < 0.5) CulturalExchange();
 
@@ -314,6 +314,18 @@ namespace TribeSim
                 } while (newTribe == m.Value);
                 newTribe.AcceptMember(m.Key);
             }
+            if (WorldProperties.LastTribesmanWillMigrate > 0.5)
+                foreach (var tribe in tribes)
+                    if (tribe.LastMember(out var migrant)) {
+                        var availableTribes = tribes.Where(tribe => tribe.Population > 1).ToArray();
+                        if (availableTribes.Length > 0) {
+                            tribe.MemberLeaves(migrant);
+                            var newTribe = availableTribes[randomizer.Next(availableTribes.Length)];
+                            newTribe.AcceptMember(migrant);
+                        } else {
+                            migrant.DieOfLonliness();
+                        }
+                    }
         }
 
         private static void SplitGroups()

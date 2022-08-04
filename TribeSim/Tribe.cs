@@ -339,12 +339,26 @@ namespace TribeSim
                 }
             }
 
+            if (WorldProperties.LastTribesmanWillMigrate > 0.5)
+                return;
             if (members.Count == 1)
             {
                 members[0].DieOfLonliness();
                 MemberDie(members[0]);
             }
         }
+        public bool LastMember(out Tribesman tribesman)
+        {
+            if (members.Count == 1)
+            {
+                tribesman = members[0];
+                return true;
+            }
+            tribesman = default;
+            return false;
+        }
+
+
 
         private List<Tribesman> breedingPartners = new List<Tribesman>();
         public void Breed()
@@ -353,6 +367,14 @@ namespace TribeSim
             members
                 .Where(member => member.IsOfReproductionAge)
                 .ForEach(member => breedingPartners.Add(member)); // То же самое, что toList(), но не срёт в память. А у нас GC на секундочку, 17% производительности жрёт на момент когда я до этого места дорвался.
+
+            Tribesman odd1 = null, odd2 = null;
+            if (WorldProperties.OddPartnerDoesNotMissBreeding > 0.5 && breedingPartners.Count > 2 && breedingPartners.Count%2 == 1)
+            {
+                odd1 = breedingPartners[breedingPartners.Count-1];
+                breedingPartners.RemoveAt(breedingPartners.Count - 1);
+                odd2 = breedingPartners[randomizer.Next(breedingPartners.Count)];
+            }
 
             while (breedingPartners.Count > 1)
             {   // breedingPartners.Remove(PartnerA) адски тяжёлая операция, потому что во-первых, надо этот элемент теперь в списке найти за линейное время. А потом ещё раз за линейное время сдвингуть все элементы, которые в списке идёт после него, между тем порядок в данном случае для нас абсолютно не важен. Одно только это место жрало 13% производительности когда я до него добрался.
@@ -373,6 +395,17 @@ namespace TribeSim
                 {
                     PartnerA.childrenCount++;
                     PartnerB.childrenCount++;
+                    this.AcceptMember(child);
+                }
+            }
+
+            if (odd1 != null)
+            {
+                Tribesman child = Tribesman.Breed(randomizer, odd1, odd2, _memesCache);
+                if (child != null)
+                {
+                    odd1.childrenCount++;
+                    odd2.childrenCount++;
                     this.AcceptMember(child);
                 }
             }
