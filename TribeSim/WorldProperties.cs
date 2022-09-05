@@ -1059,7 +1059,7 @@ namespace TribeSim
             get { return WorldProperties.dontBreedIfYoungerThan; }
             set { WorldProperties.dontBreedIfYoungerThan = value; PersistChanges(); }
         }
-        [DisplayableProperty("TheOddPartnerDoesNotMissBreeding", group = "Lifestyle\\Breeding", description = "The Odd Partner Does Not Miss Breeding.They are trying to mate with a random partner, giving him a second chance this year.[0, 1]")]
+        [DisplayableProperty("TheOddPartnerDoesNotMissBreeding", group = "Lifestyle\\Breeding", description = "A Random Partner Does Not Miss Breeding. with a 50% chance he is trying to mate with a random partner, giving him a second chance this year. This gives the average number of attempts equal to the average number of partners, regardless of the population. [0, 1]")]
         public static double OddPartnerDoesNotMissBreeding
         {
             get { return WorldProperties.oddPartnerDoesNotMissBreeding; }

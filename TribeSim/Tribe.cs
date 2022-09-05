@@ -369,7 +369,7 @@ namespace TribeSim
                 .ForEach(member => breedingPartners.Add(member)); // То же самое, что toList(), но не срёт в память. А у нас GC на секундочку, 17% производительности жрёт на момент когда я до этого места дорвался.
 
             Tribesman odd1 = null, odd2 = null;
-            if (WorldProperties.OddPartnerDoesNotMissBreeding > 0.5 && breedingPartners.Count > 2 && breedingPartners.Count%2 == 1)
+            if (WorldProperties.OddPartnerDoesNotMissBreeding > 0.5 && breedingPartners.Count > 2 && breedingPartners.Count%2 == 1 && randomizer.Chance(0.5))
             {
                 odd1 = breedingPartners[breedingPartners.Count-1];
                 breedingPartners.RemoveAt(breedingPartners.Count - 1);
