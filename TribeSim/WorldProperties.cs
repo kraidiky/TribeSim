@@ -1360,7 +1360,7 @@ namespace TribeSim
             set { WorldProperties.initialStateGenesLikelyhoodOfNotBeingAFreeRiderMean = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Cooperation desire", description = "Genetically defined altruism. Chance to participate in a group hunt. [0, 1)")]
+        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Cooperation desire", description = "LikelyhoodOfNotBeingAFreeRider ability means Genetically defined altruism. Chance to participate in a group hunt. [0, 1)")]
         public static double InitialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev
         {
             get { return WorldProperties.initialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev; }
@@ -2191,7 +2191,7 @@ namespace TribeSim
                 BrainSizeBoost = BrainSizeToFreeRiderDeterminationEfficiencyCoefficient,
             };
             FeatureDescriptions[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider] = new FeatureDescription() {
-                range = FeatureRange.ZeroToOne,
+                range = FeatureRange.MinusOneToPlusOne,
                 InitialStateGenesMean = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderMean,
                 InitialStateGenesStdDev = WorldProperties.InitialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev,
                 ChancceOfMutation = WorldProperties.MutationChanceLikelyhoodOfNotBeingAFreeRider,

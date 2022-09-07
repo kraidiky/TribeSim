@@ -27,7 +27,7 @@ namespace TribeSim
 
         private static object _individualSucessLocker = new object();
 
-        public static Type[] detaliedStatisticTypes = new Type[] { typeof(Tribesman.IndividualSucess), typeof(Meme.SucessStatistic) };
+        public static Type[] detaliedStatisticTypes = new Type[] { typeof(Tribesman.IndividualSuccess), typeof(Meme.SucessStatistic) };
         public static Func<string>[] detaliedStatisticFiles = new Func<string>[] {
             () => Path.Combine(World.TribesmanLogFolder, $"IndividualSucess.txt"),
             () => Path.Combine(World.MemesLogFolder, $"MemesSucess.txt"),
