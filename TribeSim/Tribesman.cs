@@ -415,12 +415,18 @@ namespace TribeSim
                         if (freeRidersList.Count == 1)
                         {
                             storyOfLife?.Append("Successfully determined himself to be the only free rider in a tribe.");
-                            Meme inventedMeme2;
-                            if ((WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean > 0.0001 || WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean < -0.0001) && WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev > 0.0001)
+                            
+                            if (WorldProperties.InventNewPositiveMemesForANotBeAFreeRider > 0.5 && WorldProperties.FeatureDescriptions[(int)AvailableFeatures.LikelyhoodOfNotBeingAFreeRider].MemCanBeInvented)
                             {
-                                if (InventNewMemeForAFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, out inventedMeme2))
+                                if (InventNewMemeForAFeature(AvailableFeatures.LikelyhoodOfNotBeingAFreeRider, out var inventedMeme2))
                                 {
-                                    storyOfLife?.AppendFormat("Learned {1} ({0}) as a result of a guilty conscience.", inventedMeme2.SignatureString, inventedMeme2.ActionDescription).AppendLine();
+                                    if (inventedMeme2.Efficiency > 0) {
+                                        storyOfLife?.AppendFormat("Learned {1} ({0}) as a result of a guilty conscience.", inventedMeme2.SignatureString, inventedMeme2.ActionDescription).AppendLine();
+                                    } else {
+                                        inventedMeme2.ReportForgotten(this);
+                                        storyOfLife?.AppendFormat("Forgot new meme{0}, cause it was a negative meme teaching how to {1}", inventedMeme2.SignatureString, inventedMeme2.ActionDescription).AppendLine();
+                                        RemoveMeme(inventedMeme2);
+                                    }
                                 }
                                 else
                                 {

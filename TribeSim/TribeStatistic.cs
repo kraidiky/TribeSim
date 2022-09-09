@@ -74,7 +74,7 @@ namespace TribeSim {
             }
         }
         public static string[] eventFullNames;
-        public static int EventNamesCount => Enum.GetValues(typeof(EventName)).Cast<int>().Max() + 1;
+        public static int EventNamesCount = Enum.GetValues(typeof(EventName)).Cast<int>().Max() + 1;
 
         static TribeStatistic() {
             eventFullNames = new string[EventNamesCount];
@@ -92,7 +92,6 @@ namespace TribeSim {
             }
         }
 
-        public int eventTypesCount;
         public StatisticElement[] elements;
         public TribeStatistic() {
             elements = new StatisticElement[EventNamesCount];

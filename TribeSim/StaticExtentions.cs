@@ -13,7 +13,7 @@ namespace TribeSim
             source = source.Trim();
             try {
                 return Convert.ToDouble(source);
-            } catch (FormatException e) {
+            } catch (FormatException) {
                 source = source.Replace(',', '.'); // Используется редко, так что пофиг на аллокации.
                 return Convert.ToDouble(source, CultureInfo.InvariantCulture);
             }

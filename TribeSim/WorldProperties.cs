@@ -117,6 +117,7 @@ namespace TribeSim
 
         private static double freeRiderPunishmentCosts;
         private static double freeRiderPunishmentAmount;
+        private static double inventNewPositiveMemesForANotBeAFreeRider;
 
         private static double resourcesAvailableFromEnvironmentOnEveryStep;
         private static double resourcesAvailableFromEnvironmentOnEveryStepStdDev;
@@ -1170,6 +1171,13 @@ namespace TribeSim
             set { WorldProperties.freeRiderPunishmentAmount = value; PersistChanges(); }
         }
 
+        [DisplayableProperty("Invent New Positive Memes For A Not Be A Free Rider", group = "Lifestyle\\Free riders", description = "Invent new positive memes for not be a free rider, as a result of a guilty conscience when he try to punish himself 0 or 1")]
+        public static double InventNewPositiveMemesForANotBeAFreeRider
+        {
+            get { return WorldProperties.inventNewPositiveMemesForANotBeAFreeRider; }
+            set { WorldProperties.inventNewPositiveMemesForANotBeAFreeRider = value; PersistChanges(); }
+        }
+
         [DisplayableProperty("Usage creativity modifier", group = "Memes\\Invention", description = "This modifier will be applied to basic creativity to increase or decrease the chance to invent new meme while performing the relevant action. The overall formula is C*M + T - C*M*T (the sum of probabilities C*M and T) where C is creativity, M is this modifier and T is the additional threshold. [0, infinity), Ex: 1 - apply basic crativity, 2 - basic creativity is doubled, 0.5 basic creativity is halved")]
         public static double ChanceToInventNewMemeWhileUsingItModifier
         {
@@ -1360,7 +1368,7 @@ namespace TribeSim
             set { WorldProperties.initialStateGenesLikelyhoodOfNotBeingAFreeRiderMean = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Cooperation desire", description = "LikelyhoodOfNotBeingAFreeRider ability means Genetically defined altruism. Chance to participate in a group hunt. [0, 1)")]
+        [DisplayableProperty("Standard deviation", group = "Initial state\\Genes\\Cooperation desire", description = "LikelyhoodOfNotBeingAFreeRider ability means Genetically defined altruism. Chance to participate in a group hunt. [-1, 1)")]
         public static double InitialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev
         {
             get { return WorldProperties.initialStateGenesLikelyhoodOfNotBeingAFreeRiderStdDev; }
@@ -1612,7 +1620,7 @@ namespace TribeSim
             set { WorldProperties.newMemeFreeRiderDeterminationEfficiencyStdDev = value; PersistChanges(); }
         }
 
-        [DisplayableProperty("Likelyhood change mean", group = "Memes\\Invention\\Not being a free rider likelyhood", description = "The mean of the efficiency of the newly invented meme that increases the bearer's chances for not being a free-rider. [0, 1)")]
+        [DisplayableProperty("Likelyhood change mean", group = "Memes\\Invention\\Not being a free rider likelyhood", description = "The mean of the efficiency of the newly invented meme that increases the bearer's chances for not being a free-rider. [-1, 1)")]
         public static double NewMemeLikelyhoodOfNotBeingAFreeRiderMean
         {
             get { return WorldProperties.newMemeLikelyhoodOfNotBeingAFreeRiderMean; }
