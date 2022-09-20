@@ -10,13 +10,12 @@ namespace TribeSim
         {
             if (source == null)
                 throw new ArgumentException("Can't convert null to double");
-            source = source.Trim();
-            try {
-                return Convert.ToDouble(source);
-            } catch (FormatException) {
-                source = source.Replace(',', '.'); // Используется редко, так что пофиг на аллокации.
-                return Convert.ToDouble(source, CultureInfo.InvariantCulture);
-            }
+            if (double.TryParse(source, NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
+                return d;
+            var replaced = source.Replace(',', '.'); // Используется редко, так что пофиг на аллокации.
+            if (double.TryParse(replaced, NumberStyles.Float, CultureInfo.InvariantCulture, out d))
+                return d;
+            throw new Exception($"Something wrong with number format: {source}");
         }
 
         public static List<string> significantNumbersFormat = new List<string>();
