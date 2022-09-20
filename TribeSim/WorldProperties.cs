@@ -2027,8 +2027,6 @@ namespace TribeSim
         public static FeatureDescription[] FeatureDescriptions;
         public static int[] MemesWhichCanBeInvented;
 
-        public static double AggregateAsSum(double a, double b) => a + b;
-
         public static void ResetFeatureDescriptions() {
             // Проверяем, что константа количества фич выставлена правильно.
             int maxFeatureIndex = -1;
@@ -2054,7 +2052,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeTrickLikelyhoodMean != 0 || WorldProperties.NewMemeTrickLikelyhoodStdDev != 0,
                 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = 0,
             };
@@ -2074,7 +2072,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTrickEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeTrickEfficiencyMean != 0 || WorldProperties.NewMemeTrickEfficiencyStdDev != 0,
 
-                Aggregate = AggregateAsSum,
+                Aggregator = () => new ArithmeticSummation(),
 
                 BrainSizeBoost = BrainSizeToTrickEfficiencyCoefficient,
             };
@@ -2094,7 +2092,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeTeachingLikelyhoodMean != 0 || WorldProperties.NewMemeTeachingLikelyhoodStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = 0,
             };
@@ -2114,7 +2112,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevTeachingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeTeachingEfficiencyMean != 0 || WorldProperties.NewMemeTeachingEfficiencyStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = BrainSizeToTeachingEfficiencyCoefficient,
             };
@@ -2134,7 +2132,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeStudyLikelyhoodMean != 0 || WorldProperties.NewMemeStudyLikelyhoodStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = 0,
             };
@@ -2154,7 +2152,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevStudyEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeStudyEfficiencyMean != 0 || WorldProperties.NewMemeStudyEfficiencyStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = BrainSizeToStudyEfficiencyCoefficient,
             };
@@ -2174,7 +2172,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderPunishmentLikelyhood,
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodMean != 0 || WorldProperties.NewMemeFreeRiderPunishmentLikelyhoodStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = 0,
             };
@@ -2194,7 +2192,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevFreeRiderDeterminationEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeFreeRiderDeterminationEfficiencyMean != 0 || WorldProperties.NewMemeFreeRiderDeterminationEfficiencyStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = BrainSizeToFreeRiderDeterminationEfficiencyCoefficient,
             };
@@ -2214,7 +2212,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevLikelyhoodOfNotBeingAFreeRider,
                 MemCanBeInvented = WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderMean != 0 || WorldProperties.NewMemeLikelyhoodOfNotBeingAFreeRiderStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = 0,
             };
@@ -2234,7 +2232,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevHuntingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeHuntingEfficiencyMean != 0 || WorldProperties.NewMemeHuntingEfficiencyStdDev != 0,
 
-                Aggregate = AggregateAsSum,
+                Aggregator = () => new ArithmeticSummation(),
 
                 BrainSizeBoost = BrainSizeToHuntingEfficiencyCoefficient,
             };
@@ -2254,7 +2252,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevCooperationEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeCooperationEfficiencyMean != 0 || WorldProperties.NewMemeCooperationEfficiencyStdDev != 0,
 
-                Aggregate = AggregateAsSum,
+                Aggregator = () => new ArithmeticSummation(),
 
                 BrainSizeBoost = BrainSizeToCooperationEfficiencyCoefficient,
             };
@@ -2274,7 +2272,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = 0,
                 MemCanBeInvented = false,
 
-                Aggregate = AggregateAsSum,
+                Aggregator = () => new ArithmeticSummation(),
 
                 BrainSizeBoost = BrainSizeToMemorySizeCoefficient,
             };
@@ -2294,7 +2292,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = 0,
                 MemCanBeInvented = false,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = BrainSizeToCreativityCoefficient,
             };
@@ -2314,7 +2312,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevUseless,
                 MemCanBeInvented = WorldProperties.NewMemeUselessEfficiencyMean != 0 || WorldProperties.NewMemeUselessEfficiencyStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = 0,
             };
@@ -2334,7 +2332,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevAgeingRate,
                 MemCanBeInvented = WorldProperties.NewMemeAgeingRateMean != 0 || WorldProperties.NewMemeAgeingRateStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = BrainSizeToAgeingRateCoefficient,
             };
@@ -2354,7 +2352,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevSociability,
                 MemCanBeInvented = WorldProperties.NewMemeSociabilityMean != 0 || WorldProperties.NewMemeSociabilityStdDev != 0,
 
-                Aggregate = AggregateAsSum,
+                Aggregator = () => new ArithmeticSummation(),
 
                 BrainSizeBoost = BrainSizeToSociabilityCoefficient,
             };
@@ -2374,7 +2372,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevForagingEfficiency,
                 MemCanBeInvented = WorldProperties.NewMemeForagingEfficiencyMean != 0 || WorldProperties.NewMemeForagingEfficiencyStdDev != 0,
 
-                Aggregate = AggregateAsSum,
+                Aggregator = () => new ArithmeticSummation(),
 
                 BrainSizeBoost = BrainSizeToForagingEfficiencyCoefficient,
             };
@@ -2394,7 +2392,7 @@ namespace TribeSim
                 MemePriceRandomStdDev = WorldProperties.MemeCostRandomStdDevOrganizationAbility,
                 MemCanBeInvented = WorldProperties.NewMemeOrganizationAbilityMean != 0 || WorldProperties.NewMemeOrganizationAbilityStdDev != 0,
 
-                Aggregate = SupportFunctions.SumProbabilities,
+                Aggregator = () => new ProbabilitiesSummation(),
 
                 BrainSizeBoost = BrainSizeToOrganizationAbilityCoefficient,
             };
@@ -2478,7 +2476,7 @@ namespace TribeSim
         public double MemePriceRandomStdDev;
         public bool MemCanBeInvented;
 
-        public Func<double, double, double> Aggregate;
+        public Func<IAggregator> Aggregator;
 
         public double MemoryBoost;
         public double BrainSizeBoost;
@@ -2518,5 +2516,35 @@ namespace TribeSim
         ZeroToOne,
         MinusOneToPlusOne,
         MinusToPlusInfinity
+    }
+
+    public interface IAggregator
+    {
+        IAggregator Append(double value);
+        double Value { get; }
+    }
+    public struct ArithmeticSummation : IAggregator {
+        private double value = 0;
+        public ArithmeticSummation() {}
+        public IAggregator Append(double value)
+        {
+            this.value += value;
+            return this;
+        }
+        public double Value => value;
+    }
+    public struct ProbabilitiesSummation : IAggregator
+    {
+        private double positive = 0;
+        private double negative = 0;
+        public ProbabilitiesSummation() {}
+        public IAggregator Append(double value) {
+            if (value >= 0)
+                positive += value - positive * value;
+            else
+                negative -= value - negative * value;
+            return this;
+        }
+        public double Value => positive - negative;
     }
 }

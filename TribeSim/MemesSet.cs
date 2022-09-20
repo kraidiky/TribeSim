@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TribeSim
 {
@@ -44,11 +45,11 @@ namespace TribeSim
         public void CalculateEffect(int feature)
         {
             var description = WorldProperties.FeatureDescriptions[feature];
-            double retval = 0;
+            var aggregator = WorldProperties.FeatureDescriptions[feature].Aggregator();
             foreach (Meme meme in memes)
                 if ((int)meme.AffectedFeature == feature)
-                    retval = description.Aggregate(retval, meme.Efficiency);
-            MemesEffect[feature] = retval;
+                    aggregator.Append(meme.Efficiency);
+            MemesEffect[feature] = aggregator.Value;
         }
         // Достать мем по указанному порядковому номеру с указанной фичей
         public Meme GetMemeByFeature(int feature, int index)

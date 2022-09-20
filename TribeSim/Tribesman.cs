@@ -181,7 +181,7 @@ namespace TribeSim
                 CalculatePhenotype(i);
         }
         private void CalculatePhenotype(int feature) {
-            Phenotype[feature] = WorldProperties.FeatureDescriptions[feature].Aggregate(Genotype[feature], memesSet.MemesEffect[feature]);
+            Phenotype[feature] = WorldProperties.FeatureDescriptions[feature].Aggregator().Append(Genotype[feature]).Append(memesSet.MemesEffect[feature]).Value;
             if (feature == (int)AvailableFeatures.AgeingRate && Phenotype[feature] < 0)
                 // AR надо считать вообще по-другому! тут вероятностная алгебра не работает, потому что этот показатель в принципе не вероятность!
                 // Надо следить за коммутативностью, сохраняя при этом значение выше нуля.
@@ -314,10 +314,11 @@ namespace TribeSim
                     }
                     Meme memeToTeach = memeAssoc[randomizer.Next(memeAssoc.Count)];
                     double teachingSuccessChance = SupportFunctions.MultilpyProbabilities(
-                        SupportFunctions.SumProbabilities(
-                            Phenotype.TeachingEfficiency,
-                            student.Phenotype.StudyEfficiency),
-                        Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
+                        WorldProperties.FeatureDescriptions[(int)AvailableFeatures.TeachingEfficiency].Aggregator()
+                            .Append(Phenotype.TeachingEfficiency)
+                            .Append(student.Phenotype.StudyEfficiency)
+                            .Value,
+                        Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));;
                     if (randomizer.Chance(teachingSuccessChance))
                     {
                         if (student.MemorySizeRemaining < memeToTeach.Price)
@@ -895,9 +896,10 @@ namespace TribeSim
                     Meme memeToTeach = cachedListForTeaching[memeIndexToTeach];
                     // А вот это вообще очень опасный копипейст, если я правильно понимаю.
                     double teachingSuccessChance = SupportFunctions.MultilpyProbabilities(
-                        SupportFunctions.SumProbabilities(
-                            Phenotype.TeachingEfficiency,
-                            child.Phenotype.StudyEfficiency),
+                        WorldProperties.FeatureDescriptions[(int)AvailableFeatures.TeachingEfficiency].Aggregator()
+                            .Append(Phenotype.TeachingEfficiency)
+                            .Append(child.Phenotype.StudyEfficiency)
+                            .Value,
                         Math.Pow(1d / memeToTeach.ComplexityCoefficient, WorldProperties.MemeComplexityToLearningChanceCoefficient));
                     if (randomizer.Chance(teachingSuccessChance))
                     {

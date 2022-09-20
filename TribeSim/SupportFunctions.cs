@@ -17,8 +17,6 @@ namespace TribeSim
             return randNormal;
         }
 
-        public static double SumProbabilities(double a, double b) => a + b - a * b;
-
         public static double MultilpyProbabilities(double probability, double multiplier) {
             if (probability >= 1) return 1;
             if (probability <= 0) return 0;
