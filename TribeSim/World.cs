@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Threading;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace TribeSim
 {
@@ -17,36 +18,37 @@ namespace TribeSim
         public static bool IsExtinct { get { return tribes.Count == 0; } }
 
         public static string BaseFolder
-        {            
+        {
             set { World.baseFolder = value; }
+            get { return World.baseFolder; }
         }
 
         private static string logFolder;
 
         public static string LogFolder
         {
-            get { return World.logFolder; }            
+            get { return World.logFolder; }
         }
 
         private static string memesLogFolder;
 
         public static string MemesLogFolder
         {
-            get { return World.memesLogFolder; }            
+            get { return World.memesLogFolder; }
         }
 
         private static string tribesmanLogFolder;
 
         public static string TribesmanLogFolder
         {
-            get { return World.tribesmanLogFolder; }            
+            get { return World.tribesmanLogFolder; }
         }
 
         private static string tribesLogFolder;
 
         public static string TribesLogFolder
         {
-            get { return World.tribesLogFolder; }            
+            get { return World.tribesLogFolder; }
         }
 
         private static string simDataFolder;
@@ -62,6 +64,10 @@ namespace TribeSim
         public static void InitializeNext(Dispatcher d) {
             Initialize(d, randomizer.Next(int.MaxValue));
         }
+
+        private static FileStream rndLog = null;
+        private static FileStream rndReference = null;
+
         public static void Initialize(Dispatcher d, int randomSeed)
         {
             WorldProperties.ResetFeatureDescriptions();
@@ -74,7 +80,7 @@ namespace TribeSim
             GC.WaitForPendingFinalizers();
             if (!string.IsNullOrWhiteSpace(baseFolder))
             {
-                logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmmss"));                
+                logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmmss"));
             }
             else
             {
@@ -85,7 +91,7 @@ namespace TribeSim
                 }
                 else
                 {
-                    logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmmss"));    
+                    logFolder = Path.Combine(baseFolder, DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                 }
             }
             Directory.CreateDirectory(logFolder);
@@ -96,13 +102,13 @@ namespace TribeSim
             Directory.CreateDirectory(tribesmanLogFolder);
             Directory.CreateDirectory(tribesLogFolder);
             Directory.CreateDirectory(memesLogFolder);
-            if (WorldProperties.CollectFilesData>0.5)
+            if (WorldProperties.CollectFilesData > 0.5)
             {
                 Directory.CreateDirectory(simDataFolder);
             }
             Year = 0;
             int i;
-            for (i = 0; i < WorldProperties.StartingNumberOfTribes; i++ )
+            for (i = 0; i < WorldProperties.StartingNumberOfTribes; i++)
             {
                 Tribe t = new Tribe(randomizer.Next(int.MaxValue));
                 t.statistic.CollectThisYear = t.statistic;
@@ -135,9 +141,19 @@ namespace TribeSim
                 ConsolidateGraphStatistic(d);
 
             Tribesman.UseGompertzAgeing = WorldProperties.UseGompertzAgeing > 0.5;
+
+            rndLog?.Close();
+            rndReference?.Close();
+            // rndLog = File.OpenWrite(Path.Combine(LogFolder, $"rndLog{randomSeed}.txt")); // Разлочить для глубокой проверки сидов
+            //if (File.Exists(Path.Combine(BaseFolder, $"rndLog{randomSeed}.txt")))
+            //    rndReference = File.OpenRead(Path.Combine(BaseFolder, $"rndLog{randomSeed}.txt"));
         }
 
         public static void CollectFinalState() {
+            rndLog?.Close();
+            rndLog = null;
+            rndReference?.Close();
+            rndReference = null;
             if (WorldProperties.CollectMemesSuccess > .5f)
                 foreach (var liveMeme in new HashSet<Meme>(tribes.SelectMany(tribe => tribe.AllMemes())))
                     if (randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
@@ -210,6 +226,15 @@ namespace TribeSim
                 for (int i = 0; i < tribes.Count; i++)
                     Console.WriteLine($"tribe[{tribes[i].seed}] rnd:{tribes[i].randomizer.Next(10000)}");
             }
+
+            /*
+            if (rndLog != null)
+            {
+                WriteRndLog($"year:{Year}\n");
+                for (int i = 0; i < tribes.Count; i++)
+                    WriteRndLog($"{tribes[i].rndPhasesLog}:{tribes[i].randomizer.Next(10000)}\n");
+            }
+            */
         }
 
         private static void ReportEndOfYearStatistics()
@@ -244,7 +269,7 @@ namespace TribeSim
             statisticDTO[] data = new statisticDTO[WorldProperties.CollectGlobalOnly > 0.5 ? tribes.Count + 1 : 1];
             data[0] = new statisticDTO() { TribeName = StatisticsCollector.GLOBAL, statistic = new TribeStatistic().Include(statistic) };
             if (WorldProperties.CollectGlobalOnly > 0.5)
-                for(int i = 0; i < tribes.Count; i++)
+                for (int i = 0; i < tribes.Count; i++)
                     data[i + 1] = new statisticDTO() { TribeName = tribes[i].TribeName, statistic = new TribeStatistic().Include(tribes[i].statistic) };
 
             d.Invoke(new Action(delegate () {
@@ -261,13 +286,15 @@ namespace TribeSim
                 removingTribe.PrepareForMigrationOutsideOfTheScope();
                 tribes.Remove(removingTribe);
             }
+            if (rndLog != null)
+                WriteRndLog(randomizer);
         }
 
         private static void PrepareForANewYear(bool shouldCollectThisYear)
         {
             statistic.CollectThisYear = shouldCollectThisYear ? statistic : null;
             statistic.Reset();
-            World.tribes.Parallel((tribe) => { tribe.PrepareForANewYear(shouldCollectThisYear); });          
+            World.tribes.Parallel((tribe) => { tribe.PrepareForANewYear(shouldCollectThisYear); });
         }
 
         private static void CulturalExchange()
@@ -288,6 +315,8 @@ namespace TribeSim
 
                 if (WorldProperties.AllowRepetitiveCulturalExchange < 0.5) break;
             }
+            if (rndLog != null)
+                WriteRndLog(randomizer);
         }
 
         private static void Migrate()
@@ -301,6 +330,7 @@ namespace TribeSim
                 {
                     migratingTribesmen.TryAdd(member, tribe);
                 }
+                //if (rndLog != null) tribe.DumpState();
             });
             var immigrants = migratingTribesmen.ToList();// Предполагаю, что мигрирующих всегда будет мало, так что делаю как попало.
             immigrants.Sort((m1, m2) => m1.Value != m2.Value ? Math.Sign(m1.Value.seed - m2.Value.seed) : Math.Sign(m1.Key.TribeMemberId - m2.Key.TribeMemberId));
@@ -326,6 +356,8 @@ namespace TribeSim
                             migrant.DieOfLonliness();
                         }
                     }
+            if (rndLog != null)
+                WriteRndLog(randomizer);
         }
 
         private static void SplitGroups()
@@ -341,6 +373,7 @@ namespace TribeSim
                     if (tribe.statistic.CollectThisYear != null)
                         newTribe.statistic.CollectThisYear = newTribe.statistic;
                 }
+                // tribe.DumpState();
             });
             if (newTribes.Count > 0) {
                 for(int i = 0; i < tribes.Count; i++) // Эта надстройка фиксирует порядок чтения
@@ -351,22 +384,22 @@ namespace TribeSim
 
         private static void Breed()
         {
-            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Breed(); } });  
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Breed(); } });
         }
 
         private static void Die()
         {
-            World.tribes.Parallel((tribe) => { tribe.Die(); });  
+            World.tribes.Parallel((tribe) => { tribe.Die(); });
         }
 
         private static void Study()
         {
-            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Study(); } });  
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Study(); }; /* tribe.DumpState(); */});
         }
 
         private static void UselessAction()
         {
-            World.tribes.Parallel((tribe) => { tribe.PerformUselessActions(); });  
+            World.tribes.Parallel((tribe) => { tribe.PerformUselessActions(); });
         }
 
         private static double RandomizeResources(double resources, double stdDev, double deviationLimit) {
@@ -400,7 +433,7 @@ namespace TribeSim
             foreach (Tribe t in tribes)
             {
                 totalHuntingEffort += tribeHuntingEfforts[t];
-            }            
+            }
             Dictionary<Tribe, double> resourcesRecievedByTribes = new Dictionary<Tribe, double>(); // Тут запись идёт в основном потоке, а из тредов только чтение. Чтение не может нарушить целостность, так что нефиг тут ConcurrentDictionary плодить.
             if (totalHuntingEffort <= totalEnvironmentResources || totalEnvironmentResources < 0)
             {
@@ -438,29 +471,52 @@ namespace TribeSim
 
         private static void PunishFreeRiders()
         {
-            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.PunishFreeRider(); } });  
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.PunishFreeRider(); } });
         }
 
         private static void Teach()
         {
-            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Teach(); } });   
+            World.tribes.Parallel((tribe) => { if (tribe.Population >= 2) { tribe.Teach(); } });
         }
 
         private static void ForgetUnusedMemes()
         {
-            World.tribes.Parallel((tribe) => { tribe.ForgetUnusedMeme(); });   
+            World.tribes.Parallel((tribe) => { tribe.ForgetUnusedMeme(); });
         }
 
         private static void InventMemes()
         {
-            World.tribes.Parallel((tribe) => { tribe.SpontaneousMemeInvention(); });   
+            World.tribes.Parallel((tribe) => { tribe.SpontaneousMemeInvention(); });
         }
 
         private static void LifeSupport()
         {
             World.tribes.Parallel((tribe) => { tribe.ConsumeLifeSupport(); });
-        }     
-  
-        
+        }
+
+        public static void WriteRndLog(Random rnd) => WriteRndLog($"{rnd.Next(10000)}\n");
+        public static void WriteRndLog(string value)
+        {
+            byte[] bytes = Encoding.Unicode.GetBytes(value);
+            if (rndReference != null)
+            {
+                var buffer = new byte[bytes.Length];
+                var readed = rndReference.Read(buffer, 0, bytes.Length);
+                if (readed != bytes.Length) {
+                    var toString = new byte[readed];
+                    Array.Copy(buffer, 0, toString, 0, readed);
+                    var readedString = Encoding.Unicode.GetString(toString);
+                    Console.Write($"Rnd Sync Alert!!! '{value}' != '{readedString}'");
+                } else 
+                    for (int i = 0; i < bytes.Length; i++)
+                        if (buffer[i] != bytes[i])
+                        {
+                            var readedString = Encoding.Unicode.GetString(buffer);
+                            Console.Write($"Rnd Sync Alert!!! '{value}' != '{readedString}'");
+                            break;
+                        }
+            }
+            rndLog.WriteAsync(bytes, 0, bytes.Length);
+        }
     }
 }

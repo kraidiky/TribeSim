@@ -11,7 +11,7 @@ namespace TribeSim
     {
         // Static members
         private volatile static int numInstances = 0;
-
+        private static Random random = new Random(); // Исключительно для использования в логировании, не затрагивая логику.
 
         private StringBuilder storyline = new StringBuilder();
         private volatile int knownBy = 0;
@@ -131,7 +131,7 @@ namespace TribeSim
             if (stillThoseWhoKnow == 0)
             {
                 Interlocked.Decrement(ref numInstances);
-                if (WorldProperties.CollectMemesSuccess > .5f && tribesman.randomizer.Chance(WorldProperties.ChanceToCollectMemesSuccess))
+                if (WorldProperties.CollectMemesSuccess > .5f && random.Chance(WorldProperties.ChanceToCollectMemesSuccess))
                     ReportDetaliedStatistic();
             }
             if (stillThoseWhoKnow < 0)

@@ -27,6 +27,12 @@ namespace TribeSim
         private StringBuilder logMembers = new StringBuilder();
         private StringBuilder logMemes = new StringBuilder();
 
+        // Раскомментить чтобы использовать глубокую проверку сидов
+        //public StringBuilder rndPhasesLog = new StringBuilder();
+        //public void DumpState() {
+        //    rndPhasesLog?.Append(randomizer.Next(10000)).Append(',');
+        //}
+
         public Tribe(int randomSeed)
         {
             id = nextFreeId++; // Племена создаются только из майнтрэда
@@ -122,6 +128,7 @@ namespace TribeSim
                     logTribesmenList.Add(man);
                 }
             }
+            //DumpState();
         }
 
         public void SpontaneousMemeInvention()
@@ -130,6 +137,7 @@ namespace TribeSim
             {
                 man.TryInventMemeSpontaneously();
             }
+            //DumpState();
         }
 
         public void ForgetUnusedMeme()
@@ -138,6 +146,7 @@ namespace TribeSim
             {
                 man.ForgetUnusedMemes();
             }
+            //DumpState();
         }
 
         public void Teach()
@@ -162,6 +171,7 @@ namespace TribeSim
                 double memeticalEquality = ((double)totalMemesSet.counts.Sum()) / maxMemesCount / totalMemesSet.memesSet.memes.Count;
                 statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.MemeticalEquality, memeticalEquality);
             }
+            //DumpState();
         }
 
         private List<Tribesman> _punishers = new List<Tribesman>();
@@ -195,6 +205,7 @@ namespace TribeSim
                     for (int i = 0; i < _punishers.Count; i++)
                         _punishers[i].DetermineAndPunishAFreeRider(members, _freeRaiders);
             }
+            //DumpState();
         }
 
         public double GoHunting()
@@ -255,8 +266,9 @@ namespace TribeSim
             statistic.CollectThisYear?.ReportAvgEvent(TribeStatistic.EventName.AverageHuntingEfforts, sumHuntingPowers * cooperationCoefficient);
             statistic.CollectThisYear?.ReportSumEvent(TribeStatistic.EventName.TotalHuntingEfforts, sumHuntingPowers * cooperationCoefficient);
 
+            //DumpState();
+
             return sumHuntingPowers * cooperationCoefficient;
-            
         }
 
         public double foragingEffort = 0;
@@ -265,12 +277,14 @@ namespace TribeSim
             foragingEffort = 0;
             foreach (var member in members)
                 foragingEffort += member.GetForagingEffort();
+            //DumpState();
         }
 
         public void ShareForagingResources(double resourcesPerForagingEfficiency)
         {
             foreach (var member in members)
                 member.RecieveResourcesShare(resourcesPerForagingEfficiency * member.Phenotype.ForagingEfficiency);
+            //DumpState();
         }
 
         private double[] takenShares = new double[0];
@@ -296,6 +310,7 @@ namespace TribeSim
             {
                 members[i].ReceiveForagedResources(resourcesPerRequest * takenShares[i]);
             }
+            //DumpState();
         }
 
         public void PerformUselessActions()
@@ -304,6 +319,7 @@ namespace TribeSim
             {
                 man.PerformUselessActions();
             }
+            //DumpState();
         }
 
         private List<Meme> _memesCache = new List<Meme>(); // Достаточно одного кэшированного листа, потому что массивы никогда не обрабатываются одновременно. 
@@ -326,6 +342,7 @@ namespace TribeSim
             {
                 man.PrepareForANewYear();
             }
+            //rndPhasesLog?.Clear();
         }
 
         public void Die()
@@ -346,6 +363,7 @@ namespace TribeSim
                 members[0].DieOfLonliness();
                 MemberDie(members[0]);
             }
+            //DumpState();
         }
         public bool LastMember(out Tribesman tribesman)
         {
@@ -409,6 +427,7 @@ namespace TribeSim
                     this.AcceptMember(child);
                 }
             }
+            //DumpState();
         }
 
         public Tribe Split()
@@ -475,6 +494,7 @@ namespace TribeSim
                 }
                 man.TryToTeach(student,true);                
             }
+            //DumpState();
         }
 
         public void PrepareForMigrationOutsideOfTheScope()
